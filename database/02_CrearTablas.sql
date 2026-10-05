@@ -1,0 +1,3 @@
+CREATE TABLE Usuarios(
+	IdUsuario INT IDENTITY(1,1) PRIMARY KEY
+);

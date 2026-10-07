@@ -32,3 +32,41 @@ CREATE TABLE Tareas(
 	CONSTRAINT FK_Tareas_IdUsuario FOREIGN KEY(IdUsuario) REFERENCES Usuarios(IdUsuario),
 	CONSTRAINT CK_Tareas_Fechas CHECK(FechaInicio < FechaFin)
 );
+
+CREATE TABLE Descansos(
+	IdDescanso INT IDENTITY(1,1),
+	IdTarea	INT NOT NULL,
+	IntervaloDescanso INT,
+	DuracionDescanso INT,
+
+	CONSTRAINT PK_Descansos_IdDescanso PRIMARY KEY(IdDescanso),
+	CONSTRAINT FK_Descansos_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea),
+	CONSTRAINT CK_Descansos_Intervalo_Duracion CHECK(
+		(IntervaloDescanso IS NULL AND DuracionDescanso IS NULL)
+		OR
+		(IntervaloDescanso > 0 AND DuracionDescanso > 0))
+
+);
+
+CREATE TABLE Aplicaciones(
+	IdAplicacion INT IDENTITY(1,1),
+	Nombre VARCHAR(100) NOT NULL,
+	Identificador VARCHAR(255) NOT NULL,
+	Prioridad CHAR(1) NOT NULL,
+
+	CONSTRAINT PK_Aplicaciones_IdAplicacion PRIMARY KEY(IdAplicacion),
+	CONSTRAINT UQ_Aplicaciones_Identificador UNIQUE(Identificador),
+	CONSTRAINT CK_Aplicaciones_Prioridad CHECK(Prioridad IN('P','D','T'))
+);
+
+CREATE TABLE Webs(
+	IdWeb INT IDENTITY(1,1),
+	Nombre VARCHAR(100) NOT NULL,
+	Link VARCHAR(2048) NOT NULL,
+	Prioridad CHAR(1) NOT NULL,
+	HashLink AS CONVERT(VARBINARY(32), HASHBYTES('SHA2_256',Link)) PERSISTED,
+
+	CONSTRAINT PK_Webs_IdWeb PRIMARY KEY(IdWeb),
+	CONSTRAINT UQ_Webs_HashLink UNIQUE(HashLink),
+	CONSTRAINT CK_Webs_Prioridad CHECK(Prioridad IN('D','T'))
+);

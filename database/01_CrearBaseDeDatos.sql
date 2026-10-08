@@ -1,5 +1,5 @@
 CREATE DATABASE ProgramaConcentracion;
 GO
 
-USE DATABASE ProgramaConcentracion;
+USE ProgramaConcentracion;
 GO

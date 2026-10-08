@@ -1,3 +1,6 @@
+USE ProgramaConcentracion;
+GO
+
 CREATE TABLE Usuarios(
 	IdUsuario INT IDENTITY(1,1),
 	Nombre VARCHAR(50) NOT NULL,
@@ -10,6 +13,7 @@ CREATE TABLE Usuarios(
 	CONSTRAINT UQ_Usuarios_Correo UNIQUE(Correo),
 	CONSTRAINT CK_Usuarios_Correo CHECK(Correo LIKE '%@%.%')
 );
+GO
 
 CREATE TABLE Configuraciones(
 	IdConfiguracion INT IDENTITY(1,1),
@@ -20,6 +24,7 @@ CREATE TABLE Configuraciones(
 	CONSTRAINT FK_Configuraciones_IdUsuario FOREIGN KEY(IdUsuario) REFERENCES Usuarios(IdUsuario),
 	CONSTRAINT UQ_Configuraciones_IdUsuario UNIQUE(IdUsuario)
 );
+GO
 
 CREATE TABLE Tareas(
 	IdTarea INT IDENTITY(1,1),
@@ -32,6 +37,7 @@ CREATE TABLE Tareas(
 	CONSTRAINT FK_Tareas_IdUsuario FOREIGN KEY(IdUsuario) REFERENCES Usuarios(IdUsuario),
 	CONSTRAINT CK_Tareas_Fechas CHECK(FechaInicio < FechaFin)
 );
+GO
 
 CREATE TABLE Descansos(
 	IdDescanso INT IDENTITY(1,1),
@@ -47,6 +53,7 @@ CREATE TABLE Descansos(
 		(IntervaloDescanso > 0 AND DuracionDescanso > 0))
 
 );
+GO
 
 CREATE TABLE Aplicaciones(
 	IdAplicacion INT IDENTITY(1,1),
@@ -58,6 +65,7 @@ CREATE TABLE Aplicaciones(
 	CONSTRAINT UQ_Aplicaciones_Identificador UNIQUE(Identificador),
 	CONSTRAINT CK_Aplicaciones_Prioridad CHECK(Prioridad IN('P','D','T'))
 );
+GO
 
 CREATE TABLE Webs(
 	IdWeb INT IDENTITY(1,1),
@@ -69,40 +77,4 @@ CREATE TABLE Webs(
 	CONSTRAINT PK_Webs_IdWeb PRIMARY KEY(IdWeb),
 	CONSTRAINT UQ_Webs_HashLink UNIQUE(HashLink),
 	CONSTRAINT CK_Webs_Prioridad CHECK(Prioridad IN('D','T'))
-);
-
-CREATE TABLE Tarea_Aplicacion(
-	IdTarea INT NOT NULL,
-	IdAplicacion INT NOT NULL,
-
-	CONSTRAINT PK_Tarea_Aplicacion_IdTarea_IdAplicacion PRIMARY KEY(IdTarea,IdAplicacion),
-	CONSTRAINT FK_Tarea_Aplicacion_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea),
-	CONSTRAINT FK_Tarea_Aplicacion_IdAplicacion FOREIGN KEY(IdAplicacion) REFERENCES Aplicaciones(IdAplicacion)
-);
-
-CREATE TABLE Tarea_Web(
-	IdTarea INT NOT NULL,
-	IdWeb INT NOT NULL,
-
-	CONSTRAINT PK_Tarea_Web_IdTarea_IdWeb PRIMARY KEY(IdTarea, IdWeb),
-	CONSTRAINT FK_Tarea_Web_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea),
-	CONSTRAINT FK_Tarea_Web_IdWeb FOREIGN KEY(IdWeb) REFERENCES Webs(IdWeb)
-);
-
-CREATE TABLE Configuracion_Aplicacion(
-	IdConfiguracion INT NOT NULL,
-	IdAplicacion INT NOT NULL,
-
-	CONSTRAINT PK_Configuracion_Aplicacion_IdConfiguracion_IdAplicacion PRIMARY KEY(IdConfiguracion,IdAplicacion),
-	CONSTRAINT FK_Configuracion_Aplicacion_IdConfiguracion FOREIGN KEY(IdConfiguracion) REFERENCES Configuraciones(IdConfiguracion),
-	CONSTRAINT FK_Configuracion_Aplicacion_IdAplicacion FOREIGN KEY(IdAplicacion) REFERENCES Aplicaciones(IdAplicacion)
-);
-
-CREATE TABLE Configuracion_Web(
-	IdConfiguracion INT NOT NULL,
-	IdWeb INT NOT NULL,
-
-	CONSTRAINT PK_Configuracion_Web_IdConfiguracion_IdWeb PRIMARY KEY(IdConfiguracion, IdWeb),
-	CONSTRAINT FK_Configuracion_Web_IdConfiguracion FOREIGN KEY(IdConfiguracion) REFERENCES Configuraciones(IdConfiguracion),
-	CONSTRAINT FK_Configuracion_Web_IdWeb FOREIGN KEY(IdWeb) REFERENCES Webs(IdWeb)
 );

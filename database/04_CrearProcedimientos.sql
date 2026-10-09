@@ -189,3 +189,58 @@ BEGIN
 	WHERE IdTarea = @IdTarea;
 END;
 GO
+
+-- =================================
+-- PROCEDURES DE LA TABLA DESCANSOS
+-- =================================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarDescanso
+	@IdTarea INT,
+	@IntervaloDescanso INT,
+	@DuracionDescanso INT
+
+AS
+BEGIN
+	INSERT INTO Descansos(IdTarea, IntervaloDescanso, DuracionDescanso)
+	VALUES(@IdTarea, @IntervaloDescanso, @DuracionDescanso)
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarDescanso
+	@IdTarea INT
+
+AS
+BEGIN
+	SELECT IdTarea, IntervaloDescanso, DuracionDescanso 
+	FROM Descansos
+	WHERE IdTarea = @IdTarea;
+END;
+GO
+
+-- MODIFICA
+CREATE PROCEDURE sp_ModificarDescanso
+	@IdDescanso INT,
+	@IntervaloDescanso INT,
+	@DuracionDescanso INT
+
+AS
+BEGIN
+	UPDATE Descansos
+	SET IntervaloDescanso = @IntervaloDescanso,
+		DuracionDescanso = @DuracionDescanso
+	WHERE IdDescanso = @IdDescanso;
+END;
+GO
+
+-- ELIMINA
+CREATE PROCEDURE sp_EliminarDescanso
+	@IdDescanso INT
+
+AS
+BEGIN
+	DELETE Descansos
+	WHERE IdDescanso = @IdDescanso;
+END;
+GO

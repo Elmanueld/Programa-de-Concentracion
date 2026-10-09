@@ -46,7 +46,7 @@ CREATE TABLE Descansos(
 	DuracionDescanso INT,
 
 	CONSTRAINT PK_Descansos_IdDescanso PRIMARY KEY(IdDescanso),
-	CONSTRAINT FK_Descansos_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea),
+	CONSTRAINT FK_Descansos_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea) ON DELETE CASCADE,
 	CONSTRAINT CK_Descansos_Intervalo_Duracion CHECK(
 		(IntervaloDescanso IS NULL AND DuracionDescanso IS NULL)
 		OR

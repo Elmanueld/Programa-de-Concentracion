@@ -1,7 +1,9 @@
 USE ProgramaConcentracion
 GO
 
+-- ===============================
 -- PROCEDURES DE LA TABLA USUARIOS
+-- ===============================
 
 -- REGISTRA
 CREATE PROCEDURE sp_RegistrarUsuario
@@ -41,10 +43,15 @@ CREATE PROCEDURE sp_ModificarUsuario
 
 AS
 BEGIN
-	UPDATE Usuarios
-	SET Nombre = @Nombre,
-		Correo = @Correo
-	WHERE IdUsuario = @IdUsuario;
+UPDATE Usuarios
+SET Nombre = @Nombre,
+    CorreoVerificado = CASE
+        WHEN Correo <> @Correo THEN 0
+        ELSE CorreoVerificado
+    END,
+    Correo = @Correo
+WHERE IdUsuario = @IdUsuario
+  AND Eliminado = 0;
 END;
 GO
 
@@ -55,7 +62,8 @@ CREATE PROCEDURE sp_EliminarUsuario
 AS
 BEGIN
 	UPDATE Usuarios
-	SET Eliminado = 1
+	SET Eliminado = 1,
+		CorreoVerificado = 0
 	WHERE IdUsuario = @IdUsuario;
 END;
 GO
@@ -82,7 +90,8 @@ AS
 BEGIN
 	UPDATE Usuarios
 	SET CorreoVerificado = 1
-	WHERE IdUsuario = @IdUsuario;
+	WHERE IdUsuario = @IdUsuario
+	  AND Eliminado = 0;
 END;
 GO
 
@@ -99,3 +108,84 @@ BEGIN
 END;
 GO
 
+-- RECUPERA CUENTA
+CREATE PROCEDURE sp_RecuperarCuenta
+    @IdUsuario INT
+AS
+BEGIN
+    UPDATE Usuarios
+    SET Eliminado = 0,
+        CorreoVerificado = 0
+    WHERE IdUsuario = @IdUsuario
+      AND Eliminado = 1;
+END;
+GO
+
+
+-- ===============================
+-- PROCEDURES DE LA TABLA TAREAS
+-- ===============================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarTarea
+	@IdUsuario INT,
+	@TareaNombre VARCHAR(70),
+	@FechaInicio DATETIME,
+	@FechaFin DATETIME
+
+AS
+BEGIN
+	IF EXISTS(
+		SELECT 1
+		FROM Usuarios
+		WHERE IdUsuario = @IdUsuario
+		AND Eliminado = 0
+	)
+	BEGIN
+	INSERT INTO Tareas(IdUsuario,TareaNombre, FechaInicio, FechaFin)
+	VALUES(@IdUsuario, @TareaNombre, @FechaInicio, @FechaFin);
+	END;
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarTarea
+	@IdUsuario INT,
+	@Buscar VARCHAR(70)
+
+AS
+BEGIN
+	SELECT TareaNombre, FechaInicio, FechaFin 
+	FROM Tareas
+	WHERE TareaNombre LIKE '%' + @Buscar + '%'
+		AND IdUsuario = @IdUsuario;
+END;
+GO
+
+-- MODIFICA
+CREATE PROCEDURE sp_ModificarTarea
+	@IdTarea INT,
+	@TareaNombre VARCHAR(70),
+	@FechaInicio DATETIME,
+	@FechaFin DATETIME
+
+AS
+BEGIN
+	UPDATE Tareas
+	SET TareaNombre = @TareaNombre,
+		FechaInicio = @FechaInicio,
+		FechaFin = @FechaFin
+	WHERE IdTarea = @IdTarea
+END;
+GO
+
+-- ELIMINA
+CREATE PROCEDURE sp_EliminarTarea
+	@IdTarea INT
+
+AS
+BEGIN
+	DELETE FROM Tareas
+	WHERE IdTarea = @IdTarea;
+END;
+GO

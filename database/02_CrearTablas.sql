@@ -26,16 +26,24 @@ CREATE TABLE Configuraciones(
 );
 GO
 
+-- ESTADO:
+	-- P = PROGRAMADA
+	-- A = ACTIVA
+	-- C = COMPLETA
+
 CREATE TABLE Tareas(
 	IdTarea INT IDENTITY(1,1),
 	IdUsuario INT NOT NULL,
 	TareaNombre VARCHAR(70) NOT NULL,
 	FechaInicio DATETIME NOT NULL,
 	FechaFin DATETIME NOT NULL,
+	Estado CHAR(1) NOT NULL DEFAULT 'P',
+	EsPlantilla BIT NOT NULL DEFAULT 0,
 
 	CONSTRAINT PK_Tareas_IdTarea PRIMARY KEY(IdTarea),
 	CONSTRAINT FK_Tareas_IdUsuario FOREIGN KEY(IdUsuario) REFERENCES Usuarios(IdUsuario),
-	CONSTRAINT CK_Tareas_Fechas CHECK(FechaInicio < FechaFin)
+	CONSTRAINT CK_Tareas_Fechas CHECK(FechaInicio < FechaFin),
+	CONSTRAINT CK_Tareas_Estado CHECK(Estado IN('P','A','C'))
 );
 GO
 
@@ -46,11 +54,18 @@ CREATE TABLE Descansos(
 	DuracionDescanso INT,
 
 	CONSTRAINT PK_Descansos_IdDescanso PRIMARY KEY(IdDescanso),
+	CONSTRAINT UQ_Descansos_IdTarea UNIQUE(IdTarea),
 	CONSTRAINT FK_Descansos_IdTarea FOREIGN KEY(IdTarea) REFERENCES Tareas(IdTarea) ON DELETE CASCADE,
-	CONSTRAINT CK_Descansos_Intervalo_Duracion CHECK(
+	CONSTRAINT CK_Descansos_Intervalo_Duracion CHECK (
 		(IntervaloDescanso IS NULL AND DuracionDescanso IS NULL)
 		OR
-		(IntervaloDescanso > 0 AND DuracionDescanso > 0))
+		(
+			IntervaloDescanso IS NOT NULL
+			AND DuracionDescanso IS NOT NULL
+			AND IntervaloDescanso > 0
+			AND DuracionDescanso > 0
+		)
+	)
 
 );
 GO
@@ -59,11 +74,10 @@ CREATE TABLE Aplicaciones(
 	IdAplicacion INT IDENTITY(1,1),
 	Nombre VARCHAR(100) NOT NULL,
 	Identificador VARCHAR(255) NOT NULL,
-	Prioridad CHAR(1) NOT NULL,
+	EsCritica BIT NOT NULL DEFAULT 0,
 
 	CONSTRAINT PK_Aplicaciones_IdAplicacion PRIMARY KEY(IdAplicacion),
-	CONSTRAINT UQ_Aplicaciones_Identificador UNIQUE(Identificador),
-	CONSTRAINT CK_Aplicaciones_Prioridad CHECK(Prioridad IN('P','D','T'))
+	CONSTRAINT UQ_Aplicaciones_Identificador UNIQUE(Identificador)
 );
 GO
 
@@ -71,10 +85,8 @@ CREATE TABLE Webs(
 	IdWeb INT IDENTITY(1,1),
 	Nombre VARCHAR(100) NOT NULL,
 	Link VARCHAR(2048) NOT NULL,
-	Prioridad CHAR(1) NOT NULL,
 	HashLink AS CONVERT(VARBINARY(32), HASHBYTES('SHA2_256',Link)) PERSISTED,
 
 	CONSTRAINT PK_Webs_IdWeb PRIMARY KEY(IdWeb),
-	CONSTRAINT UQ_Webs_HashLink UNIQUE(HashLink),
-	CONSTRAINT CK_Webs_Prioridad CHECK(Prioridad IN('D','T'))
+	CONSTRAINT UQ_Webs_HashLink UNIQUE(HashLink)
 );

@@ -131,7 +131,8 @@ CREATE PROCEDURE sp_InsertarTarea
 	@IdUsuario INT,
 	@TareaNombre VARCHAR(70),
 	@FechaInicio DATETIME,
-	@FechaFin DATETIME
+	@FechaFin DATETIME,
+	@EsPlantilla BIT
 
 AS
 BEGIN
@@ -142,8 +143,8 @@ BEGIN
 		AND Eliminado = 0
 	)
 	BEGIN
-	INSERT INTO Tareas(IdUsuario,TareaNombre, FechaInicio, FechaFin)
-	VALUES(@IdUsuario, @TareaNombre, @FechaInicio, @FechaFin);
+	INSERT INTO Tareas(IdUsuario,TareaNombre, FechaInicio, FechaFin,EsPlantilla, Estado)
+	VALUES(@IdUsuario, @TareaNombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P');
 	END;
 END;
 GO
@@ -155,10 +156,11 @@ CREATE PROCEDURE sp_BuscarTarea
 
 AS
 BEGIN
-	SELECT TareaNombre, FechaInicio, FechaFin 
+	SELECT TareaNombre, FechaInicio, FechaFin
 	FROM Tareas
 	WHERE TareaNombre LIKE '%' + @Buscar + '%'
-		AND IdUsuario = @IdUsuario;
+		AND IdUsuario = @IdUsuario
+		AND EsPlantilla = 0;
 END;
 GO
 
@@ -244,3 +246,45 @@ BEGIN
 	WHERE IdDescanso = @IdDescanso;
 END;
 GO
+
+-- =======================================
+-- PROCEDURES DE LA TABLA CONFIGURACIONES
+-- =======================================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarConfiguracion
+	@IdUsuario INT,
+	@AutoSesion BIT
+	
+AS
+BEGIN
+	INSERT INTO Configuraciones(IdUsuario, AutoSesion)
+	VALUES(@IdUsuario, @AutoSesion)
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarConfiguracion
+	@IdUsuario INT
+
+AS
+BEGIN
+	SELECT AutoSesion
+	FROM Configuraciones
+	WHERE IdUsuario = @IdUsuario;
+END;
+GO
+
+-- MODIFICA
+CREATE PROCEDURE sp_ModificarConfiguracion
+	@IdConfiguracion INT,
+	@AutoSesion BIT
+
+AS
+BEGIN
+	UPDATE Configuraciones
+	SET AutoSesion = @AutoSesion
+	WHERE IdConfiguracion = @IdConfiguracion;
+END;
+GO
+

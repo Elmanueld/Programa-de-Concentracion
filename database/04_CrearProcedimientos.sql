@@ -129,7 +129,7 @@ GO
 -- INSERTA
 CREATE PROCEDURE sp_InsertarTarea
 	@IdUsuario INT,
-	@TareaNombre VARCHAR(70),
+	@Nombre VARCHAR(70),
 	@FechaInicio DATETIME,
 	@FechaFin DATETIME,
 	@EsPlantilla BIT
@@ -143,8 +143,8 @@ BEGIN
 		AND Eliminado = 0
 	)
 	BEGIN
-	INSERT INTO Tareas(IdUsuario,TareaNombre, FechaInicio, FechaFin,EsPlantilla, Estado)
-	VALUES(@IdUsuario, @TareaNombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P');
+	INSERT INTO Tareas(IdUsuario, Nombre, FechaInicio, FechaFin, EsPlantilla, Estado)
+	VALUES(@IdUsuario, @Nombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P');
 	END;
 END;
 GO
@@ -156,9 +156,9 @@ CREATE PROCEDURE sp_BuscarTarea
 
 AS
 BEGIN
-	SELECT TareaNombre, FechaInicio, FechaFin
+	SELECT Nombre, FechaInicio, FechaFin
 	FROM Tareas
-	WHERE TareaNombre LIKE '%' + @Buscar + '%'
+	WHERE Nombre LIKE '%' + @Buscar + '%'
 		AND IdUsuario = @IdUsuario
 		AND EsPlantilla = 0;
 END;
@@ -167,14 +167,14 @@ GO
 -- MODIFICA
 CREATE PROCEDURE sp_ModificarTarea
 	@IdTarea INT,
-	@TareaNombre VARCHAR(70),
+	@Nombre VARCHAR(70),
 	@FechaInicio DATETIME,
 	@FechaFin DATETIME
 
 AS
 BEGIN
 	UPDATE Tareas
-	SET TareaNombre = @TareaNombre,
+	SET Nombre = @Nombre,
 		FechaInicio = @FechaInicio,
 		FechaFin = @FechaFin
 	WHERE IdTarea = @IdTarea
@@ -333,9 +333,9 @@ BEGIN
 END;
 GO
 
--- ====================================
--- PROCEDURES DE LA WEBS
--- ====================================
+-- ============================
+-- PROCEDURES DE LA TABLA WEBS
+-- ============================
 
 -- INSERTA
 CREATE PROCEDURE sp_InsertarWeb
@@ -374,5 +374,48 @@ BEGIN
 	SET Nombre = @Nombre,
 		Link = @Link
 	WHERE IdWeb = @IdWeb;
+END;
+GO
+
+-- ==========================================
+-- PROCEDURES DE LA TABLA TAREA_APLICACIONES
+-- ==========================================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarTareaAplicacion
+	@IdTarea INT,
+	@IdAplicacion INT
+
+AS
+BEGIN
+	INSERT INTO Tarea_Aplicacion(IdTarea, IdAplicacion)
+	VALUES(@IdTarea, @IdAplicacion)
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarTareaAplicacion
+	@Buscar VARCHAR(100)
+
+AS
+BEGIN
+	SELECT A.Nombre, T.Nombre
+	FROM Tarea_Aplicacion TA
+	INNER JOIN Tareas T ON TA.IdTarea = T.IdTarea
+	INNER JOIN Aplicaciones A ON TA.IdAplicacion = A.IdAplicacion
+	WHERE A.Nombre LIKE '%' + @Buscar + '%';
+END;
+GO
+
+-- ELIMINA
+CREATE PROCEDURE sp_EliminarTareaAplicacion
+	@IdTarea INT,
+	@IdAplicacion INT
+
+AS
+BEGIN
+	DELETE Tarea_Aplicacion
+	WHERE IdTarea = @IdTarea
+	AND IdAplicacion = @IdAplicacion;
 END;
 GO

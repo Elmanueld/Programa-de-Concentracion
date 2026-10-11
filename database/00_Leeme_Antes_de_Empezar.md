@@ -33,6 +33,10 @@ Define las relaciones entre las tablas mediante claves foráneas, claves primari
 
 Crea los procedimientos almacenados (`Stored Procedures`) utilizados por la aplicación para realizar operaciones sobre la base de datos, como registrar, buscar, modificar y eliminar información.
 
+### 5. `05_CrearIndices.sql`
+
+Crea un índice único filtrado para permitir como máximo una tarea marcada como plantilla (`EsPlantilla = 1`) por usuario. Ejecuta este archivo después de crear las tablas.
+
 ## Importante
 
 Los scripts deben ejecutarse en el orden indicado, ya que algunos archivos dependen de objetos creados por los archivos anteriores.

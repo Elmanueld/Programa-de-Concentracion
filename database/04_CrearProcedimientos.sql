@@ -288,3 +288,49 @@ BEGIN
 END;
 GO
 
+-- ====================================
+-- PROCEDURES DE LA TABLA APLICACIONES
+-- ====================================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarAplicacion
+	@Nombre VARCHAR(100),
+	@Identificador VARCHAR(255),
+	@EsCritica BIT = 0
+
+AS
+BEGIN
+	INSERT INTO Aplicaciones(Nombre, Identificador, EsCritica)
+	VALUES(@Nombre, @Identificador, @EsCritica)
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarAplicacion
+	@Buscar VARCHAR(255)
+
+AS
+BEGIN
+	SELECT IdAplicacion, Nombre, Identificador
+	FROM Aplicaciones
+	WHERE Nombre LIKE '%' + @Buscar + '%'
+	OR Identificador LIKE '%' + @Buscar + '%'
+END;
+GO
+
+-- MODIFICA
+CREATE PROCEDURE sp_ModificarAplicacion
+	@IdAplicacion INT,
+	@Nombre VARCHAR(100),
+	@Identificador VARCHAR(255)
+
+AS
+BEGIN
+	UPDATE Aplicaciones
+	SET Nombre = @Nombre,
+		Identificador = @Identificador
+	WHERE IdAplicacion = @IdAplicacion;
+END;
+GO
+
+

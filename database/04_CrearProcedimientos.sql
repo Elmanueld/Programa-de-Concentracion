@@ -333,4 +333,46 @@ BEGIN
 END;
 GO
 
+-- ====================================
+-- PROCEDURES DE LA WEBS
+-- ====================================
 
+-- INSERTA
+CREATE PROCEDURE sp_InsertarWeb
+	@Nombre VARCHAR(100),
+	@Link VARCHAR(2048)
+
+AS
+BEGIN
+	INSERT INTO Webs(Nombre, Link)
+	VALUES(@Nombre, @Link);
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarWeb
+	@Buscar VARCHAR(2048)
+
+AS
+BEGIN
+	SELECT IdWeb, Nombre, Link
+	FROM Webs
+	WHERE Nombre LIKE '%' + @Buscar + '%'
+	OR Link LIKE '%' + @Buscar + '%';
+END;
+GO
+
+-- MODIFICA
+CREATE PROCEDURE sp_ModificarWeb
+	@IdWeb INT,
+	@Nombre VARCHAR(100),
+	@Link VARCHAR(2048)
+
+AS
+BEGIN
+	UPDATE Webs
+	SET Nombre = @Nombre,
+		Link = @Link
+	WHERE IdWeb = @IdWeb;
+END;
+GO

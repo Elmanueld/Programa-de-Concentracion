@@ -128,24 +128,51 @@ GO
 
 -- INSERTA
 CREATE PROCEDURE sp_InsertarTarea
-	@IdUsuario INT,
-	@Nombre VARCHAR(70),
-	@FechaInicio DATETIME,
-	@FechaFin DATETIME,
-	@EsPlantilla BIT
-
+    @IdUsuario INT,
+    @Nombre VARCHAR(70),
+    @FechaInicio DATETIME,
+    @FechaFin DATETIME,
+    @EsPlantilla BIT
 AS
 BEGIN
-	IF EXISTS(
-		SELECT 1
-		FROM Usuarios
-		WHERE IdUsuario = @IdUsuario
-		AND Eliminado = 0
-	)
-	BEGIN
-	INSERT INTO Tareas(IdUsuario, Nombre, FechaInicio, FechaFin, EsPlantilla, Estado)
-	VALUES(@IdUsuario, @Nombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P');
-	END;
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Usuarios
+            WHERE IdUsuario = @IdUsuario
+              AND Eliminado = 0
+        )
+            THROW 50001, 'El usuario no existe o está eliminado.', 1;
+
+        IF @EsPlantilla = 1
+        BEGIN
+            DELETE FROM Tareas
+            WHERE IdUsuario = @IdUsuario
+              AND EsPlantilla = 1;
+        END;
+
+        INSERT INTO Tareas (
+            IdUsuario, Nombre, FechaInicio, FechaFin, EsPlantilla, Estado
+        )
+        VALUES (
+            @IdUsuario, @Nombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P'
+        );
+
+        SELECT CONVERT(INT, SCOPE_IDENTITY()) AS IdTarea;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -156,7 +183,7 @@ CREATE PROCEDURE sp_BuscarTarea
 
 AS
 BEGIN
-	SELECT Nombre, FechaInicio, FechaFin
+	SELECT IdTarea, Nombre, FechaInicio, FechaFin, Estado
 	FROM Tareas
 	WHERE Nombre LIKE '%' + @Buscar + '%'
 		AND IdUsuario = @IdUsuario
@@ -178,6 +205,7 @@ BEGIN
 		FechaInicio = @FechaInicio,
 		FechaFin = @FechaFin
 	WHERE IdTarea = @IdTarea
+	AND Estado = 'P';
 END;
 GO
 
@@ -188,7 +216,40 @@ CREATE PROCEDURE sp_EliminarTarea
 AS
 BEGIN
 	DELETE FROM Tareas
-	WHERE IdTarea = @IdTarea;
+	WHERE IdTarea = @IdTarea
+	AND Estado <> 'A'
+END;
+GO
+
+-- CAMBIA ESTADO
+CREATE PROCEDURE sp_CambiarEstadoTarea
+	@IdTarea INT,
+	@Estado CHAR(1)
+
+
+AS
+BEGIN
+	UPDATE Tareas
+	SET Estado = @Estado
+    WHERE IdTarea = @IdTarea
+      AND (
+            (Estado = 'P' AND @Estado = 'A')
+         OR (Estado = 'A' AND @Estado = 'C')
+      );
+END;
+GO
+
+-- BUSCA PLANTILLA
+CREATE PROCEDURE sp_BuscarPlantilla
+	@IdUsuario INT
+
+AS
+BEGIN 
+	SELECT IdTarea
+	FROM Tareas
+	WHERE EsPlantilla = 1
+	AND IdUsuario = @IdUsuario;
+
 END;
 GO
 
@@ -395,15 +456,17 @@ GO
 
 -- BUSCA
 CREATE PROCEDURE sp_BuscarTareaAplicacion
-	@Buscar VARCHAR(100)
+	@IdUsuario INT,
+	@IdTarea INT
 
 AS
 BEGIN
-	SELECT A.Nombre, T.Nombre
+	SELECT TA.IdTarea, TA.IdAplicacion, A.Nombre Aplicacion, T.Nombre Tarea
 	FROM Tarea_Aplicacion TA
 	INNER JOIN Tareas T ON TA.IdTarea = T.IdTarea
 	INNER JOIN Aplicaciones A ON TA.IdAplicacion = A.IdAplicacion
-	WHERE A.Nombre LIKE '%' + @Buscar + '%';
+	WHERE TA.IdTarea = @IdTarea
+	AND T.IdUsuario = @IdUsuario;
 END;
 GO
 
@@ -417,5 +480,49 @@ BEGIN
 	DELETE Tarea_Aplicacion
 	WHERE IdTarea = @IdTarea
 	AND IdAplicacion = @IdAplicacion;
+END;
+GO
+
+-- ==========================================
+-- PROCEDURES DE LA TABLA TAREA_WEB
+-- ==========================================
+
+-- INSERTA
+CREATE PROCEDURE sp_InsertarTareaWeb
+	@IdTarea INT,
+	@IdWeb INT
+
+AS
+BEGIN
+	INSERT INTO Tarea_Web(IdTarea, IdWeb)
+	VALUES(@IdTarea, @IdWeb);
+END;
+GO
+
+-- BUSCA
+CREATE PROCEDURE sp_BuscarTareaWeb
+	@IdUsuario INT,
+	@IdTarea INT
+AS 
+BEGIN
+	SELECT TW.IdTarea, TW.IdWeb, T.Nombre Tarea, W.Nombre Web
+	FROM Tarea_Web TW
+	INNER JOIN Tareas T ON TW.IdTarea = T.IdTarea
+	INNER JOIN Webs W ON TW.IdWeb = W.IdWeb
+	WHERE TW.IdTarea = @IdTarea
+	AND T.IdUsuario = @IdUsuario;
+END;
+GO
+
+-- ELIMINA
+CREATE PROCEDURE sp_EliminarTareaWeb
+	@IdTarea INT,
+	@IdWeb INT
+
+AS
+BEGIN
+	DELETE Tarea_Web
+	WHERE IdTarea = @IdTarea
+	AND IdWeb = @IdWeb;
 END;
 GO

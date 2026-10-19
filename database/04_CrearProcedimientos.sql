@@ -276,7 +276,7 @@ CREATE PROCEDURE sp_BuscarDescanso
 
 AS
 BEGIN
-	SELECT IdTarea, IntervaloDescanso, DuracionDescanso 
+	SELECT IdDescanso, IdTarea, IntervaloDescanso, DuracionDescanso
 	FROM Descansos
 	WHERE IdTarea = @IdTarea;
 END;
@@ -330,7 +330,7 @@ CREATE PROCEDURE sp_BuscarConfiguracion
 
 AS
 BEGIN
-	SELECT AutoSesion
+	SELECT IdConfiguracion, IdUsuario, AutoSesion
 	FROM Configuraciones
 	WHERE IdUsuario = @IdUsuario;
 END;
@@ -372,7 +372,7 @@ CREATE PROCEDURE sp_BuscarAplicacion
 
 AS
 BEGIN
-	SELECT IdAplicacion, Nombre, Identificador
+	SELECT IdAplicacion, Nombre, Identificador, EsCritica
 	FROM Aplicaciones
 	WHERE Nombre LIKE '%' + @Buscar + '%'
 	OR Identificador LIKE '%' + @Buscar + '%'
@@ -390,6 +390,15 @@ BEGIN
 	UPDATE Aplicaciones
 	SET Nombre = @Nombre,
 		Identificador = @Identificador
+	WHERE IdAplicacion = @IdAplicacion;
+END;
+GO
+
+CREATE PROCEDURE sp_EliminarAplicacion
+	@IdAplicacion INT
+AS
+BEGIN
+	DELETE FROM Aplicaciones
 	WHERE IdAplicacion = @IdAplicacion;
 END;
 GO
@@ -434,6 +443,15 @@ BEGIN
 	UPDATE Webs
 	SET Nombre = @Nombre,
 		Link = @Link
+	WHERE IdWeb = @IdWeb;
+END;
+GO
+
+CREATE PROCEDURE sp_EliminarWeb
+	@IdWeb INT
+AS
+BEGIN
+	DELETE FROM Webs
 	WHERE IdWeb = @IdWeb;
 END;
 GO

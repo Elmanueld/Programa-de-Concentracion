@@ -8,6 +8,34 @@ namespace CapaNegocio
     public class N_Usuario
     {
         private readonly D_Usuario Datos = new D_Usuario();
+        private int intentosFallidos;
+        private DateTime bloqueadoHasta = DateTime.MinValue;
+
+        public void RegistrarUsuario(string nombre, string correo, string contrasena)
+        {
+            var usuario = new E_Usuario { Nombre = (nombre ?? "").Trim(), Correo = (correo ?? "").Trim() };
+            ValidarDatosUsuario(usuario, false);
+            usuario.ContrasenaHash = SeguridadContrasena.CrearHash(contrasena);
+            Datos.RegistrarUsuario(usuario);
+        }
+
+        public E_Usuario IniciarSesion(string correo, string contrasena)
+        {
+            if (DateTime.UtcNow < bloqueadoHasta)
+                throw new ArgumentException("Demasiados intentos. Espere 30 segundos.");
+            correo = (correo ?? "").Trim();
+            ValidarCorreo(correo);
+            var usuario = Datos.IniciarSesion(correo);
+            if (usuario == null || !SeguridadContrasena.Verificar(contrasena, usuario.ContrasenaHash))
+            {
+                intentosFallidos++;
+                if (intentosFallidos >= 5) { bloqueadoHasta = DateTime.UtcNow.AddSeconds(30); intentosFallidos = 0; }
+                throw new ArgumentException("Credenciales incorrectas o cuenta pendiente de verificación.");
+            }
+            intentosFallidos = 0;
+            usuario.ContrasenaHash = null;
+            return usuario;
+        }
 
         public List<E_Usuario> BuscarUsuario(string buscar)
         {
@@ -68,9 +96,11 @@ namespace CapaNegocio
             if (String.IsNullOrWhiteSpace(correo))
                 throw new ArgumentException("El correo es obligatorio.");
 
-            int arroba = correo.IndexOf('@');
-            int punto = correo.LastIndexOf('.');
-            if (correo.Length > 254 || arroba <= 0 || punto <= arroba + 1 || punto == correo.Length - 1)
+            System.Net.Mail.MailAddress direccion;
+            try { direccion = new System.Net.Mail.MailAddress(correo); }
+            catch (FormatException) { throw new ArgumentException("El correo no tiene un formato válido."); }
+            if (correo.Length > 254 || direccion.Address != correo || correo.IndexOf(' ') >= 0 ||
+                correo.LastIndexOf('.') < correo.IndexOf('@') + 2)
                 throw new ArgumentException("El correo no tiene un formato válido.");
         }
 

@@ -42,23 +42,27 @@ namespace CapaDatos
             D_Comun.Ejecutar("sp_ModificarTarea", comando =>
             {
                 D_Comun.Entero(comando, "@IdTarea", tarea.IdTarea);
+                D_Comun.Entero(comando, "@IdUsuario", tarea.IdUsuario);
                 D_Comun.Texto(comando, "@Nombre", 70, tarea.Nombre);
                 D_Comun.Fecha(comando, "@FechaInicio", tarea.FechaInicio);
                 D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
             });
         }
 
-        public void EliminarTarea(int idTarea)
+        public void EliminarTarea(int idUsuario, int idTarea)
         {
-            D_Comun.Ejecutar("sp_EliminarTarea", comando =>
-                D_Comun.Entero(comando, "@IdTarea", idTarea));
+            D_Comun.Ejecutar("sp_EliminarTarea", comando => {
+                D_Comun.Entero(comando, "@IdTarea", idTarea);
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
+            });
         }
 
-        public void CambiarEstadoTarea(int idTarea, char estado)
+        public void CambiarEstadoTarea(int idUsuario, int idTarea, char estado)
         {
             D_Comun.Ejecutar("sp_CambiarEstadoTarea", comando =>
             {
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Caracter(comando, "@Estado", estado);
             });
         }

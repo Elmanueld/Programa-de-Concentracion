@@ -27,22 +27,25 @@ namespace CapaNegocio
         {
             if (tarea == null) throw new ArgumentNullException("tarea");
             ValidarId(tarea.IdTarea, "tarea");
+            ValidarId(tarea.IdUsuario, "usuario");
             ValidarContenido(tarea);
             Datos.ModificarTarea(tarea);
         }
 
-        public void EliminarTarea(int idTarea)
+        public void EliminarTarea(int idUsuario, int idTarea)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idTarea, "tarea");
-            Datos.EliminarTarea(idTarea);
+            Datos.EliminarTarea(idUsuario, idTarea);
         }
 
-        public void CambiarEstadoTarea(int idTarea, char estado)
+        public void CambiarEstadoTarea(int idUsuario, int idTarea, char estado)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idTarea, "tarea");
             if (estado != 'A' && estado != 'C')
                 throw new ArgumentException("El nuevo estado debe ser A (activa) o C (completa).");
-            Datos.CambiarEstadoTarea(idTarea, estado);
+            Datos.CambiarEstadoTarea(idUsuario, idTarea, estado);
         }
 
         public int? BuscarPlantilla(int idUsuario)
@@ -60,6 +63,8 @@ namespace CapaNegocio
                 throw new ArgumentException("El nombre de la tarea no puede exceder 70 caracteres.");
             if (tarea.FechaInicio >= tarea.FechaFin)
                 throw new ArgumentException("La fecha de inicio debe ser anterior a la fecha de fin.");
+            if (tarea.FechaInicio < new DateTime(1753, 1, 1) || tarea.FechaFin > new DateTime(9999, 12, 31, 23, 59, 59))
+                throw new ArgumentException("Las fechas exceden el rango admitido por SQL Server.");
         }
 
         private static void ValidarId(int id, string tipo)

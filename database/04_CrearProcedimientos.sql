@@ -74,7 +74,7 @@ CREATE PROCEDURE sp_IniciarSesion
 
 AS
 BEGIN
-	SELECT IdUsuario, Correo, ContrasenaHash 
+	SELECT IdUsuario, Nombre, Correo, ContrasenaHash
 	FROM Usuarios
 	WHERE Correo = @Correo AND
 		  Eliminado = 0 AND
@@ -194,6 +194,7 @@ GO
 -- MODIFICA
 CREATE PROCEDURE sp_ModificarTarea
 	@IdTarea INT,
+	@IdUsuario INT,
 	@Nombre VARCHAR(70),
 	@FechaInicio DATETIME,
 	@FechaFin DATETIME
@@ -205,25 +206,31 @@ BEGIN
 		FechaInicio = @FechaInicio,
 		FechaFin = @FechaFin
 	WHERE IdTarea = @IdTarea
-	AND Estado = 'P';
+	AND IdUsuario = @IdUsuario AND EsPlantilla = 0 AND Estado <> 'A'
+	AND EXISTS (SELECT 1 FROM Usuarios WHERE IdUsuario = @IdUsuario AND Eliminado = 0);
+	IF @@ROWCOUNT = 0 THROW 50002, 'No se puede editar: tarea inexistente, ajena o activa.', 1;
 END;
 GO
 
 -- ELIMINA
 CREATE PROCEDURE sp_EliminarTarea
-	@IdTarea INT
+	@IdTarea INT,
+	@IdUsuario INT
 
 AS
 BEGIN
 	DELETE FROM Tareas
 	WHERE IdTarea = @IdTarea
-	AND Estado <> 'A'
+	AND IdUsuario = @IdUsuario AND EsPlantilla = 0 AND Estado <> 'A'
+	AND EXISTS (SELECT 1 FROM Usuarios WHERE IdUsuario = @IdUsuario AND Eliminado = 0);
+	IF @@ROWCOUNT = 0 THROW 50003, 'No se puede eliminar: tarea inexistente, ajena o activa.', 1;
 END;
 GO
 
 -- CAMBIA ESTADO
 CREATE PROCEDURE sp_CambiarEstadoTarea
 	@IdTarea INT,
+	@IdUsuario INT,
 	@Estado CHAR(1)
 
 
@@ -232,10 +239,13 @@ BEGIN
 	UPDATE Tareas
 	SET Estado = @Estado
     WHERE IdTarea = @IdTarea
+      AND IdUsuario = @IdUsuario AND EsPlantilla = 0
+      AND EXISTS (SELECT 1 FROM Usuarios WHERE IdUsuario = @IdUsuario AND Eliminado = 0)
       AND (
             (Estado = 'P' AND @Estado = 'A')
          OR (Estado = 'A' AND @Estado = 'C')
       );
+	IF @@ROWCOUNT = 0 THROW 50004, 'La transición de estado no es válida para esta tarea.', 1;
 END;
 GO
 

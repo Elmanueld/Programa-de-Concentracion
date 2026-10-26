@@ -37,6 +37,7 @@ namespace CapaDatos
             {
                 IdUsuario = D_Comun.LeerEntero(lector, "IdUsuario"),
                 Correo = D_Comun.LeerTexto(lector, "Correo"),
+                Nombre = D_Comun.LeerTexto(lector, "Nombre"),
                 ContrasenaHash = D_Comun.LeerTexto(lector, "ContrasenaHash")
             });
 

@@ -1,0 +1,24 @@
+name: Verificar Entregable 3
+on:
+  push:
+    branches: [entregable-3-avance-funcional]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Compilar solución existente
+        run: msbuild src/CapaDatos/CapaDatos.sln /restore /t:Rebuild /p:Configuration=Release /verbosity:minimal
+      - name: Compilar pruebas
+        run: msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release /verbosity:minimal
+      - name: Pruebas de validación y contraseñas
+        run: .\tests\bin\Release\Pruebas.exe
+      - name: Instalar SQL en instancia exclusiva de pruebas
+        shell: powershell
+        run: .\tests\PrepararPruebas.ps1
+      - name: Probar registro, login y persistencia de tareas
+        run: .\tests\bin\Release\Pruebas.exe --integracion

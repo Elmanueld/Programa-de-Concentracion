@@ -23,8 +23,10 @@ namespace CapaPresentacion
             if (usuario == null || usuario.IdUsuario <= 0) throw new ArgumentException("Se requiere una sesión válida.");
             this.usuario = usuario;
             Text = "Programa de Concentración — " + usuario.Nombre;
-            Size = new Size(980, 580); MinimumSize = new Size(850, 450);
-            Font = new Font("Segoe UI", 10); StartPosition = FormStartPosition.CenterScreen;
+            Size = new Size(980, 580);
+            MinimumSize = new Size(850, 450);
+            Font = new Font("Segoe UI", 10);
+            StartPosition = FormStartPosition.CenterScreen;
             var barra = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 95, Padding = new Padding(8) };
             barra.Controls.Add(new Label { Text = "Mis tareas", AutoSize = true, Margin = new Padding(4, 8, 10, 0) });
             barra.Controls.Add(filtro);
@@ -38,7 +40,8 @@ namespace CapaPresentacion
             Columna("FechaInicio", "Inicio", 100);
             Columna("FechaFin", "Fin", 100);
             Columna("Estado", "Estado (P/A/C)", 75);
-            Controls.Add(listado); Controls.Add(barra);
+            Controls.Add(listado);
+            Controls.Add(barra);
             Shown += (s, e) => OperacionUI.Ejecutar(this, Cargar);
         }
 
@@ -54,7 +57,10 @@ namespace CapaPresentacion
             padre.Controls.Add(boton);
         }
 
-        private void Cargar() { listado.DataSource = tareas.BuscarTarea(usuario.IdUsuario, filtro.Text); }
+        private void Cargar()
+        {
+            listado.DataSource = tareas.BuscarTarea(usuario.IdUsuario, filtro.Text);
+        }
 
         private E_Tarea Seleccionada()
         {

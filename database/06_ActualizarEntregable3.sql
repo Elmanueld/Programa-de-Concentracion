@@ -1,5 +1,5 @@
--- Actualización no destructiva para bases instaladas antes del Entregable 3.
--- No ejecutar 01..05 nuevamente en una base existente. Respaldar antes de migrar.
+-- Actualiza los procedimientos de una base que ya existe.
+-- No repetir 01..05 sobre esa base. Hacer una copia de seguridad antes de actualizar.
 USE ProgramaConcentracion;
 GO
 

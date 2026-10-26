@@ -11,14 +11,27 @@ internal static class Program
     private static void Comprobar(bool condicion, string nombre)
     {
         if (!condicion) throw new Exception("FALLÓ: " + nombre);
-        comprobaciones++; Console.WriteLine("CORRECTO: " + nombre);
+        comprobaciones++;
+        Console.WriteLine("CORRECTO: " + nombre);
     }
     private static void Rechazar(Action accion, string nombre)
     {
         bool rechazo = false;
-        try { accion(); }
-        catch (ArgumentException) { rechazo = true; }
-        catch (SqlException ex) { if (ex.Number >= 50001 && ex.Number <= 50004 || ex.Number == 2627 || ex.Number == 2601) rechazo = true; else throw; }
+        try
+        {
+            accion();
+        }
+        catch (ArgumentException)
+        {
+            rechazo = true;
+        }
+        catch (SqlException ex)
+        {
+            if (ex.Number >= 50001 && ex.Number <= 50004 || ex.Number == 2627 || ex.Number == 2601)
+                rechazo = true;
+            else
+                throw;
+        }
         Comprobar(rechazo, nombre);
     }
     private static int Main(string[] args)
@@ -44,7 +57,11 @@ internal static class Program
             Console.WriteLine("Total correcto: " + comprobaciones);
             return 0;
         }
-        catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+            return 1;
+        }
     }
 
     private static object Sql(string texto, string correo, int id = 0)
@@ -54,13 +71,14 @@ internal static class Program
         {
             cmd.Parameters.AddWithValue("@Correo", correo);
             cmd.Parameters.AddWithValue("@Id", id);
-            cn.Open(); return cmd.ExecuteScalar();
+            cn.Open();
+            return cmd.ExecuteScalar();
         }
     }
 
     private static void Integracion(string clave)
     {
-        // Solo la instancia desechable de pruebas: jamás una base compartida.
+        // Usamos solo la instancia de pruebas para no tocar los datos del proyecto.
         var conexion = new SqlConnectionStringBuilder(ConfigurationManager.ConnectionStrings["conexion"].ConnectionString);
         if (!String.Equals(conexion.DataSource, @"(localdb)\Entregable3Pruebas", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Use exclusivamente la instancia Entregable3Pruebas.");
@@ -88,7 +106,8 @@ internal static class Program
             Rechazar(() => tareas.EliminarTarea(idOtro, id), "SQL rechaza borrar tarea ajena");
             tarea.IdUsuario = idOtro;
             Rechazar(() => tareas.ModificarTarea(tarea), "SQL rechaza editar tarea ajena");
-            tarea.IdUsuario = usuario.IdUsuario; tarea.Nombre = "Lectura editada";
+            tarea.IdUsuario = usuario.IdUsuario;
+            tarea.Nombre = "Lectura editada";
             tareas.ModificarTarea(tarea);
             Comprobar(new N_Tarea().BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id).Nombre == tarea.Nombre, "Editar y recuperar en otra consulta");
             tareas.CambiarEstadoTarea(usuario.IdUsuario, id, 'A');

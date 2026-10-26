@@ -1,10 +1,10 @@
 # Entregable 3 — Avance funcional
 
-## Auditoría inicial
+## Revisión inicial
 
 Fecha de revisión: 26 de octubre de 2026. Base: `main`, commit `6154e9751a534797313a17e6d71d38260cae63ad`.
 
-Se revisaron los archivos C#, proyectos, solución, configuración, scripts SQL 01–05, instalador, README, commits recientes e issues 1–19. Se contrastaron los flujos con RF-001 a RF-007 y la seguridad de contraseñas del Documento de Requerimientos. El tablero Project no pudo recuperarse; no se atribuyen estados de columnas que no se pudieron consultar.
+Se revisaron el código C#, los proyectos, la solución, la configuración, los scripts SQL 01–05, el instalador, el README, los commits recientes y los issues 1–19. También se consultaron los requerimientos RF-001 a RF-007 y la seguridad de contraseñas del Documento de Requerimientos. No se pudo abrir el tablero Project, por lo que falta revisar sus columnas.
 
 Hallazgos:
 
@@ -20,24 +20,24 @@ Hallazgos:
 
 ## Cambios realizados
 
-1. Registro desde negocio con contraseña en texto únicamente como entrada; sal aleatoria y hash PBKDF2-SHA256. Login compara el hash recuperado desde SQL, rechaza credenciales incorrectas y descarta el hash antes de entregar el usuario a presentación.
-2. Formularios de acceso/registro, listado por usuario, crear/editar/eliminar y cierre de sesión, con manejo de errores visible y registro de excepciones en depuración.
-3. Contratos C#/SQL coordinados para propietario, estados y errores explícitos. Se añadió migración 06 para bases existentes; se conservaron las tablas y los procedimientos restantes.
-4. Referencia directa de presentación a entidades y System.Configuration; registro de nuevos archivos de compilación; solución raíz completa.
-5. Pruebas ejecutables sin dependencias externas, instancia LocalDB exclusiva y verificación automatizada en Windows.
-6. README con instalación, configuración, demostración y alcance real.
+1. Se agregaron el registro y el inicio de sesión en negocio. La contraseña se guarda como hash PBKDF2-SHA256 con una sal aleatoria. Al entrar se compara con el valor guardado en SQL y se quita el hash del usuario que recibe la pantalla principal.
+2. Se agregaron formularios para registro, acceso, listado por usuario, creación, edición, eliminación y cierre de sesión. Se muestran mensajes si una operación falla y se guarda el detalle del error en la salida de depuración.
+3. Se ajustaron juntos los parámetros de C# y SQL para comprobar el usuario y el estado de la tarea. El script 06 actualiza los procedimientos de una base existente sin borrar sus datos.
+4. Se agregaron las referencias de presentación a entidades y System.Configuration. Se incluyeron los archivos nuevos en sus proyectos y los proyectos en la solución raíz.
+5. Pruebas ejecutables sin paquetes adicionales, una instancia LocalDB separada y pruebas automáticas en Windows.
+6. Se actualizó el README con instalación, configuración, pasos para la demostración y funciones pendientes.
 
 No se sustituyó la arquitectura ni se eliminaron archivos del grupo. No se incorporaron estadísticas, calendarios, sincronización, gamificación ni bloqueo de aplicaciones.
 
-## Evidencia de verificación
+## Revisiones y pruebas
 
 | Comprobación | Resultado |
 | --- | --- |
 | Árbol inicial y commits de main | Revisados; repositorio local inicialmente limpio. |
 | Referencias y archivos de los cinco proyectos | Correctos: todos los archivos declarados y proyectos referenciados existen. |
 | XML de configuración y solución raíz | Correcto; conexión única en la configuración de la aplicación. |
-| Contratos de parámetros de datos con SQL | 35 llamadas contrastadas con sus procedimientos. |
-| Migración 06 frente a instalación nueva 04 | Los cuatro cuerpos coinciden, cambiando CREATE por ALTER. |
+| Parámetros enviados desde datos a SQL | 35 llamadas comparadas con sus procedimientos. |
+| Script 06 frente al script 04 | Los cuatro procedimientos coinciden, cambiando CREATE por ALTER. |
 | Formularios sin consultas/conexiones SQL | Correcto por inspección y búsqueda. |
 | Bloques catch vacíos | Ninguno en C#. |
 | git diff --check | Correcto. |
@@ -48,11 +48,11 @@ No se sustituyó la arquitectura ni se eliminaron archivos del grupo. No se inco
 | Pruebas de contraseñas/validaciones | Preparadas; pendientes de ejecución con .NET Framework 4.8. |
 | Registro/login/CRUD contra SQL real | Preparados; pendientes de ejecución en Windows/LocalDB. |
 | Prueba visual y cierre de sesión WinForms | Pendiente en Windows. |
-| Publicar rama por Git | Falló: no hay credenciales locales HTTPS para escritura. |
-| Crear rama mediante la conexión GitHub | Rechazado con HTTP 403: Resource not accessible by integration. |
-| Verificación automatizada de Windows | Preparada; no iniciada al no poder publicar la rama. |
+| Intento anterior de publicar la rama por Git | Falló: no hay credenciales locales HTTPS para escritura. |
+| Intento anterior de crear la rama con la conexión GitHub | Rechazado con HTTP 403: Resource not accessible by integration. |
+| Pruebas automáticas de Windows | Preparadas; no se han ejecutado porque la rama no está publicada. |
 
-Una revisión estática no equivale a compilación ni a persistencia operativa. No se declaran aprobadas las pruebas dinámicas pendientes.
+Se revisaron los archivos, pero todavía falta compilar y ejecutar las pruebas para comprobar que el programa guarda y recupera datos correctamente.
 
 ## Comprobación final de los requisitos
 
@@ -60,15 +60,21 @@ Una revisión estática no equivale a compilación ni a persistencia operativa. 
 - [x] Proyecto organizado por las cuatro capas existentes.
 - [ ] Módulo 1 funcional comprobado: implementado, pendiente de ejecución real.
 - [ ] Módulo 2 funcional comprobado: implementado, pendiente de ejecución real.
-- [ ] Base de datos conectada y persistencia comprobada: contratos integrados, pendiente de ejecución real.
+- [ ] Base de datos conectada y guardado comprobado: parámetros revisados, pendiente de ejecución real.
 - [x] README con instalación y ejecución.
 - [ ] Proyecto compila: falta ejecutar el compilador Windows.
 - [x] No se introdujeron secretos; las conexiones usan autenticación integrada.
-- [x] No se eliminó trabajo previo ni se reescribió historial.
+- [x] Se conservaron los archivos y los commits anteriores del grupo. Solo se reescribieron los cinco commits locales del Entregable 3 para ajustar sus mensajes e incluir esta revisión de estilo.
 - [x] Cambios limitados a los dos módulos, integración, pruebas y documentación.
 - [ ] Rama nueva publicada: bloqueada por permisos de escritura.
 
-La entrega queda implementada y preparada para verificación, pero no certificada como funcional mientras no se completen las casillas pendientes.
+El código está preparado para probarlo. Las casillas pendientes se deben completar en Windows antes de entregar.
+
+## Última revisión de estilo
+
+Se usaron los commits anteriores del grupo como referencia. Se simplificaron los mensajes de los cinco commits locales, se separaron instrucciones que estaban en una sola línea y se cambió una expresión condicional por if y else. También se revisaron los comentarios nuevos y la redacción de estos documentos.
+
+No se cambiaron las funciones, la seguridad de contraseñas ni los procedimientos SQL. En el script 06 solo se simplificaron dos comentarios. Se conservaron los autores y las fechas de autor; Git registra la hora real de esta revisión como fecha de confirmación de los commits reescritos. Esta versión no se publicó en GitHub.
 
 ## Importar la rama local y publicar
 
@@ -81,7 +87,7 @@ git switch entregable-3-avance-funcional
 git log -5 --oneline
 ```
 
-Si ya existe una rama con ese nombre, detenerse y comparar ambas antes de actualizarla; no usar force. Compilar y ejecutar las pruebas del README, corregir cualquier fallo y luego, con una cuenta autorizada:
+Si ya existe una rama con ese nombre, detenerse y comparar ambas antes de actualizarla; no usar force. La publicación sigue pendiente. Después de compilar, pasar las pruebas y autorizar la publicación, usar una cuenta con permisos para ejecutar:
 
 ```powershell
 git push -u origin entregable-3-avance-funcional

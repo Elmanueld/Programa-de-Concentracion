@@ -29,7 +29,11 @@ namespace CapaNegocio
             if (usuario == null || !SeguridadContrasena.Verificar(contrasena, usuario.ContrasenaHash))
             {
                 intentosFallidos++;
-                if (intentosFallidos >= 5) { bloqueadoHasta = DateTime.UtcNow.AddSeconds(30); intentosFallidos = 0; }
+                if (intentosFallidos >= 5)
+                {
+                    bloqueadoHasta = DateTime.UtcNow.AddSeconds(30);
+                    intentosFallidos = 0;
+                }
                 throw new ArgumentException("Credenciales incorrectas o cuenta pendiente de verificación.");
             }
             intentosFallidos = 0;
@@ -97,8 +101,14 @@ namespace CapaNegocio
                 throw new ArgumentException("El correo es obligatorio.");
 
             System.Net.Mail.MailAddress direccion;
-            try { direccion = new System.Net.Mail.MailAddress(correo); }
-            catch (FormatException) { throw new ArgumentException("El correo no tiene un formato válido."); }
+            try
+            {
+                direccion = new System.Net.Mail.MailAddress(correo);
+            }
+            catch (FormatException)
+            {
+                throw new ArgumentException("El correo no tiene un formato válido.");
+            }
             if (correo.Length > 254 || direccion.Address != correo || correo.IndexOf(' ') >= 0 ||
                 correo.LastIndexOf('.') < correo.IndexOf('@') + 2)
                 throw new ArgumentException("El correo no tiene un formato válido.");

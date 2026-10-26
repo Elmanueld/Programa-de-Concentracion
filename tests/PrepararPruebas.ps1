@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-# Instancia exclusiva y nueva: no se borran bases ni instancias existentes.
+# Usamos una instancia separada para no tocar los datos del proyecto.
 $herramienta = Get-Command SqlLocalDB.exe -ErrorAction SilentlyContinue
 if ($herramienta) { $localdb = $herramienta.Source }
 else {

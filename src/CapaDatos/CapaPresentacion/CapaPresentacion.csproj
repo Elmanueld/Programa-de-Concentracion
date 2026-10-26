@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,6 +54,9 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="OperacionUI.cs" />
+    <Compile Include="PrincipalForm.cs"><SubType>Form</SubType></Compile>
+    <Compile Include="TareaForm.cs"><SubType>Form</SubType></Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -81,5 +85,9 @@
     <ProjectReference Include="..\CapaNegocio\CapaNegocio.csproj">
       <Project>{25E77B76-FAA8-462E-99E5-3E744477CA27}</Project>
       <Name>CapaNegocio</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CapaEntidades\CapaEntidades.csproj">
+      <Project>{BE256DD1-A5F6-483D-AF95-AB0143FA0DFB}</Project>
+      <Name>CapaEntidades</Name>
     </ProjectReference>
   </ItemGroup></Project>

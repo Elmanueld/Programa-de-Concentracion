@@ -1,6 +1,7 @@
 <Solution>
-  <Configurations>
-    <BuildType Name="Default" />
-    <Platform Name="Default" />
-  </Configurations>
+  <Project Path="src/CapaDatos/CapaEntidades/CapaEntidades.csproj" />
+  <Project Path="src/CapaDatos/CapaDatos/CapaDatos.csproj" />
+  <Project Path="src/CapaDatos/CapaNegocio/CapaNegocio.csproj" />
+  <Project Path="src/CapaDatos/CapaPresentacion/CapaPresentacion.csproj" />
+  <Project Path="tests/Pruebas.csproj" />
 </Solution>

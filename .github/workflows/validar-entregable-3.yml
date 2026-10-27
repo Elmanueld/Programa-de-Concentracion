@@ -1,7 +1,7 @@
 name: Verificar Entregable 3
 on:
   push:
-    branches: [entregable-3-avance-funcional]
+    branches: [entregable-3-avance-funcional, main]
   workflow_dispatch:
 permissions:
   contents: read

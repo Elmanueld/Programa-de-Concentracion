@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using CapaDatos;
 using CapaEntidades;
 
@@ -10,6 +11,17 @@ namespace CapaNegocio
         private readonly D_Usuario Datos = new D_Usuario();
         private int intentosFallidos;
         private DateTime bloqueadoHasta = DateTime.MinValue;
+
+        public static bool ModoDemostracion
+        {
+            get
+            {
+                bool activo;
+                string valor = Environment.GetEnvironmentVariable("PC_MODO_DEMOSTRACION") ??
+                    ConfigurationManager.AppSettings["ModoDemostracion"];
+                return Boolean.TryParse(valor, out activo) && activo;
+            }
+        }
 
         public void RegistrarUsuario(string nombre, string correo, string contrasena)
         {
@@ -25,7 +37,7 @@ namespace CapaNegocio
                 throw new ArgumentException("Demasiados intentos. Espere 30 segundos.");
             correo = (correo ?? "").Trim();
             ValidarCorreo(correo);
-            var usuario = Datos.IniciarSesion(correo);
+            var usuario = Datos.IniciarSesion(correo, ModoDemostracion);
             if (usuario == null || !SeguridadContrasena.Verificar(contrasena, usuario.ContrasenaHash))
             {
                 intentosFallidos++;

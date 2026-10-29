@@ -28,8 +28,20 @@ namespace CapaDatos
             });
         }
 
-        public E_Usuario IniciarSesion(string correo)
+        public E_Usuario IniciarSesion(string correo, bool demostracion = false)
         {
+            if (demostracion)
+            {
+                using (var cn = ConexionDB.Instancia.CrearConexion())
+                using (var cmd = new System.Data.SqlClient.SqlCommand(
+                    "SELECT IdUsuario, Nombre, Correo, ContrasenaHash FROM Usuarios WHERE Correo=@Correo AND Eliminado=0", cn))
+                {
+                    D_Comun.Texto(cmd, "@Correo", 254, correo);
+                    cn.Open();
+                    using (var lector = cmd.ExecuteReader())
+                        return lector.Read() ? LeerSesion(lector) : null;
+                }
+            }
             List<E_Usuario> resultados = D_Comun.Consultar("sp_IniciarSesion", comando =>
             {
                 D_Comun.Texto(comando, "@Correo", 254, correo);

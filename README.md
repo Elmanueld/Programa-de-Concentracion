@@ -1,3 +1,7 @@
+> Para la demostración está activado `ModoDemostracion=true` en App.config: registro y acceso con contraseña sin SMTP. No se marca el correo como verificado. Con `false` se mantiene la verificación normal. No usar el modo demostración como configuración de producción.
+>
+> C# admite los procedimientos originales de Elmanueld (6154e97), sin ejecutar migraciones. Editar/eliminar comprueban propietario y estado dentro de una transacción. El procedimiento original solo edita tareas P; esto difiere de RF-006 para completadas. No se modifica ese contrato ni se cambia su base automáticamente.
+
 # Programa de Concentración
 
 Aplicación de escritorio para organizar tareas y sesiones de concentración. En este avance se agregaron el registro, el inicio de sesión y el manejo básico de tareas guardadas en SQL Server. Se mantienen Windows Forms y las cuatro capas del grupo.

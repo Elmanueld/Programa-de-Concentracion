@@ -1,3 +1,4 @@
+param([switch]$Original)
 $ErrorActionPreference = 'Stop'
 # Usamos una instancia separada para no tocar los datos del proyecto.
 $herramienta = Get-Command SqlLocalDB.exe -ErrorAction SilentlyContinue
@@ -14,8 +15,14 @@ if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear la instancia exclusiva.' }
 $cn = New-Object System.Data.SqlClient.SqlConnection 'Server=(localdb)\Entregable3Pruebas;Database=master;Integrated Security=True;'
 try {
     $cn.Open()
-    foreach ($archivo in @('01_CrearBaseDeDatos.sql','02_CrearTablas.sql','03_CrearRelaciones.sql','04_CrearProcedimientos.sql','05_CrearIndices.sql','07_VerificacionCorreo.sql')) {
+    $archivos = @('01_CrearBaseDeDatos.sql','02_CrearTablas.sql','03_CrearRelaciones.sql','04_CrearProcedimientos.sql','05_CrearIndices.sql')
+    if (-not $Original) { $archivos += '07_VerificacionCorreo.sql' }
+    foreach ($archivo in $archivos) {
         $texto = Get-Content (Join-Path $PSScriptRoot "../database/$archivo") -Raw -Encoding UTF8
+        if ($Original) {
+            $texto = (& git show "6154e9751a534797313a17e6d71d38260cae63ad:database/$archivo") -join "`n"
+            if ($LASTEXITCODE -ne 0) { throw "No se pudo leer el script original $archivo." }
+        }
         foreach ($lote in [regex]::Split($texto, '(?im)^\s*GO\s*$')) {
             if ([string]::IsNullOrWhiteSpace($lote)) { continue }
             $cmd = $cn.CreateCommand()

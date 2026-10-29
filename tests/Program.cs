@@ -55,7 +55,8 @@ internal static partial class Program
             Rechazar(() => tareas.EliminarTarea(0, 1), "Usuario inválido");
             PruebasAcceso.Ejecutar(Comprobar, Rechazar);
             if (args.Contains("--interfaz")) PruebasInterfaz.Ejecutar(Comprobar);
-            if (args.Contains("--integracion")) Integracion(clave);
+            if (args.Contains("--demostracion")) ProbarDemostracionOriginal(clave);
+            else if (args.Contains("--integracion")) Integracion(clave);
             else Console.WriteLine("PENDIENTE: integración SQL; ejecutar con --integracion en la instancia exclusiva de pruebas.");
             Console.WriteLine("Total correcto: " + comprobaciones);
             return 0;
@@ -96,12 +97,24 @@ internal static partial class Program
             Comprobar(SeguridadContrasena.Verificar(clave, almacenado), "Registro persiste hash verificable en SQL");
             Rechazar(() => usuarios.RegistrarUsuario("Duplicado", correo, clave), "Correo duplicado");
             Rechazar(() => usuarios.IniciarSesion(correo, clave), "Cuenta pendiente no accede");
+            string modoAnterior = Environment.GetEnvironmentVariable("PC_MODO_DEMOSTRACION");
+            try
+            {
+                Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", "true");
+                var demo = new N_Usuario().IniciarSesion(correo, clave);
+                Comprobar(demo.IdUsuario > 0 && demo.ContrasenaHash == null, "Demostración permite login pendiente con contraseña correcta");
+                Rechazar(() => new N_Usuario().IniciarSesion(correo, "Incorrecta"), "Demostración rechaza contraseña incorrecta");
+                Comprobar(Convert.ToInt32(Sql("SELECT CorreoVerificado FROM Usuarios WHERE Correo=@Correo", correo)) == 0,
+                    "Demostración no marca el correo como verificado");
+            }
+            finally { Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", modoAnterior); }
+            Rechazar(() => new N_Usuario().IniciarSesion(correo, clave), "Modo normal sigue rechazando correo pendiente");
             ProbarVerificacion(correo);
             var usuario = usuarios.IniciarSesion(correo, clave);
             Comprobar(usuario.IdUsuario > 0 && usuario.ContrasenaHash == null, "Login correcto sin hash en sesión");
             Rechazar(() => usuarios.IniciarSesion(correo, "Incorrecta"), "Login incorrecto rechazado");
             ProbarLoginAnterior(correo, clave);
-            ProbarActualizacionTareas();
+            ProbarProcedimientosOriginales(usuario.IdUsuario);
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
             int id = tareas.InsertarTarea(new E_Tarea { IdUsuario = usuario.IdUsuario, Nombre = "Lectura", FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13) });
@@ -129,6 +142,53 @@ internal static partial class Program
         }
         finally
         {
+            foreach (string email in new[] { correo, otro })
+                Sql("DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+        }
+    }
+
+    private static void ProbarDemostracionOriginal(string clave)
+    {
+        var destino = new SqlConnectionStringBuilder(ConfigurationManager.ConnectionStrings["conexion"].ConnectionString);
+        if (!String.Equals(destino.DataSource, @"(localdb)\Entregable3Pruebas", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Use exclusivamente la instancia Entregable3Pruebas.");
+        string correo = "demo-" + Guid.NewGuid().ToString("N") + "@example.com";
+        string otro = "otro-" + Guid.NewGuid().ToString("N") + "@example.com";
+        string anterior = Environment.GetEnvironmentVariable("PC_MODO_DEMOSTRACION");
+        try
+        {
+            Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", "true");
+            var usuarios = new N_Usuario();
+            usuarios.RegistrarUsuario("Demostración", correo, clave);
+            var usuario = usuarios.IniciarSesion(correo, clave);
+            Comprobar(usuario.IdUsuario > 0 && usuario.ContrasenaHash == null, "Original: registro y login sin SMTP");
+            Rechazar(() => usuarios.IniciarSesion(correo, "Incorrecta"), "Original: contraseña incorrecta rechazada");
+            Comprobar(Convert.ToInt32(Sql("SELECT CorreoVerificado FROM Usuarios WHERE Correo=@Correo", correo)) == 0, "Original: correo permanece sin verificar");
+            usuarios.RegistrarUsuario("Segundo", otro, clave);
+            var segundo = usuarios.IniciarSesion(otro, clave);
+            var tareas = new N_Tarea();
+            int id = tareas.InsertarTarea(new E_Tarea { IdUsuario=usuario.IdUsuario, Nombre="Demostración", FechaInicio=DateTime.Today, FechaFin=DateTime.Today.AddHours(1) });
+            var tarea = tareas.BuscarTarea(usuario.IdUsuario, "").Single(t => t.IdTarea == id);
+            Comprobar(tarea.Estado == 'P', "Original: crear y consultar tarea");
+            Comprobar(!tareas.BuscarTarea(segundo.IdUsuario, "").Any(t => t.IdTarea == id), "Original: listado aislado por usuario");
+            Rechazar(() => tareas.EliminarTarea(segundo.IdUsuario, id), "Original: no elimina tarea ajena");
+            tarea.IdUsuario=segundo.IdUsuario;
+            Rechazar(() => tareas.ModificarTarea(tarea), "Original: no edita tarea ajena");
+            tarea.IdUsuario=usuario.IdUsuario;
+            tarea.Nombre="Editada";
+            tareas.ModificarTarea(tarea);
+            Comprobar(new N_Tarea().BuscarTarea(usuario.IdUsuario, "").Single(t => t.IdTarea == id).Nombre == "Editada", "Original: edición persistente");
+            tareas.EliminarTarea(usuario.IdUsuario, id);
+            Comprobar(!tareas.BuscarTarea(usuario.IdUsuario, "").Any(t => t.IdTarea == id), "Original: eliminación persistente");
+            Comprobar(new N_Usuario().IniciarSesion(correo, clave).IdUsuario == usuario.IdUsuario, "Original: segundo inicio de sesión");
+            usuarios.EliminarUsuario(usuario.IdUsuario);
+            Rechazar(() => new N_Usuario().IniciarSesion(correo, clave), "Original: cuenta eliminada no accede en demostración");
+            Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", "false");
+            Rechazar(() => new N_Usuario().IniciarSesion(otro, clave), "Original: modo normal conserva verificación obligatoria");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", anterior);
             foreach (string email in new[] { correo, otro })
                 Sql("DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }

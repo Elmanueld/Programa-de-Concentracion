@@ -22,3 +22,18 @@ jobs:
         run: .\tests\PrepararPruebas.ps1
       - name: Probar registro, login y persistencia de tareas
         run: .\tests\bin\Release\Pruebas.exe --integracion
+
+  originales:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Obtener scripts originales de Elmanueld
+        run: git fetch origin 6154e9751a534797313a17e6d71d38260cae63ad
+      - name: Compilar pruebas y proyectos
+        run: msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release /verbosity:minimal
+      - name: Preparar base con scripts originales 01 a 05
+        shell: powershell
+        run: .\tests\PrepararPruebas.ps1 -Original
+      - name: Probar demostración sin SMTP y sin migraciones
+        run: .\tests\bin\Release\Pruebas.exe --demostracion

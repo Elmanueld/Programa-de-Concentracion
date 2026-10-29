@@ -1,6 +1,6 @@
 using System;
 using System.Configuration;
-using System.IO;
+using System.Linq;
 using CapaDatos;
 using CapaEntidades;
 using System.Data.SqlClient;
@@ -65,9 +65,10 @@ internal static partial class Program
         }
     }
 
-    private static void ProbarActualizacionTareas()
+
+    private static void ProbarProcedimientosOriginales(int idUsuario)
     {
-        string[] nombres = { "sp_IniciarSesion", "sp_ModificarTarea", "sp_EliminarTarea", "sp_CambiarEstadoTarea" };
+        string[] nombres = { "sp_ModificarTarea", "sp_EliminarTarea", "sp_CambiarEstadoTarea" };
         string[] originales = new string[nombres.Length];
         for (int i = 0; i < nombres.Length; i++)
             originales[i] = Convert.ToString(Sql("SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." + nombres[i] + "'))", ""));
@@ -97,38 +98,44 @@ BEGIN
 	WHERE IdTarea = @IdTarea
 	AND Estado <> 'A'
 END;");
-            var datos = new D_Tarea();
-            ComprobarProcedimientoAnterior(() => datos.ModificarTarea(new E_Tarea {
-                IdTarea = 0, IdUsuario = 0, Nombre = "Prueba", FechaInicio = DateTime.Today, FechaFin = DateTime.Today.AddHours(1)
-            }), "Edición reproduce SQL 8144 con el procedimiento antiguo");
-            ComprobarProcedimientoAnterior(() => datos.EliminarTarea(0, 0),
-                "Eliminación reproduce SQL 8144 con el procedimiento antiguo");
-            string script = File.ReadAllText(Path.Combine("database", "06_ActualizarEntregable3.sql"));
-            foreach (string lote in Regex.Split(script, @"(?im)^\s*GO\s*$"))
-                if (!String.IsNullOrWhiteSpace(lote)) CambiarProcedimiento(lote);
-            foreach (string nombre in new[] { "sp_ModificarTarea", "sp_EliminarTarea", "sp_CambiarEstadoTarea" })
-                Comprobar(Convert.ToInt32(Sql("SELECT COUNT(*) FROM sys.parameters WHERE object_id=OBJECT_ID('dbo." + nombre + "') AND name='@IdUsuario'", "")) == 1,
-                    "Actualización 06 agrega el usuario a " + nombre);
+            CambiarProcedimiento(@"ALTER PROCEDURE sp_CambiarEstadoTarea
+	@IdTarea INT,
+	@Estado CHAR(1)
+
+
+AS
+BEGIN
+	UPDATE Tareas
+	SET Estado = @Estado
+    WHERE IdTarea = @IdTarea
+      AND (
+            (Estado = 'P' AND @Estado = 'A')
+         OR (Estado = 'A' AND @Estado = 'C')
+      );
+END;");
+            var datos = new N_Tarea();
+            int id = datos.InsertarTarea(new E_Tarea { IdUsuario=idUsuario, Nombre="Original", FechaInicio=DateTime.Today, FechaFin=DateTime.Today.AddHours(1) });
+            var tarea = datos.BuscarTarea(idUsuario, "").Single(t => t.IdTarea == id);
+            tarea.Nombre = "Original editada";
+            datos.ModificarTarea(tarea);
+            Comprobar(datos.BuscarTarea(idUsuario, "").Single(t => t.IdTarea == id).Nombre == tarea.Nombre,
+                "Editar con el procedimiento original sin migración");
+            Rechazar(() => datos.EliminarTarea(Int32.MaxValue, id), "Procedimiento original no permite borrar tarea ajena");
+            tarea.IdUsuario = Int32.MaxValue;
+            Rechazar(() => datos.ModificarTarea(tarea), "Procedimiento original no permite editar tarea ajena");
+            tarea.IdUsuario = idUsuario;
+            datos.CambiarEstadoTarea(idUsuario, id, 'A');
+            Rechazar(() => datos.ModificarTarea(tarea), "Procedimiento original protege tarea activa al editar");
+            Rechazar(() => datos.EliminarTarea(idUsuario, id), "Procedimiento original protege tarea activa al eliminar");
+            datos.CambiarEstadoTarea(idUsuario, id, 'C');
+            datos.EliminarTarea(idUsuario, id);
+            Comprobar(!datos.BuscarTarea(idUsuario, "").Any(t => t.IdTarea == id), "Eliminar con el procedimiento original sin migración");
         }
-        catch
+        finally
         {
             for (int i = 0; i < nombres.Length; i++)
                 CambiarProcedimiento(new Regex(@"^\s*CREATE(?:\s+OR\s+ALTER)?\s+PROCEDURE\b",
                     RegexOptions.IgnoreCase | RegexOptions.Multiline).Replace(originales[i], "ALTER PROCEDURE", 1));
-            throw;
         }
     }
-
-    private static void ComprobarProcedimientoAnterior(Action accion, string nombre)
-    {
-        bool rechazado = false;
-        try { accion(); }
-        catch (SqlException ex)
-        {
-            if (ex.Number != 8144) throw;
-            rechazado = true;
-        }
-        Comprobar(rechazado, nombre);
-    }
-
 }

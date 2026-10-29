@@ -14,6 +14,12 @@ namespace CapaPresentacion
         public Form1()
         {
             InitializeComponent();
+            if (N_Usuario.ModoDemostracion)
+            {
+                pestanas.TabPages.Remove(tabVerificacion);
+                btnVerificarCorreo.Visible = false;
+                lblAcceso.Text = "Modo demostración: acceso con contraseña, sin verificación de correo.";
+            }
         }
 
         private void btnEntrar_Click(object sender, EventArgs e)
@@ -52,6 +58,13 @@ namespace CapaPresentacion
             confirmar.Clear();
             clave.Clear();
             codigoVerificacion.Clear();
+            if (N_Usuario.ModoDemostracion)
+            {
+                pestanas.SelectedTab = tabAcceso;
+                lblAcceso.Text = "Cuenta creada. Ya puede iniciar sesión con su contraseña (modo demostración).";
+                clave.Focus();
+                return;
+            }
             pestanas.SelectedTab = tabVerificacion;
             estadoVerificacion.Text = "Cuenta creada. Enviando el código al correo indicado...";
             await SolicitarCodigo();

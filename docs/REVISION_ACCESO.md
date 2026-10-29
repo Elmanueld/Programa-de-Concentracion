@@ -26,8 +26,12 @@ SMTP se configura según el README. El repositorio no contiene host, remitente, 
 | Pruebas normales | 20 correctas, incluyendo ambos resultados de login y un intercambio SMTP completo en localhost. |
 | Prueba de interfaz con Mono y Xvfb | 26 correctas en total: las 20 anteriores y seis comprobaciones de navegación, contraseñas ocultas y límites de controles. |
 | Capturas de las tres pestañas | Revisadas visualmente; controles y textos visibles, sin superposición. |
-| Pruebas de códigos en SQL y login con el procedimiento antiguo | Agregadas al modo --integracion; pendientes de ejecutar con la nueva migración. |
+| Integración SQL Server 2022 en Linux | 50 comprobaciones correctas en total (20 normales y 30 SQL), salida 0. Incluye códigos, ambos procedimientos de login, CRUD, estados, cuenta eliminada y aislamiento de usuarios. |
 | Windows, LocalDB y diseñador de Visual Studio | Pendientes para esta revisión. Los resultados de Actions de la versión base no validan estos cambios nuevos. |
 | Entrega a un buzón real | Pendiente de configurar y probar el servidor SMTP del grupo. Las pruebas realizadas solo usan localhost. |
 
-La base existente de un integrante no se modificó. La migración 07 y los cambios locales todavía requieren esa comprobación de integración antes de publicarse.
+La prueba se ejecutó en SQL Server 2022 Developer, en un contenedor aislado. Se instalaron los scripts 01–05 y 07 en ProgramaConcentracionPruebas. Se usó una copia temporal del ejecutable de pruebas con una guardia exclusiva para 127.0.0.1:14333 y esa base. No se modificó la guardia LocalDB del repositorio ni el código de la aplicación para conectarla. Las contraseñas de esa instancia no se incorporaron al repositorio.
+
+La primera ejecución comenzó antes de terminar el arranque del motor. Al reintentar se encontró un error real del test del procedimiento anterior: enviaba parámetros innecesarios al ejecutar ALTER y no contemplaba los comentarios iniciales al restaurar la definición. Se separó esa ejecución sin parámetros y se corrigió la búsqueda de CREATE al comienzo de cada línea. Después pasó toda la integración.
+
+La base existente de un integrante no se modificó. Windows/LocalDB, el diseñador de Visual Studio y la entrega mediante SMTP real permanecen pendientes. No se publicó ningún cambio.

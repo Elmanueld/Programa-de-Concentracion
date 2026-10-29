@@ -1,4 +1,6 @@
 using System;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Text.RegularExpressions;
 using CapaNegocio;
 
@@ -36,16 +38,28 @@ internal static partial class Program
         string original = Convert.ToString(Sql("SELECT OBJECT_DEFINITION(OBJECT_ID('dbo.sp_IniciarSesion'))", correo));
         try
         {
-            Sql(@"ALTER PROCEDURE dbo.sp_IniciarSesion @Correo VARCHAR(254) AS
+            CambiarProcedimiento(@"ALTER PROCEDURE dbo.sp_IniciarSesion @Correo VARCHAR(254) AS
                 SELECT IdUsuario, Correo, ContrasenaHash FROM Usuarios
-                WHERE Correo=@Correo AND Eliminado=0 AND CorreoVerificado=1", correo);
+                WHERE Correo=@Correo AND Eliminado=0 AND CorreoVerificado=1");
             var usuario = new N_Usuario().IniciarSesion(correo, clave);
             Comprobar(usuario.Nombre == "Prueba" && usuario.ContrasenaHash == null,
                 "Login con procedimiento anterior recupera Nombre y no expone el hash");
         }
         finally
         {
-            Sql(Regex.Replace(original, @"(?i)^\s*CREATE(?:\s+OR\s+ALTER)?\s+PROCEDURE", "ALTER PROCEDURE"), correo);
+            CambiarProcedimiento(new Regex(@"^\s*CREATE(?:\s+OR\s+ALTER)?\s+PROCEDURE\b",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline).Replace(original, "ALTER PROCEDURE", 1));
         }
     }
+
+    private static void CambiarProcedimiento(string texto)
+    {
+        using (var cn = new SqlConnection(ConfigurationManager.ConnectionStrings["conexion"].ConnectionString))
+        using (var cmd = new SqlCommand(texto, cn))
+        {
+            cn.Open();
+            cmd.ExecuteNonQuery();
+        }
+    }
+
 }

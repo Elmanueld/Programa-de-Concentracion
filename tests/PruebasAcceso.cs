@@ -38,6 +38,19 @@ internal static class PruebasAcceso
             var usuario = (E_Usuario)leer.Invoke(null, new object[] { lector });
             comprobar(usuario.Nombre == "Ana", "Login conserva Nombre si SQL lo devuelve");
         }
+        string modoAnterior = Environment.GetEnvironmentVariable("PC_MODO_DEMOSTRACION");
+        try
+        {
+            Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", "true");
+            using (var ventana = new CapaPresentacion.Form1())
+            {
+                var pestanas = (System.Windows.Forms.TabControl)ventana.Controls.Find("pestanas", true)[0];
+                comprobar(pestanas.TabPages.Count == 2 &&
+                    ventana.Controls.Find("lblRegistro", true)[0].Text.Contains("No se enviará correo"),
+                    "Interfaz de demostración muestra registro y login sin solicitar código");
+            }
+        }
+        finally { Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", modoAnterior); }
         var vistos = new HashSet<string>();
         bool formato = true;
         for (int i = 0; i < 100; i++)

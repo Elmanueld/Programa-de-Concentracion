@@ -18,6 +18,7 @@ namespace CapaPresentacion
             {
                 pestanas.TabPages.Remove(tabVerificacion);
                 btnVerificarCorreo.Visible = false;
+                lblRegistro.Text = "Modo demostración: cree la cuenta y entre con su contraseña. No se enviará correo.";
                 lblAcceso.Text = "Modo demostración: acceso con contraseña, sin verificación de correo.";
             }
         }

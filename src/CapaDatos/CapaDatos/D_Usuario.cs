@@ -33,15 +33,26 @@ namespace CapaDatos
             List<E_Usuario> resultados = D_Comun.Consultar("sp_IniciarSesion", comando =>
             {
                 D_Comun.Texto(comando, "@Correo", 254, correo);
-            }, lector => new E_Usuario
-            {
-                IdUsuario = D_Comun.LeerEntero(lector, "IdUsuario"),
-                Correo = D_Comun.LeerTexto(lector, "Correo"),
-                Nombre = D_Comun.LeerTexto(lector, "Nombre"),
-                ContrasenaHash = D_Comun.LeerTexto(lector, "ContrasenaHash")
-            });
+            }, LeerSesion);
 
             return resultados.Count == 0 ? null : resultados[0];
+        }
+
+        internal static E_Usuario LeerSesion(System.Data.IDataRecord lector)
+        {
+            var usuario = new E_Usuario
+            {
+                IdUsuario = System.Convert.ToInt32(lector["IdUsuario"]),
+                Correo = System.Convert.ToString(lector["Correo"]),
+                ContrasenaHash = System.Convert.ToString(lector["ContrasenaHash"])
+            };
+            // Algunas instalaciones conservan el procedimiento anterior, sin Nombre.
+            for (int i = 0; i < lector.FieldCount; i++)
+            {
+                if (System.String.Equals(lector.GetName(i), "Nombre", System.StringComparison.OrdinalIgnoreCase))
+                    usuario.Nombre = lector.IsDBNull(i) ? "" : System.Convert.ToString(lector.GetValue(i));
+            }
+            return usuario;
         }
 
         public void ModificarUsuario(E_Usuario usuario)

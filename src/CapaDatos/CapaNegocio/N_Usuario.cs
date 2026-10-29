@@ -36,6 +36,17 @@ namespace CapaNegocio
                 }
                 throw new ArgumentException("Credenciales incorrectas o cuenta pendiente de verificación.");
             }
+            if (String.IsNullOrEmpty(usuario.Nombre))
+            {
+                foreach (var encontrado in Datos.BuscarUsuario(correo))
+                {
+                    if (encontrado.IdUsuario == usuario.IdUsuario)
+                    {
+                        usuario.Nombre = encontrado.Nombre;
+                        break;
+                    }
+                }
+            }
             intentosFallidos = 0;
             usuario.ContrasenaHash = null;
             return usuario;
@@ -95,7 +106,7 @@ namespace CapaNegocio
             if (incluirHash) ValidarHash(usuario.ContrasenaHash);
         }
 
-        private static void ValidarCorreo(string correo)
+        internal static void ValidarCorreo(string correo)
         {
             if (String.IsNullOrWhiteSpace(correo))
                 throw new ArgumentException("El correo es obligatorio.");

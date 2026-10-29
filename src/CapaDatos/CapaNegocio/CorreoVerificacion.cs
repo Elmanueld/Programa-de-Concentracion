@@ -13,6 +13,14 @@ namespace CapaNegocio
             return valor ?? ConfigurationManager.AppSettings[nombre] ?? "";
         }
 
+        public static bool EstaConfigurado()
+        {
+            return !String.IsNullOrWhiteSpace(Leer("SmtpHost")) &&
+                !String.IsNullOrWhiteSpace(Leer("SmtpRemitente")) &&
+                (String.IsNullOrEmpty(Leer("SmtpUsuario")) ||
+                 !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PC_SMTPCLAVE")));
+        }
+
         public static void ValidarConfiguracion()
         {
             string host = Leer("SmtpHost");

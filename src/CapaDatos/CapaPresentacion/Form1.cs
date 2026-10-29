@@ -64,6 +64,11 @@ namespace CapaPresentacion
 
         private async Task SolicitarCodigo()
         {
+            if (!verificacion.EstaConfigurado())
+            {
+                estadoVerificacion.Text = "Verificación pendiente. El envío de correo aún no está configurado. Si acaba de registrarse, su cuenta ya fue guardada.";
+                return;
+            }
             string destino = correoVerificacion.Text;
             bool enviado = await OperacionUI.EjecutarAsync(this,
                 () => Task.Run(() => verificacion.SolicitarCodigo(destino)));

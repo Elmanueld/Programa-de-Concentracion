@@ -9,6 +9,11 @@ namespace CapaNegocio
     {
         private readonly D_VerificacionCorreo datos = new D_VerificacionCorreo();
 
+        public bool EstaConfigurado()
+        {
+            return CorreoVerificacion.EstaConfigurado();
+        }
+
         public void SolicitarCodigo(string correo)
         {
             correo = (correo ?? "").Trim();

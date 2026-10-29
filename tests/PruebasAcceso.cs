@@ -61,6 +61,7 @@ internal static class PruebasAcceso
             catch (InvalidOperationException) { rechazoTls = true; }
             comprobar(rechazoTls, "SMTP remoto sin TLS rechazado sin enviar mensajes");
             Environment.SetEnvironmentVariable("PC_SMTPHOST", "");
+            comprobar(!servicio.EstaConfigurado(), "SMTP ausente se detecta sin excepción ni conexión SQL");
             bool rechazoConfiguracion = false;
             try { InvocarCorreo("ValidarConfiguracion"); }
             catch (InvalidOperationException) { rechazoConfiguracion = true; }

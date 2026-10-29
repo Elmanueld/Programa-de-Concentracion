@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear la instancia exclusiva.' }
 $cn = New-Object System.Data.SqlClient.SqlConnection 'Server=(localdb)\Entregable3Pruebas;Database=master;Integrated Security=True;'
 try {
     $cn.Open()
-    foreach ($archivo in @('01_CrearBaseDeDatos.sql','02_CrearTablas.sql','03_CrearRelaciones.sql','04_CrearProcedimientos.sql','05_CrearIndices.sql')) {
+    foreach ($archivo in @('01_CrearBaseDeDatos.sql','02_CrearTablas.sql','03_CrearRelaciones.sql','04_CrearProcedimientos.sql','05_CrearIndices.sql','07_VerificacionCorreo.sql')) {
         $texto = Get-Content (Join-Path $PSScriptRoot "../database/$archivo") -Raw -Encoding UTF8
         foreach ($lote in [regex]::Split($texto, '(?im)^\s*GO\s*$')) {
             if ([string]::IsNullOrWhiteSpace($lote)) { continue }

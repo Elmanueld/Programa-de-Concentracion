@@ -40,6 +40,7 @@
     <Compile Include="D_Web.cs" />
     <Compile Include="D_TareaAplicacion.cs" />
     <Compile Include="D_TareaWeb.cs" />
+    <Compile Include="D_VerificacionCorreo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

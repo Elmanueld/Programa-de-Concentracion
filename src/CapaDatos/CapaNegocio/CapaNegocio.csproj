@@ -26,6 +26,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="N_Usuario.cs" />
@@ -37,6 +38,8 @@
     <Compile Include="N_Web.cs" />
     <Compile Include="N_TareaAplicacion.cs" />
     <Compile Include="N_TareaWeb.cs" />
+    <Compile Include="N_VerificacionCorreo.cs" />
+    <Compile Include="CorreoVerificacion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

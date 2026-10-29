@@ -5,7 +5,7 @@ using System.Linq;
 using CapaEntidades;
 using CapaNegocio;
 
-internal static class Program
+internal static partial class Program
 {
     private static int comprobaciones;
     private static void Comprobar(bool condicion, string nombre)
@@ -27,13 +27,14 @@ internal static class Program
         }
         catch (SqlException ex)
         {
-            if (ex.Number >= 50001 && ex.Number <= 50004 || ex.Number == 2627 || ex.Number == 2601)
+            if (ex.Number >= 50001 && ex.Number <= 50006 || ex.Number == 2627 || ex.Number == 2601)
                 rechazo = true;
             else
                 throw;
         }
         Comprobar(rechazo, nombre);
     }
+    [STAThread]
     private static int Main(string[] args)
     {
         try
@@ -52,6 +53,8 @@ internal static class Program
             var tareas = new N_Tarea();
             Rechazar(() => tareas.InsertarTarea(new E_Tarea { IdUsuario = 1, Nombre = "T", FechaInicio = DateTime.Today, FechaFin = DateTime.Today }), "Fechas inválidas");
             Rechazar(() => tareas.EliminarTarea(0, 1), "Usuario inválido");
+            PruebasAcceso.Ejecutar(Comprobar, Rechazar);
+            if (args.Contains("--interfaz")) PruebasInterfaz.Ejecutar(Comprobar);
             if (args.Contains("--integracion")) Integracion(clave);
             else Console.WriteLine("PENDIENTE: integración SQL; ejecutar con --integracion en la instancia exclusiva de pruebas.");
             Console.WriteLine("Total correcto: " + comprobaciones);
@@ -93,10 +96,11 @@ internal static class Program
             Comprobar(SeguridadContrasena.Verificar(clave, almacenado), "Registro persiste hash verificable en SQL");
             Rechazar(() => usuarios.RegistrarUsuario("Duplicado", correo, clave), "Correo duplicado");
             Rechazar(() => usuarios.IniciarSesion(correo, clave), "Cuenta pendiente no accede");
-            Sql("UPDATE Usuarios SET CorreoVerificado=1 WHERE Correo=@Correo", correo);
+            ProbarVerificacion(correo);
             var usuario = usuarios.IniciarSesion(correo, clave);
             Comprobar(usuario.IdUsuario > 0 && usuario.ContrasenaHash == null, "Login correcto sin hash en sesión");
             Rechazar(() => usuarios.IniciarSesion(correo, "Incorrecta"), "Login incorrecto rechazado");
+            ProbarLoginAnterior(correo, clave);
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
             int id = tareas.InsertarTarea(new E_Tarea { IdUsuario = usuario.IdUsuario, Nombre = "Lectura", FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13) });

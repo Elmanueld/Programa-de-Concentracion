@@ -12,6 +12,7 @@ $orden = @(
     '03_CrearRelaciones.sql'
     '04_CrearProcedimientos.sql'
     '05_CrearIndices.sql'
+    '07_VerificacionCorreo.sql'
 )
 
 $sqlcmd = Get-Command 'sqlcmd' -ErrorAction SilentlyContinue

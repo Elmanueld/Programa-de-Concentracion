@@ -1,3 +1,5 @@
+> Estado de referencia: la versión `f39cd1d` fue publicada y validada en Windows mediante [Actions 40446666067](https://github.com/Elmanueld/Programa-de-Concentracion/actions/runs/40446666067). El informe de revisión inicial se conserva debajo. Las correcciones locales de acceso, diseñador y correo necesitan su propia validación antes de publicarse.
+
 # Entregable 3 — Avance funcional
 
 ## Revisión inicial
@@ -97,10 +99,10 @@ La ejecución de Windows en Actions debe terminar correctamente antes de declara
 
 ## Demostración presencial
 
-1. Preparar SQLEXPRESS con 01–05 o actualizar la base existente con 06. Ajustar App.config.
+1. Preparar SQLEXPRESS con 01–05 y 07 o actualizar la base existente con 06 y 07. Ajustar App.config y SMTP según el README.
 2. Abrir la solución `.sln`, recompilar e iniciar CapaPresentacion.
 3. Registrar una cuenta; comprobar en SSMS que su contraseña no se guarda en claro.
-4. Verificar administrativamente el correo usando el bloque del README. Mostrar que una cuenta pendiente no accede.
+4. Mostrar que la cuenta pendiente no accede. Recibir el código por correo e introducirlo en la pestaña Verificar correo.
 5. Probar clave incorrecta, luego correcta y acceso al listado.
 6. Crear una tarea con fin posterior al inicio; buscarla, editarla y volver a consultar.
 7. Cerrar sesión y entrar de nuevo para comprobar persistencia.
@@ -108,4 +110,4 @@ La ejecución de Windows en Actions debe terminar correctamente antes de declara
 9. Verificar un segundo usuario y comprobar que no lista tareas del primero.
 10. Mostrar el resultado de las pruebas automáticas y la estructura por capas.
 
-No mostrar el bloqueo efectivo del sistema operativo como funcional: queda fuera de este sprint. La verificación de correo es manual y el límite de intentos es local al proceso. Las preferencias completas y la diferencia previa entre Descansos 0..1 en SQL y 0..* en el modelo documental siguen fuera del alcance de este cambio.
+No mostrar el bloqueo efectivo del sistema operativo como funcional: queda fuera de este sprint. La verificación por código guarda en SQL el resumen, la vigencia y el número de intentos; el bloqueo de intentos de login sigue siendo local al proceso. Las preferencias completas y la diferencia previa entre Descansos 0..1 en SQL y 0..* en el modelo documental siguen fuera del alcance de este cambio.

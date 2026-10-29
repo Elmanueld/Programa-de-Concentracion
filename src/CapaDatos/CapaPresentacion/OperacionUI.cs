@@ -1,6 +1,8 @@
 using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Net.Mail;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CapaPresentacion
@@ -16,37 +18,59 @@ namespace CapaPresentacion
                 accion();
                 return true;
             }
-            catch (ArgumentException ex)
-            {
-                Mostrar(ventana, ex.Message);
-            }
-            catch (SqlException ex)
-            {
-                Trace.TraceError(ex.ToString());
-                string mensaje;
-                if (ex.Number == 2601 || ex.Number == 2627)
-                    mensaje = "Ya existe un registro con esos datos. Si está registrándose, use otro correo.";
-                else if (ex.Number >= 50001 && ex.Number <= 50004)
-                    mensaje = ex.Message;
-                else
-                    mensaje = "No se pudo completar la operación en SQL Server. Revise el servicio, la instancia, la conexión y la instalación de los scripts.";
-                Mostrar(ventana, mensaje);
-            }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
-                Mostrar(ventana, "No se pudo completar la operación. Revise la configuración y los detalles en la salida de depuración.");
+                MostrarError(ventana, ex);
+                return false;
             }
             finally
             {
                 ventana.UseWaitCursor = false;
                 ventana.Enabled = true;
             }
-            return false;
         }
 
-        private static void Mostrar(Form ventana, string mensaje)
+        public static async Task<bool> EjecutarAsync(Form ventana, Func<Task> accion)
         {
+            ventana.UseWaitCursor = true;
+            ventana.Enabled = false;
+            try
+            {
+                await accion();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ventana, ex);
+                return false;
+            }
+            finally
+            {
+                if (!ventana.IsDisposed)
+                {
+                    ventana.UseWaitCursor = false;
+                    ventana.Enabled = true;
+                }
+            }
+        }
+
+        private static void MostrarError(Form ventana, Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            string mensaje;
+            var sql = ex as SqlException;
+            if (ex is ArgumentException || ex is InvalidOperationException)
+                mensaje = ex.Message;
+            else if (ex is SmtpException)
+                mensaje = "No se pudo enviar el correo. La cuenta sigue pendiente. Revise SMTP y espere un minuto antes de reenviar.";
+            else if (sql != null && (sql.Number == 2601 || sql.Number == 2627))
+                mensaje = "Ya existe un registro con esos datos. Si está registrándose, use otro correo.";
+            else if (sql != null && sql.Number >= 50001 && sql.Number <= 50006)
+                mensaje = sql.Message;
+            else if (sql != null)
+                mensaje = "No se pudo completar la operación en SQL Server. Revise el servicio, la instancia, la conexión y la instalación de los scripts.";
+            else
+                mensaje = "No se pudo completar la operación. Revise la configuración y los detalles en la salida de depuración.";
             MessageBox.Show(ventana, mensaje, "Programa de Concentración", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }

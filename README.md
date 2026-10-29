@@ -55,6 +55,8 @@ El instalador se detiene si la base ya existe para no afectar sus datos. Los scr
 
 Si la base **ya estaba instalada con la versión anterior**, respaldarla y ejecutar `database/06_ActualizarEntregable3.sql` y después `database/07_VerificacionCorreo.sql` en SSMS. Actualiza cuatro procedimientos sin borrar tablas ni registros. El script 06 no se necesita para una instalación nueva con los scripts actualizados. El 07 agrega los códigos de verificación y se ejecuta también en instalaciones nuevas.
 
+Si crear y consultar tareas funciona pero editar o eliminar devuelve SQL 8144, compruebe que se ejecutó el script 06 en la misma instancia y base de `App.config`. Actualizar el código desde Git no actualiza por sí solo los procedimientos de una base ya instalada.
+
 ## Configuración de conexión
 
 La aplicación utiliza la entrada `conexion` en `src/CapaDatos/CapaPresentacion/App.config`:

@@ -1,5 +1,8 @@
 using System;
 using System.Configuration;
+using System.IO;
+using CapaDatos;
+using CapaEntidades;
 using System.Data.SqlClient;
 using System.Text.RegularExpressions;
 using CapaNegocio;
@@ -60,6 +63,72 @@ internal static partial class Program
             cn.Open();
             cmd.ExecuteNonQuery();
         }
+    }
+
+    private static void ProbarActualizacionTareas()
+    {
+        string[] nombres = { "sp_IniciarSesion", "sp_ModificarTarea", "sp_EliminarTarea", "sp_CambiarEstadoTarea" };
+        string[] originales = new string[nombres.Length];
+        for (int i = 0; i < nombres.Length; i++)
+            originales[i] = Convert.ToString(Sql("SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." + nombres[i] + "'))", ""));
+        try
+        {
+            CambiarProcedimiento(@"ALTER PROCEDURE sp_ModificarTarea
+	@IdTarea INT,
+	@Nombre VARCHAR(70),
+	@FechaInicio DATETIME,
+	@FechaFin DATETIME
+
+AS
+BEGIN
+	UPDATE Tareas
+	SET Nombre = @Nombre,
+		FechaInicio = @FechaInicio,
+		FechaFin = @FechaFin
+	WHERE IdTarea = @IdTarea
+	AND Estado = 'P';
+END;");
+            CambiarProcedimiento(@"ALTER PROCEDURE sp_EliminarTarea
+	@IdTarea INT
+
+AS
+BEGIN
+	DELETE FROM Tareas
+	WHERE IdTarea = @IdTarea
+	AND Estado <> 'A'
+END;");
+            var datos = new D_Tarea();
+            ComprobarProcedimientoAnterior(() => datos.ModificarTarea(new E_Tarea {
+                IdTarea = 0, IdUsuario = 0, Nombre = "Prueba", FechaInicio = DateTime.Today, FechaFin = DateTime.Today.AddHours(1)
+            }), "Edición reproduce SQL 8144 con el procedimiento antiguo");
+            ComprobarProcedimientoAnterior(() => datos.EliminarTarea(0, 0),
+                "Eliminación reproduce SQL 8144 con el procedimiento antiguo");
+            string script = File.ReadAllText(Path.Combine("database", "06_ActualizarEntregable3.sql"));
+            foreach (string lote in Regex.Split(script, @"(?im)^\s*GO\s*$"))
+                if (!String.IsNullOrWhiteSpace(lote)) CambiarProcedimiento(lote);
+            foreach (string nombre in new[] { "sp_ModificarTarea", "sp_EliminarTarea", "sp_CambiarEstadoTarea" })
+                Comprobar(Convert.ToInt32(Sql("SELECT COUNT(*) FROM sys.parameters WHERE object_id=OBJECT_ID('dbo." + nombre + "') AND name='@IdUsuario'", "")) == 1,
+                    "Actualización 06 agrega el usuario a " + nombre);
+        }
+        catch
+        {
+            for (int i = 0; i < nombres.Length; i++)
+                CambiarProcedimiento(new Regex(@"^\s*CREATE(?:\s+OR\s+ALTER)?\s+PROCEDURE\b",
+                    RegexOptions.IgnoreCase | RegexOptions.Multiline).Replace(originales[i], "ALTER PROCEDURE", 1));
+            throw;
+        }
+    }
+
+    private static void ComprobarProcedimientoAnterior(Action accion, string nombre)
+    {
+        bool rechazado = false;
+        try { accion(); }
+        catch (SqlException ex)
+        {
+            if (ex.Number != 8144) throw;
+            rechazado = true;
+        }
+        Comprobar(rechazado, nombre);
     }
 
 }

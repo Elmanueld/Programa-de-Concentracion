@@ -1,0 +1,63 @@
+CORRECTO: Formato y longitud del hash
+CORRECTO: Sal aleatoria por contraseña
+CORRECTO: Contraseña correcta
+CORRECTO: Contraseña incorrecta
+CORRECTO: Hash malformado
+CORRECTO: Contraseña corta
+CORRECTO: Nombre obligatorio
+CORRECTO: Correo sin nombre de presentación
+CORRECTO: Fechas inválidas
+CORRECTO: Usuario inválido
+CORRECTO: Login admite el resultado SQL anterior sin Nombre
+CORRECTO: Login conserva Nombre si SQL lo devuelve
+CORRECTO: Interfaz de demostración muestra registro y login sin solicitar código
+CORRECTO: Códigos aleatorios de seis dígitos
+CORRECTO: El código se resume con una sal y no se guarda directamente
+CORRECTO: Código corto rechazado antes de SQL
+CORRECTO: Código no numérico rechazado antes de SQL
+CORRECTO: SMTP remoto sin TLS rechazado sin enviar mensajes
+CORRECTO: SMTP ausente se detecta sin excepción ni conexión SQL
+CORRECTO: Falta de SMTP informa error
+CORRECTO: SMTP local recibió el código y su vigencia
+CORRECTO: Fallo de conexión SMTP no se oculta
+CORRECTO: Registro persiste hash verificable en SQL
+CORRECTO: Correo duplicado
+CORRECTO: Cuenta pendiente no accede
+CORRECTO: Demostración permite login pendiente con contraseña correcta
+CORRECTO: Demostración rechaza contraseña incorrecta
+CORRECTO: Demostración no marca el correo como verificado
+CORRECTO: Modo normal sigue rechazando correo pendiente
+CORRECTO: SQL guarda el resumen del código, sin texto directo
+CORRECTO: Reenvío inmediato bloqueado
+CORRECTO: Código vencido rechazado
+CORRECTO: Intento de código incorrecto 1
+CORRECTO: Intento de código incorrecto 2
+CORRECTO: Intento de código incorrecto 3
+CORRECTO: Intento de código incorrecto 4
+CORRECTO: Intento de código incorrecto 5
+CORRECTO: Cinco intentos bloquean incluso el código correcto
+CORRECTO: Una cuenta no se verifica con códigos inválidos
+CORRECTO: Código recibido por SMTP verifica la cuenta en SQL
+CORRECTO: El código usado se elimina
+CORRECTO: Código de un solo uso
+CORRECTO: Login correcto sin hash en sesión
+CORRECTO: Login incorrecto rechazado
+CORRECTO: Login con procedimiento anterior recupera Nombre y no expone el hash
+CORRECTO: Editar con el procedimiento original sin migración
+CORRECTO: Procedimiento original no permite borrar tarea ajena
+CORRECTO: Procedimiento original no permite editar tarea ajena
+CORRECTO: Procedimiento original protege tarea activa al editar
+CORRECTO: Procedimiento original protege tarea activa al eliminar
+CORRECTO: Eliminar con el procedimiento original sin migración
+CORRECTO: Crear y listar tarea persistida
+CORRECTO: Otro usuario no lista tarea ajena
+CORRECTO: SQL rechaza borrar tarea ajena
+CORRECTO: SQL rechaza editar tarea ajena
+CORRECTO: Editar y recuperar en otra consulta
+CORRECTO: Tarea activa no editable
+CORRECTO: Tarea activa no eliminable
+CORRECTO: RF-006 permite editar completadas
+CORRECTO: Eliminación persistente
+CORRECTO: Borrado inexistente informa error
+CORRECTO: Cuenta eliminada no accede
+Total correcto: 62

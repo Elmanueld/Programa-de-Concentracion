@@ -1,7 +1,7 @@
 <Solution>
-  <Project Path="src/CapaDatos/CapaEntidades/CapaEntidades.csproj" />
-  <Project Path="src/CapaDatos/CapaDatos/CapaDatos.csproj" />
-  <Project Path="src/CapaDatos/CapaNegocio/CapaNegocio.csproj" />
-  <Project Path="src/CapaDatos/CapaPresentacion/CapaPresentacion.csproj" />
-  <Project Path="tests/Pruebas.csproj" />
+  <Project Path="src/CapaDatos/CapaEntidades/CapaEntidades.csproj" Id="be256dd1-a5f6-483d-af95-ab0143fa0dfb" />
+  <Project Path="src/CapaDatos/CapaDatos/CapaDatos.csproj" Id="519e9926-0a22-4f06-9841-96f7cd7cc5ce" />
+  <Project Path="src/CapaDatos/CapaNegocio/CapaNegocio.csproj" Id="25e77b76-faa8-462e-99e5-3e744477ca27" />
+  <Project Path="src/CapaDatos/CapaPresentacion/CapaPresentacion.csproj" Id="23f3e509-c374-4885-968d-4f9b5ef39f75" />
+  <Project Path="tests/Pruebas.csproj" Id="ea178cb6-2ef0-49c5-b9de-24dfba5a06f1" />
 </Solution>

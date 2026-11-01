@@ -2,6 +2,8 @@
 
 Base: `f39cd1da1af91990efa5f886f74cfd039b99d8ac`. Cambios preparados en una rama local, sin publicar.
 
+Esta revisión conserva resultados de una ejecución anterior. Para las cifras y evidencias actuales de la rama, consulta [REPORTE_DE_PRUEBAS.md](REPORTE_DE_PRUEBAS.md).
+
 ## Login
 
 `Nombre` no se envía como parámetro de entrada: `sp_IniciarSesion` recibe solamente `@Correo`. El problema aparece cuando una instalación conserva el procedimiento anterior, que devuelve IdUsuario, Correo y ContrasenaHash, mientras el código intenta leer también Nombre.
@@ -25,7 +27,7 @@ SMTP se configura según el README. El repositorio no contiene host, remitente, 
 | Compilar solución y pruebas con Mono en Linux | Correcto. El compilador usado fue XBuild/Mono, no MSBuild de Windows. |
 | Pruebas normales | 20 correctas, incluyendo ambos resultados de login y un intercambio SMTP completo en localhost. |
 | Prueba de interfaz con Mono y Xvfb | 26 correctas en total: las 20 anteriores y seis comprobaciones de navegación, contraseñas ocultas y límites de controles. |
-| Capturas de las tres pestañas | Revisadas visualmente; controles y textos visibles, sin superposición. |
+| Capturas de las tres pestañas | No se incluyen; la prueba de interfaz conserva sus comprobaciones en `tests/evidencias/interfaz.log`. |
 | Integración SQL Server 2022 en Linux | 50 comprobaciones correctas en total (20 normales y 30 SQL), salida 0. Incluye códigos, ambos procedimientos de login, CRUD, estados, cuenta eliminada y aislamiento de usuarios. |
 | Windows, LocalDB y diseñador de Visual Studio | Pendientes para esta revisión. Los resultados de Actions de la versión base no validan estos cambios nuevos. |
 | Entrega a un buzón real | Pendiente de configurar y probar el servidor SMTP del grupo. Las pruebas realizadas solo usan localhost. |

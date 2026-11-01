@@ -10,6 +10,7 @@ namespace CapaPresentacion
     {
         private readonly E_Usuario usuario;
         private readonly N_Tarea tareas = new N_Tarea();
+        private readonly N_BloqueoApp bloqueador = new N_BloqueoApp();
         private readonly DataGridView listado = new DataGridView {
             Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false,
             AllowUserToDeleteRows = false, AutoGenerateColumns = false,
@@ -34,6 +35,8 @@ namespace CapaPresentacion
             Boton(barra, "Crear", () => Editar(null));
             Boton(barra, "Editar", () => Editar(Seleccionada()));
             Boton(barra, "Eliminar", Eliminar);
+            Boton(barra, "Iniciar control de apps", IniciarControlApps);
+            Boton(barra, "Detener control", DetenerControlApps);
             Boton(barra, "Cerrar sesión", Close);
             Columna("IdTarea", "ID", 35);
             Columna("Nombre", "Tarea", 150);
@@ -57,6 +60,24 @@ namespace CapaPresentacion
             padre.Controls.Add(boton);
         }
 
+        private void IniciarControlApps()
+        {
+            if (MessageBox.Show(this,
+                "Se solicitará el cierre normal de las aplicaciones abiertas. Guarda tu trabajo antes de continuar. Las aplicaciones con diálogos de confirmación pueden permanecer abiertas.",
+                "Iniciar control de aplicaciones", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+                return;
+
+            bloqueador.Iniciar();
+            MessageBox.Show(this, "El control está activo.", "Control iniciado",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void DetenerControlApps()
+        {
+            bloqueador.Detener();
+            MessageBox.Show(this, "El control se detuvo.", "Control detenido",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
         private void Cargar()
         {
             listado.DataSource = tareas.BuscarTarea(usuario.IdUsuario, filtro.Text);
@@ -82,6 +103,11 @@ namespace CapaPresentacion
             if (MessageBox.Show(this, "¿Eliminar la tarea seleccionada?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             tareas.EliminarTarea(usuario.IdUsuario, tarea.IdTarea);
             Cargar();
+        }
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            bloqueador.Dispose();
+            base.OnFormClosed(e);
         }
     }
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 using CapaPresentacion;
 
@@ -25,8 +23,6 @@ internal static class PruebasInterfaz
             comprobar(pestanas.SelectedTab.Name == "tabVerificacion" &&
                 ventana.Controls.Find("correoVerificacion", true)[0].Text == correo.Text,
                 "El botón del login abre verificación y conserva el correo");
-            string carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "capturas");
-            Directory.CreateDirectory(carpeta);
             foreach (TabPage pagina in pestanas.TabPages)
             {
                 pestanas.SelectedTab = pagina;
@@ -38,12 +34,6 @@ internal static class PruebasInterfaz
                     dentro = dentro && control.Left >= 0 && control.Top >= 0 &&
                         control.Right <= pagina.ClientSize.Width && control.Bottom <= pagina.ClientSize.Height;
                 comprobar(dentro, "Controles dentro de los límites: " + pagina.Text);
-                using (var imagen = new Bitmap(ventana.Width, ventana.Height))
-                {
-                    using (var graficos = Graphics.FromImage(imagen))
-                        graficos.CopyFromScreen(ventana.Left, ventana.Top, 0, 0, imagen.Size);
-                    imagen.Save(Path.Combine(carpeta, pagina.Name + ".png"));
-                }
             }
             ventana.Close();
         }

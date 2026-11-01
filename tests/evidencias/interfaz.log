@@ -1,0 +1,30 @@
+CORRECTO: Formato y longitud del hash
+CORRECTO: Sal aleatoria por contraseña
+CORRECTO: Contraseña correcta
+CORRECTO: Contraseña incorrecta
+CORRECTO: Hash malformado
+CORRECTO: Contraseña corta
+CORRECTO: Nombre obligatorio
+CORRECTO: Correo sin nombre de presentación
+CORRECTO: Fechas inválidas
+CORRECTO: Usuario inválido
+CORRECTO: Login admite el resultado SQL anterior sin Nombre
+CORRECTO: Login conserva Nombre si SQL lo devuelve
+CORRECTO: Interfaz de demostración muestra registro y login sin solicitar código
+CORRECTO: Códigos aleatorios de seis dígitos
+CORRECTO: El código se resume con una sal y no se guarda directamente
+CORRECTO: Código corto rechazado antes de SQL
+CORRECTO: Código no numérico rechazado antes de SQL
+CORRECTO: SMTP remoto sin TLS rechazado sin enviar mensajes
+CORRECTO: SMTP ausente se detecta sin excepción ni conexión SQL
+CORRECTO: Falta de SMTP informa error
+CORRECTO: SMTP local recibió el código y su vigencia
+CORRECTO: Fallo de conexión SMTP no se oculta
+CORRECTO: Acceso, registro y verificación disponibles sin conexión SQL
+CORRECTO: Las contraseñas están ocultas
+CORRECTO: El botón del login abre verificación y conserva el correo
+CORRECTO: Controles dentro de los límites: Iniciar sesión
+CORRECTO: Controles dentro de los límites: Registro
+CORRECTO: Controles dentro de los límites: Verificar correo
+PENDIENTE: integración SQL; ejecutar con --integracion en la instancia exclusiva de pruebas.
+Total correcto: 28

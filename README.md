@@ -137,6 +137,8 @@ Este avance gestiona nombre y horario. Bloqueo efectivo de aplicaciones/webs, de
 
 ## Pruebas
 
+Consulta el [reporte de pruebas](docs/REPORTE_DE_PRUEBAS.md), el [plan de pruebas](docs/PLAN_PRUEBAS.md), el [registro de incidencias](docs/INCIDENCIAS_PRUEBAS.md) y las [evidencias](tests/evidencias/README.md).
+
 Después de compilar:
 
 ```powershell
@@ -164,10 +166,10 @@ Se dejó preparada la ejecución **Verificar Entregable 3** para **Actions**, qu
 - Edición antes exigía `P`; ahora admite estados distintos de `A`, conforme a RF-006. Las operaciones sin registros afectados informan error.
 - Se conservaron tablas, columnas, claves y nombres de procedimientos. `06_ActualizarEntregable3.sql` permite actualizar instalaciones existentes.
 
-Para la prueba de navegación y capturas de acceso, registro y verificación:
+Para la prueba automática de navegación por acceso, registro y verificación:
 
 ```powershell
 .\tests\bin\Release\Pruebas.exe --interfaz
 ```
 
-Las capturas se guardan en `tests/bin/Release/capturas`. Esta prueba abre formularios sin consultar la base; no sustituye la revisión del diseñador en Visual Studio ni la prueba completa con SQL y el SMTP real.
+El resultado de la prueba se guarda en `tests/evidencias/interfaz.log`. Las imágenes `evidencia-*.png` muestran los resultados de los logs; no son capturas de las pantallas de la aplicación. La prueba abre formularios sin consultar la base y no sustituye la prueba completa con SQL y el SMTP real.

@@ -1,69 +1,53 @@
-> Para la demostración está activado `ModoDemostracion=true` en App.config: registro y acceso con contraseña sin SMTP. No se marca el correo como verificado. Con `false` se mantiene la verificación normal. No usar el modo demostración como configuración de producción.
->
-> C# admite los procedimientos originales de Elmanueld (6154e97), sin ejecutar migraciones. Editar/eliminar comprueban propietario y estado dentro de una transacción. El procedimiento original solo edita tareas P; esto difiere de RF-006 para completadas. No se modifica ese contrato ni se cambia su base automáticamente.
-
 # Programa de Concentración
 
-Aplicación de escritorio para organizar tareas y sesiones de concentración. En este avance se agregaron el registro, el inicio de sesión y el manejo básico de tareas guardadas en SQL Server. Se mantienen Windows Forms y las cuatro capas del grupo.
+Aplicación de escritorio para planificar sesiones de concentración, seleccionar aplicaciones y webs y aplicar bloqueos durante las tareas. Está construida con Windows Forms sobre .NET Framework 4.8 y SQL Server.
+
+## Funciones
+
+- Registro, inicio y cierre de sesión.
+- Tareas con horario, descansos, aplicaciones y webs asociadas.
+- Opciones por tarea para omitir el bloqueo de aplicaciones o de webs.
+- Catálogos de aplicaciones y webs privados por usuario. Las tareas y sus asociaciones también incluyen al propietario; las claves foráneas compuestas impiden vincular recursos de cuentas distintas.
+- Bloqueo de aplicaciones y webs mientras hay una sesión activa, con avisos y formularios de descanso.
+- Interfaz en español con fuente Inter y controles AntdUI.
 
 ## Requisitos
 
 - Windows 10/11.
-- Visual Studio 2022, recomendado 17.14 (versión de la solución original), con «Desarrollo de escritorio de .NET».
-- .NET Framework 4.8 y Developer Pack/Targeting Pack 4.8.
-- SQL Server Express (2019 o 2022 recomendado), SQL Server Management Studio (SSMS) y, para el instalador automático, `sqlcmd`.
-- Para integración automática: SQL Server Express LocalDB, independiente de SQLEXPRESS.
+- Visual Studio 2022 con desarrollo de escritorio de .NET y el Developer Pack de .NET Framework 4.8.
+- SQL Server Express (por ejemplo, la instancia local `SQLEXPRESS`) y, para instalar desde PowerShell, `sqlcmd`.
+- NuGet para restaurar AntdUI 2.4.19. Visual Studio también puede restaurar el paquete al compilar.
 
-No hay paquetes NuGet externos. Las referencias son de .NET Framework y de los proyectos de la solución.
+## Obtener el proyecto
 
-## Arquitectura y estructura
-
-| Carpeta | Responsabilidad |
-| --- | --- |
-| `src/CapaDatos/CapaPresentacion` | Formularios de registro, login, listado y editor; llama a negocio. |
-| `src/CapaDatos/CapaNegocio` | Validaciones, contraseñas y reglas de usuarios/tareas. |
-| `src/CapaDatos/CapaEntidades` | Objetos del dominio, incluidos `E_Usuario` y `E_Tarea`. |
-| `src/CapaDatos/CapaDatos` | Conexiones, parámetros SQL y procedimientos almacenados. |
-| `database` | Instalación y actualización SQL. |
-| `tests` | Pruebas de validaciones, contraseñas y operaciones SQL en una instancia separada. |
-| `.github/workflows` | Verificación en Windows. |
-
-La carpeta contenedora `src/CapaDatos` conserva la organización original: incluye los cuatro proyectos y `CapaDatos.sln`. Los formularios no ejecutan consultas SQL.
-
-## Instalación
-
-Si se recibió el archivo `.bundle`, seguir primero los pasos de `docs/ENTREGABLE_3.md` para importar la rama. Los siguientes comandos son para cuando la rama esté publicada.
+La rama activa es `main`:
 
 ```powershell
 git clone https://github.com/Elmanueld/Programa-de-Concentracion.git
 cd Programa-de-Concentracion
-git switch entregable-3-avance-funcional
 ```
 
-Iniciar el servicio SQL Server (SQLEXPRESS). Si **no existe** la base, ejecutar en SSMS, en este orden:
+## Instalar la base de datos
+
+La instalación crea una base nueva y se detiene si `ProgramaConcentracion` ya existe. Desde PowerShell, en la raíz del repositorio:
+
+```powershell
+.\database\InstalarBaseDatos.ps1 -Servidor '.\SQLEXPRESS'
+```
+
+También puedes ejecutar en SSMS, en este orden:
 
 1. `database/01_CrearBaseDeDatos.sql`
 2. `database/02_CrearTablas.sql`
 3. `database/03_CrearRelaciones.sql`
 4. `database/04_CrearProcedimientos.sql`
 5. `database/05_CrearIndices.sql`
-6. `database/07_VerificacionCorreo.sql`
 
-Alternativamente, desde PowerShell en la raíz:
+Los scripts crean el esquema actual desde cero; no son migraciones ni deben ejecutarse sobre una base existente. Para reinstalar, respalda primero los datos y elimina la base por separado. La tabla de usuarios, tareas, aplicaciones, webs, descansos y relaciones está organizada para mantener los datos vinculados a su propietario.
 
-```powershell
-.\database\InstalarBaseDatos.ps1 -Servidor '.\SQLEXPRESS'
-```
+## Configurar y ejecutar
 
-El instalador se detiene si la base ya existe para no afectar sus datos. Los scripts 01–05 crean objetos y no deben repetirse sobre una base existente.
-
-Si la base **ya estaba instalada con la versión anterior**, respaldarla y ejecutar `database/06_ActualizarEntregable3.sql` y después `database/07_VerificacionCorreo.sql` en SSMS. Actualiza cuatro procedimientos sin borrar tablas ni registros. El script 06 no se necesita para una instalación nueva con los scripts actualizados. El 07 agrega los códigos de verificación y se ejecuta también en instalaciones nuevas.
-
-Si crear y consultar tareas funciona pero editar o eliminar devuelve SQL 8144, compruebe que se ejecutó el script 06 en la misma instancia y base de `App.config`. Actualizar el código desde Git no actualiza por sí solo los procedimientos de una base ya instalada.
-
-## Configuración de conexión
-
-La aplicación utiliza la entrada `conexion` en `src/CapaDatos/CapaPresentacion/App.config`:
+La conexión está en `src/CapaDatos/CapaPresentacion/App.config`. El valor de ejemplo usa autenticación integrada de Windows:
 
 ```xml
 <add name="conexion"
@@ -71,105 +55,30 @@ La aplicación utiliza la entrada `conexion` en `src/CapaDatos/CapaPresentacion/
      providerName="System.Data.SqlClient" />
 ```
 
-Cambiar `Server` si la instancia tiene otro nombre. La autenticación integrada usa el usuario Windows que ejecuta el programa; debe tener permisos sobre la base y sus procedimientos. No agregar credenciales privadas al repositorio. Datos obtiene esta entrada mediante `ConfigurationManager`; se copia a `CapaPresentacion.exe.config` al compilar.
+Cambia el servidor si tu instancia tiene otro nombre. La cuenta de Windows que ejecuta el programa debe tener permisos sobre la base.
 
-## Compilación y ejecución
+El archivo de ejemplo tiene `ModoDemostracion=true`: permite probar el acceso sin SMTP y no marca el correo como verificado. Para usar la verificación normal, configura SMTP mediante las variables de entorno `PC_SMTPHOST`, `PC_SMTPPUERTO`, `PC_SMTPSSL`, `PC_SMTPREMITENTE`, `PC_SMTPUSUARIO` y `PC_SMTPCLAVE`, y cambia `ModoDemostracion` a `false`. No guardes credenciales en Git.
 
-1. Abrir `src/CapaDatos/CapaDatos.sln` en Visual Studio.
-2. Establecer **CapaPresentacion** como proyecto de inicio.
-3. Elegir Debug o Release, Any CPU, y **Recompilar solución**.
-4. Ejecutar con F5 o Ctrl+F5.
-
-La solución raíz `Programa-de-Concentracion.slnx` ahora incluye los proyectos y pruebas; requiere una versión compatible de Visual Studio. La solución `.sln` original permanece disponible.
-
-Desde Developer PowerShell de Visual Studio:
+Abre `src/CapaDatos/CapaDatos.sln` en Visual Studio, selecciona `CapaPresentacion` como proyecto de inicio y compila. Desde Developer PowerShell también puedes ejecutar:
 
 ```powershell
-msbuild src/CapaDatos/CapaDatos.sln /restore /t:Rebuild /p:Configuration=Release
-msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release
+nuget restore src/CapaDatos/CapaDatos.sln
+msbuild src/CapaDatos/CapaDatos.sln /t:Rebuild /p:Configuration=Release
 ```
-
-## Funcionalidades y demostración del sprint
-
-### Registro e inicio/cierre de sesión
-
-1. Abrir **Registro** y completar nombre, correo, contraseña de 8–128 caracteres y confirmación. Se validan los campos y SQL impide correos duplicados.
-2. Al registrar la cuenta se abre **Verificar correo** y se intenta enviar un código de seis dígitos por SMTP. Introducir el código y pulsar **Verificar correo**. También se puede entrar desde el botón **Verificar mi correo** del login.
-   El código vence en 10 minutos, tiene un máximo de cinco intentos y es de un solo uso. **Solicitar / reenviar código** permite otro envío después de un minuto. El nuevo código reemplaza al anterior. Si falla SMTP, la cuenta permanece pendiente y se puede reintentar; no se verifica automáticamente.
-3. Probar contraseña incorrecta: debe rechazarse. Iniciar con la correcta: debe abrir la pantalla principal.
-4. **Cerrar sesión** devuelve al login, limpia la contraseña y descarta el usuario de la ventana anterior.
-
-La contraseña no se guarda directamente. Se usa PBKDF2-SHA256 para calcular un hash con 600 000 repeticiones, una sal aleatoria de 16 bytes y un resultado de 32 bytes. La sal hace que dos cuentas con la misma contraseña tengan hashes diferentes. Al iniciar sesión, se vuelve a calcular el valor y se compara con el guardado. Todo se hace con las clases de seguridad de .NET.
-
-El hash no se pasa a la pantalla principal. Después de cinco fallos se esperan 30 segundos para intentar de nuevo. Ese contador se reinicia al cerrar el programa. Si existen cuentas antiguas con otro formato de hash, habrá que adaptar su lectura; no se aceptan como contraseñas en texto plano.
-
-### Configuración del correo
-
-El envío usa SMTP con STARTTLS, normalmente en el puerto 587. El servidor debe permitir ese tipo de conexión; no se usa TLS implícito del puerto 465. Los datos se leen de `appSettings` en `CapaPresentacion/App.config`. Las variables de entorno tienen prioridad:
-
-| Configuración | Variable de entorno |
-|---|---|
-| SmtpHost | PC_SMTPHOST |
-| SmtpPuerto | PC_SMTPPUERTO |
-| SmtpSsl | PC_SMTPSSL |
-| SmtpRemitente | PC_SMTPREMITENTE |
-| SmtpUsuario | PC_SMTPUSUARIO |
-| Contraseña | PC_SMTPCLAVE (solo variable de entorno) |
-
-Host, remitente y usuario están vacíos en el repositorio. Configurarlos con los datos del servidor utilizado por el grupo. `SmtpSsl` debe ser `true` para servidores remotos. Solo se admite `false` en localhost para pruebas. No guardar contraseñas SMTP en Git. Reiniciar Visual Studio después de establecer las variables para que el programa las reciba. El remitente debe estar autorizado por el proveedor de correo.
-
-El login admite el resultado anterior de `sp_IniciarSesion` que no incluía `Nombre`: recupera el nombre por ID después de validar la contraseña. Esto no sustituye la actualización 06 de los procedimientos de tareas. `Nombre` no es un parámetro de entrada del login.
-
-El formulario `Form1` contiene acceso, registro y verificación. Sus controles están declarados en `Form1.Designer.cs` y los eventos en `Form1.cs`, para poder editarlos con el diseñador de Windows Forms.
-
-### Gestión de tareas
-
-1. En **Mis tareas**, pulsar **Crear**, indicar nombre, inicio y fin y guardar.
-2. Comprobar el registro en el listado. **Buscar** vuelve a consultar SQL Server.
-3. Seleccionar, **Editar**, cambiar nombre/horario y guardar.
-4. Cerrar sesión, volver a entrar y comprobar que la edición persiste.
-5. Seleccionar y **Eliminar**, confirmar y volver a consultar.
-6. Registrar y verificar un segundo usuario: no debe ver las tareas del primero.
-
-Las tareas nuevas se guardan con estado `P`. Las `A` (activas) no se pueden editar ni eliminar; las `C` (completadas) son editables según RF-006. El procedimiento SQL comprueba que la tarea pertenezca al usuario y que su estado permita el cambio. Si no se puede realizar la operación, se muestra un mensaje.
-
-Este avance gestiona nombre y horario. Bloqueo efectivo de aplicaciones/webs, descansos automáticos, recursos permitidos y preferencias completas quedan para avances posteriores. Se conservan las entidades y procedimientos previos. Este CRUD todavía no ejecuta las restricciones de concentración del sistema operativo.
 
 ## Pruebas
 
-Consulta el [reporte de pruebas](docs/REPORTE_DE_PRUEBAS.md), el [plan de pruebas](docs/PLAN_PRUEBAS.md), el [registro de incidencias](docs/INCIDENCIAS_PRUEBAS.md) y las [evidencias](tests/evidencias/README.md).
-
-Después de compilar:
+Las pruebas usan una instancia LocalDB separada llamada `Entregable3Pruebas`; no apuntan a `SQLEXPRESS` ni a la base de desarrollo.
 
 ```powershell
+nuget restore src/CapaDatos/CapaDatos.sln
+msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release
 .\tests\bin\Release\Pruebas.exe
-```
-
-Estas pruebas revisan contraseñas correctas e incorrectas, sal aleatoria, hashes con formato incorrecto y validaciones. También prueban la lectura del login con el resultado SQL antiguo y actualizado, los códigos y un servidor SMTP local de pruebas. No se envían mensajes a buzones reales. Para comprobar el guardado de datos también hay que ejecutar las pruebas con SQL.
-
-En una máquina de pruebas con LocalDB:
-
-```powershell
+.\tests\bin\Release\Pruebas.exe --interfaz
 .\tests\PrepararPruebas.ps1
 .\tests\bin\Release\Pruebas.exe --integracion
 ```
 
-El instalador se detiene si ya existe la instancia de pruebas. `tests/App.config` usa `(localdb)\Entregable3Pruebas`; las pruebas no aceptan otra instancia para no tocar los datos del proyecto. Se ejecutan los scripts 01–05 y 07. Las cuentas de pruebas tienen correos aleatorios `example.com`. Se revisan registro, correos duplicados, cuenta pendiente, login correcto e incorrecto, guardado de datos, tareas de cada usuario, edición, eliminación, estados y cuenta eliminada. Al terminar se borran solo los registros creados por esa ejecución, sin borrar la base ni la instancia. Para repetir, ejecutar el EXE sobre la instancia preparada, sin repetir el instalador.
+`PrepararPruebas.ps1` crea la instancia y la base de pruebas, y ejecuta los cinco scripts SQL actuales. Si la instancia ya existe, se detiene sin borrar ni reemplazar sus datos. La integración comprueba registro y acceso, privacidad entre cuentas, operaciones de tareas y el envío de verificación a un servidor SMTP local de prueba. La prueba `--interfaz` abre los formularios sin consultar SQL.
 
-Se dejó preparada la ejecución **Verificar Entregable 3** para **Actions**, que podrá usarse después de publicar la rama. Las correcciones de acceso y verificación deben volver a probarse en Windows antes de publicarlas. También hay que revisar las pantallas y el cierre de sesión siguiendo los pasos anteriores. Los resultados y las pruebas pendientes están en `docs/ENTREGABLE_3.md`.
-
-## Ajustes realizados
-
-- Se retiró de `App.config` una sección no declarada que podía impedir leer la configuración.
-- `sp_IniciarSesion` devuelve también el nombre y conserva los filtros de cuenta activa y correo verificado.
-- Modificar, eliminar y cambiar estado de una tarea reciben `@IdUsuario`; se actualizaron juntos los consumidores C#. Las llamadas externas antiguas deben agregar ese parámetro.
-- Edición antes exigía `P`; ahora admite estados distintos de `A`, conforme a RF-006. Las operaciones sin registros afectados informan error.
-- Se conservaron tablas, columnas, claves y nombres de procedimientos. `06_ActualizarEntregable3.sql` permite actualizar instalaciones existentes.
-
-Para la prueba automática de navegación por acceso, registro y verificación:
-
-```powershell
-.\tests\bin\Release\Pruebas.exe --interfaz
-```
-
-El resultado de la prueba se guarda en `tests/evidencias/interfaz.log`. Las imágenes `evidencia-*.png` muestran los resultados de los logs; no son capturas de las pantallas de la aplicación. La prueba abre formularios sin consultar la base y no sustituye la prueba completa con SQL y el SMTP real.
+GitHub Actions compila el proyecto y las pruebas en Windows y ejecuta las pruebas unitarias, de interfaz e integración en cada cambio a `main` y en solicitudes de incorporación a esa rama.

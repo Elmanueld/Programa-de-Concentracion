@@ -8,28 +8,32 @@ namespace CapaNegocio
     {
         private readonly D_Descanso Datos = new D_Descanso();
 
-        public void InsertarDescanso(E_Descanso descanso)
+        public void InsertarDescanso(int idUsuario, E_Descanso descanso)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarDescanso(descanso, false);
-            Datos.InsertarDescanso(descanso);
+            Datos.InsertarDescanso(idUsuario, descanso);
         }
 
-        public E_Descanso BuscarDescanso(int idTarea)
+        public E_Descanso BuscarDescanso(int idUsuario, int idTarea)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idTarea, "tarea");
-            return Datos.BuscarDescanso(idTarea);
+            return Datos.BuscarDescanso(idUsuario, idTarea);
         }
 
-        public void ModificarDescanso(E_Descanso descanso)
+        public void ModificarDescanso(int idUsuario, E_Descanso descanso)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarDescanso(descanso, true);
-            Datos.ModificarDescanso(descanso);
+            Datos.ModificarDescanso(idUsuario, descanso);
         }
 
-        public void EliminarDescanso(int idDescanso)
+        public void EliminarDescanso(int idUsuario, int idDescanso)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idDescanso, "descanso");
-            Datos.EliminarDescanso(idDescanso);
+            Datos.EliminarDescanso(idUsuario, idDescanso);
         }
 
         private static void ValidarDescanso(E_Descanso descanso, bool requiereId)

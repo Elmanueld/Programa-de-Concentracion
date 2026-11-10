@@ -17,6 +17,8 @@ namespace CapaDatos
                 D_Comun.Fecha(comando, "@FechaInicio", tarea.FechaInicio);
                 D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
                 D_Comun.Booleano(comando, "@EsPlantilla", tarea.EsPlantilla);
+                D_Comun.Booleano(comando, "@NoBloquearApps", tarea.NoBloquearApps);
+                D_Comun.Booleano(comando, "@NoBloquearWebs", tarea.NoBloquearWebs);
             });
             return Convert.ToInt32(id);
         }
@@ -35,7 +37,9 @@ namespace CapaDatos
                 FechaInicio = D_Comun.LeerFecha(lector, "FechaInicio"),
                 FechaFin = D_Comun.LeerFecha(lector, "FechaFin"),
                 Estado = D_Comun.LeerCaracter(lector, "Estado"),
-                EsPlantilla = false
+                EsPlantilla = false,
+                NoBloquearApps = D_Comun.LeerBooleano(lector, "NoBloquearApps"),
+                NoBloquearWebs = D_Comun.LeerBooleano(lector, "NoBloquearWebs")
             });
         }
 
@@ -47,6 +51,8 @@ namespace CapaDatos
                 D_Comun.Texto(comando, "@Nombre", 70, tarea.Nombre);
                 D_Comun.Fecha(comando, "@FechaInicio", tarea.FechaInicio);
                 D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
+                D_Comun.Booleano(comando, "@NoBloquearApps", tarea.NoBloquearApps);
+                D_Comun.Booleano(comando, "@NoBloquearWebs", tarea.NoBloquearWebs);
             });
         }
 

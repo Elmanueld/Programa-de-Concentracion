@@ -15,17 +15,23 @@ namespace CapaDatos
             });
         }
 
-        public List<E_Usuario> BuscarUsuario(string buscar)
+        public string BuscarNombreUsuario(int idUsuario)
         {
-            return D_Comun.Consultar("sp_BuscarUsuario", comando =>
+            if (idUsuario <= 0)
+                throw new System.ArgumentException("El ID de usuario no es válido.");
+
+            using (var conexion = ConexionDB.Instancia.CrearConexion())
+            using (var comando = new System.Data.SqlClient.SqlCommand(
+                "SELECT Nombre FROM Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0",
+                conexion))
             {
-                D_Comun.Texto(comando, "@Buscar", 254, buscar);
-            }, lector => new E_Usuario
-            {
-                IdUsuario = D_Comun.LeerEntero(lector, "IdUsuario"),
-                Nombre = D_Comun.LeerTexto(lector, "Nombre"),
-                Correo = D_Comun.LeerTexto(lector, "Correo")
-            });
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
+                conexion.Open();
+                object nombre = comando.ExecuteScalar();
+                return nombre == null || nombre == System.DBNull.Value
+                    ? null
+                    : System.Convert.ToString(nombre);
+            }
         }
 
         public E_Usuario IniciarSesion(string correo, bool demostracion = false)

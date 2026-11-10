@@ -9,11 +9,12 @@ namespace CapaNegocio
     {
         private readonly D_TareaAplicacion Datos = new D_TareaAplicacion();
 
-        public void Insertar(int idTarea, int idAplicacion)
+        public void Insertar(int idUsuario, int idTarea, int idAplicacion)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idTarea, "tarea");
             ValidarId(idAplicacion, "aplicación");
-            Datos.Insertar(idTarea, idAplicacion);
+            Datos.Insertar(idUsuario, idTarea, idAplicacion);
         }
 
         public List<E_TareaAplicacion> Buscar(int idUsuario, int idTarea)
@@ -23,11 +24,12 @@ namespace CapaNegocio
             return Datos.Buscar(idUsuario, idTarea);
         }
 
-        public void Eliminar(int idTarea, int idAplicacion)
+        public void Eliminar(int idUsuario, int idTarea, int idAplicacion)
         {
+            ValidarId(idUsuario, "usuario");
             ValidarId(idTarea, "tarea");
             ValidarId(idAplicacion, "aplicación");
-            Datos.Eliminar(idTarea, idAplicacion);
+            Datos.Eliminar(idUsuario, idTarea, idAplicacion);
         }
 
         private static void ValidarId(int id, string tipo)

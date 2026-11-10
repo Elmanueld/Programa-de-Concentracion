@@ -31,6 +31,7 @@ namespace CapaDatos
         {
             D_Comun.Ejecutar("sp_ModificarConfiguracion", comando =>
             {
+                D_Comun.Entero(comando, "@IdUsuario", configuracion.IdUsuario);
                 D_Comun.Entero(comando, "@IdConfiguracion", configuracion.IdConfiguracion);
                 D_Comun.Booleano(comando, "@AutoSesion", configuracion.AutoSesion);
             });

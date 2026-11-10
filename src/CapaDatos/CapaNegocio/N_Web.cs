@@ -9,29 +9,36 @@ namespace CapaNegocio
     {
         private readonly D_Web Datos = new D_Web();
 
-        public List<E_Web> BuscarWeb(string buscar)
+        public List<E_Web> BuscarWeb(int idUsuario, string buscar)
         {
-            return Datos.BuscarWeb(buscar ?? String.Empty);
+            ValidarIdUsuario(idUsuario);
+            return Datos.BuscarWeb(idUsuario, buscar ?? String.Empty);
         }
 
-        public void InsertarWeb(E_Web web)
+        public int InsertarWeb(int idUsuario, E_Web web)
         {
+            ValidarIdUsuario(idUsuario);
             ValidarWeb(web);
-            Datos.InsertarWeb(web);
+            ValidarPropietario(idUsuario, web.IdUsuario);
+            web.IdUsuario = idUsuario;
+            return Datos.InsertarWeb(idUsuario, web);
         }
 
-        public void ModificarWeb(E_Web web)
+        public void ModificarWeb(int idUsuario, E_Web web)
         {
+            ValidarIdUsuario(idUsuario);
             if (web == null) throw new ArgumentNullException("web");
+            ValidarPropietario(idUsuario, web.IdUsuario);
             ValidarId(web.IdWeb);
             ValidarWeb(web);
-            Datos.ModificarWeb(web);
+            Datos.ModificarWeb(idUsuario, web);
         }
 
-        public void EliminarWeb(int idWeb)
+        public void EliminarWeb(int idUsuario, int idWeb)
         {
+            ValidarIdUsuario(idUsuario);
             ValidarId(idWeb);
-            Datos.EliminarWeb(idWeb);
+            Datos.EliminarWeb(idUsuario, idWeb);
         }
 
         private static void ValidarWeb(E_Web web)
@@ -50,6 +57,18 @@ namespace CapaNegocio
         private static void ValidarId(int id)
         {
             if (id <= 0) throw new ArgumentException("El ID de web no es válido.");
+        }
+
+        private static void ValidarIdUsuario(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                throw new ArgumentException("El ID de usuario no es válido.");
+        }
+
+        private static void ValidarPropietario(int idUsuario, int propietario)
+        {
+            if (propietario > 0 && propietario != idUsuario)
+                throw new ArgumentException("La web pertenece a otro usuario.");
         }
     }
 }

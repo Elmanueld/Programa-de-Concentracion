@@ -14,6 +14,7 @@ namespace CapaPresentacion
         public Form1()
         {
             InitializeComponent();
+            Tipografia.Aplicar(this);
             if (N_Usuario.ModoDemostracion)
             {
                 pestanas.TabPages.Remove(tabVerificacion);
@@ -29,17 +30,15 @@ namespace CapaPresentacion
             if (!OperacionUI.Ejecutar(this, () => usuario = usuarios.IniciarSesion(correo.Text, clave.Text)))
                 return;
             clave.Clear();
-            Hide();
             try
             {
                 using (var principal = new PrincipalForm(usuario))
-                    principal.ShowDialog();
+                    NavegacionFormularios.MostrarModal(this, principal);
             }
             finally
             {
                 usuario = null;
                 clave.Clear();
-                Show();
                 correo.Focus();
             }
         }

@@ -1,113 +1,377 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 using CapaEntidades;
 using CapaNegocio;
 
 namespace CapaPresentacion
 {
-    public sealed class PrincipalForm : Form
+    public sealed partial class PrincipalForm : Form
     {
         private readonly E_Usuario usuario;
+        private frmAviso avisoBloqueo;
+        private frmDescanso formularioDescanso;
+
         private readonly N_Tarea tareas = new N_Tarea();
-        private readonly N_BloqueoApp bloqueador = new N_BloqueoApp();
+        private readonly N_BloqueoApp bloqueador =
+            N_BloqueoApp.Instancia;
+        private readonly N_BloqueoWeb bloqueadorWeb =
+            N_BloqueoWeb.Instancia;
         private readonly DataGridView listado = new DataGridView {
             Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false,
             AllowUserToDeleteRows = false, AutoGenerateColumns = false,
             SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false,
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         };
+
+        private DateTime fechaActual = DateTime.Today;
+        private List<ucDia> diasCalendario = new List<ucDia>();
         private readonly TextBox filtro = new TextBox { Width = 180, MaxLength = 70 };
+        private ucDia diaSeleccionado = null;
 
         public PrincipalForm(E_Usuario usuario)
         {
-            if (usuario == null || usuario.IdUsuario <= 0) throw new ArgumentException("Se requiere una sesión válida.");
+            InitializeComponent();
+            Tipografia.Aplicar(this);
+            ArrastreFormulario.Habilitar(this, pnlTop);
+
+            FormClosing += (s, e) =>
+            {
+                bloqueadorWeb.ErrorAplicandoBloqueo -= BloqueadorWeb_ErrorAplicandoBloqueo;
+                bloqueadorWeb.Detener();
+            };
+
             this.usuario = usuario;
-            Text = "Programa de Concentración — " + usuario.Nombre;
-            Size = new Size(980, 580);
-            MinimumSize = new Size(850, 450);
-            Font = new Font("Segoe UI", 10);
-            StartPosition = FormStartPosition.CenterScreen;
-            var barra = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 95, Padding = new Padding(8) };
-            barra.Controls.Add(new Label { Text = "Mis tareas", AutoSize = true, Margin = new Padding(4, 8, 10, 0) });
-            barra.Controls.Add(filtro);
-            Boton(barra, "Buscar", Cargar);
-            Boton(barra, "Crear", () => Editar(null));
-            Boton(barra, "Editar", () => Editar(Seleccionada()));
-            Boton(barra, "Eliminar", Eliminar);
-            Boton(barra, "Iniciar control de apps", IniciarControlApps);
-            Boton(barra, "Detener control", DetenerControlApps);
-            Boton(barra, "Cerrar sesión", Close);
-            Columna("IdTarea", "ID", 35);
-            Columna("Nombre", "Tarea", 150);
-            Columna("FechaInicio", "Inicio", 100);
-            Columna("FechaFin", "Fin", 100);
-            Columna("Estado", "Estado (P/A/C)", 75);
-            Controls.Add(listado);
-            Controls.Add(barra);
-            Shown += (s, e) => OperacionUI.Ejecutar(this, Cargar);
+            bloqueador.AplicacionBloqueada +=
+                Bloqueador_AplicacionBloqueada;
+            bloqueador.DescansoIniciado +=
+                Bloqueador_DescansoIniciado;
+            bloqueadorWeb.ErrorAplicandoBloqueo += BloqueadorWeb_ErrorAplicandoBloqueo;
+            bloqueador.Iniciar(usuario.IdUsuario);
+            bloqueadorWeb.Iniciar(usuario.IdUsuario);
+
+            btnCerrarSesion.Click += BtnCerrarSesion_Click;
+            
+            CargarCalendario();
+
         }
 
-        private void Columna(string propiedad, string titulo, int peso)
+        private void CargarCalendario()
         {
-            listado.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = propiedad, HeaderText = titulo, FillWeight = peso });
+            string mesAnio = fechaActual.ToString(
+                "MMMM yyyy",
+                new System.Globalization.CultureInfo("es-ES")
+            );
+
+            lblMesAnio.Text = char.ToUpper(mesAnio[0]) + mesAnio.Substring(1);
+
+            tlpCalendario.Controls.Clear();
+            diasCalendario.Clear();
+
+            DateTime primerDia = new DateTime(
+                fechaActual.Year,
+                fechaActual.Month,
+                1
+            );
+            List<E_Tarea> todasLasTareas =
+    tareas.BuscarTarea(usuario.IdUsuario, "");
+
+
+            // Ajustar para que la semana comience en lunes
+            int desplazamiento = ((int)primerDia.DayOfWeek + 6) % 7;
+
+            // Fecha del primer espacio del calendario
+            DateTime fechaInicio = primerDia.AddDays(-desplazamiento);
+
+            for (int i = 0; i < 42; i++)
+            {
+                DateTime fecha = fechaInicio.AddDays(i);
+
+                ucDia dia = new ucDia();
+
+                dia.Dock = DockStyle.Fill;
+                dia.ConfigurarDia(
+                    fecha,
+                    fecha.Month == fechaActual.Month
+                );
+                var tareasDelDia = todasLasTareas
+                        .Where(t => t.FechaInicio.Date <= fecha.Date &&
+                                    t.FechaFin.Date >= fecha.Date)
+                        .OrderBy(t => t.FechaInicio.TimeOfDay)
+                        .ThenBy(t => t.Nombre);
+
+                dia.CargarTareas(tareasDelDia);
+                dia.SeleccionSolicitada += (s, e) => SeleccionarDia(dia);
+
+                diasCalendario.Add(dia);
+
+                int fila = i / 7;
+                int columna = i % 7;
+
+                tlpCalendario.Controls.Add(dia, columna, fila);
+            }
         }
 
-        private void Boton(Control padre, string texto, Action accion)
+        private void Control_EliminarSolicitado(object sender, EventArgs e)
         {
-            var boton = new Button { Text = texto, AutoSize = true };
-            boton.Click += (s, e) => OperacionUI.Ejecutar(this, accion);
-            padre.Controls.Add(boton);
-        }
+            var control = sender as ucTareas;
 
-        private void IniciarControlApps()
-        {
-            if (MessageBox.Show(this,
-                "Se solicitará el cierre normal de las aplicaciones abiertas. Guarda tu trabajo antes de continuar. Las aplicaciones con diálogos de confirmación pueden permanecer abiertas.",
-                "Iniciar control de aplicaciones", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+            if (control == null || control.Tarea == null)
                 return;
 
-            bloqueador.Iniciar();
-            MessageBox.Show(this, "El control está activo.", "Control iniciado",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            DialogResult confirmacion = MessageBox.Show(
+                this,
+                "¿Seguro que quieres borrar la tarea \"" +
+                    control.Tarea.Nombre + "\"?",
+                "Confirmar eliminación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            DateTime fecha = diaSeleccionado != null
+                ? diaSeleccionado.Fecha
+                : control.Tarea.FechaInicio.Date;
+            if (confirmacion != DialogResult.Yes)
+                return;
+
+            try
+            {
+                tareas.EliminarTarea(
+                    usuario.IdUsuario,
+                    control.Tarea.IdTarea);
+
+                bloqueador.ActualizarProgramacion();
+                bloqueadorWeb.ActualizarProgramacion();
+                ActualizarCalendarioYDia(fecha);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    this,
+                    ex.Message,
+                    "No se pudo borrar la tarea",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
-        private void DetenerControlApps()
+        private void ActualizarCalendarioYDia(DateTime fecha)
         {
-            bloqueador.Detener();
-            MessageBox.Show(this, "El control se detuvo.", "Control detenido",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-        private void Cargar()
-        {
-            listado.DataSource = tareas.BuscarTarea(usuario.IdUsuario, filtro.Text);
+            // CargarCalendario crea controles ucDia nuevos.
+            diaSeleccionado = null;
+            CargarCalendario();
+
+            ucDia diaActualizado = diasCalendario
+                .FirstOrDefault(dia => dia.Fecha.Date == fecha.Date);
+
+            if (diaActualizado != null)
+                SeleccionarDia(diaActualizado);
         }
 
-        private E_Tarea Seleccionada()
+        private void CargarTareasDelDia(DateTime fecha)
         {
-            var tarea = listado.CurrentRow == null ? null : listado.CurrentRow.DataBoundItem as E_Tarea;
-            if (tarea == null) throw new ArgumentException("Seleccione una tarea del listado.");
-            return tarea;
+            flTareas.Controls.Clear();
+
+            List<E_Tarea> resultado = tareas.BuscarTarea(usuario.IdUsuario, "");
+            List<E_Tarea> tareasDelDia = resultado
+                .Where(t => t.FechaInicio.Date <= fecha.Date &&
+                            t.FechaFin.Date >= fecha.Date)
+                .OrderBy(t => t.FechaInicio)
+                .ToList();
+
+            foreach (E_Tarea tarea in tareasDelDia)
+            {
+                var control = new ucTareas();
+                control.CargarTarea(tarea);
+                control.EliminarSolicitado += Control_EliminarSolicitado;
+                flTareas.Controls.Add(control);
+            }
         }
 
-        private void Editar(E_Tarea tarea)
+        private void SeleccionarDia(ucDia dia)
         {
-            if (tarea != null && tarea.Estado == 'A') throw new ArgumentException("Una tarea activa no se puede editar.");
-            using (var editor = new TareaForm(usuario.IdUsuario, tarea))
-                if (editor.ShowDialog() == DialogResult.OK) Cargar();
+            if (diaSeleccionado != null)
+                diaSeleccionado.Seleccionar(false);
+
+            diaSeleccionado = dia;
+            diaSeleccionado.Seleccionar(true);
+
+            CargarTareasDelDia(dia.Fecha);
+        }
+        private void MesAnterior()
+        {
+            fechaActual = fechaActual.AddMonths(-1);
+            CargarCalendario();
         }
 
-        private void Eliminar()
+        private void MesSiguiente()
         {
-            var tarea = Seleccionada();
-            if (MessageBox.Show(this, "¿Eliminar la tarea seleccionada?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-            tareas.EliminarTarea(usuario.IdUsuario, tarea.IdTarea);
-            Cargar();
+            fechaActual = fechaActual.AddMonths(1);
+            CargarCalendario();
         }
-        protected override void OnFormClosed(FormClosedEventArgs e)
+
+        private void BtnSiguiente_Click(object sender, EventArgs e)
         {
-            bloqueador.Dispose();
-            base.OnFormClosed(e);
+            MesSiguiente();
+        }
+
+        private void BtnAnterior_Click(object sender, EventArgs e)
+        {
+            MesAnterior();
+        }
+
+        private void btnAgregarTarea_Click(object sender, EventArgs e)
+        {
+            if (diaSeleccionado == null)
+            {
+                MessageBox.Show("Selecciona primero un día del calendario.");
+                return;
+            }
+
+            using (var formulario = new frmTareas(usuario.IdUsuario, diaSeleccionado.Fecha))
+            {
+                DateTime fecha = diaSeleccionado.Fecha;
+
+                if (NavegacionFormularios.MostrarModal(this, formulario) == DialogResult.OK)
+                {
+                    bloqueador.ActualizarProgramacion();
+                    bloqueadorWeb.ActualizarProgramacion();
+                    ActualizarCalendarioYDia(fecha);
+                }
+            }
+        }
+
+        private void Bloqueador_AplicacionBloqueada(
+    object sender,
+    AplicacionBloqueadaEventArgs e)
+        {
+            if (IsDisposed || !IsHandleCreated)
+                return;
+
+            if (InvokeRequired)
+            {
+                try
+                {
+                    BeginInvoke(new Action(
+                        () => MostrarAvisoBloqueo(e)));
+                }
+                catch (InvalidOperationException)
+                {
+                    // El formulario pudo cerrarse antes de procesar el aviso.
+                }
+
+                return;
+            }
+
+            MostrarAvisoBloqueo(e);
+        }
+
+        private void MostrarAvisoBloqueo(
+            AplicacionBloqueadaEventArgs e)
+        {
+            if (IsDisposed)
+                return;
+
+            if (avisoBloqueo == null || avisoBloqueo.IsDisposed)
+            {
+                avisoBloqueo = new frmAviso();
+
+                avisoBloqueo.FormClosed += (s, args) =>
+                {
+                    avisoBloqueo = null;
+                };
+            }
+
+            avisoBloqueo.ConfigurarContexto(
+                e.NombreAplicacion,
+                e.NombreTarea);
+
+            avisoBloqueo.TopMost = true;
+
+            if (!avisoBloqueo.Visible)
+                avisoBloqueo.Show();
+        }
+
+        private void BtnCerrarSesion_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void BloqueadorWeb_ErrorAplicandoBloqueo(string mensaje)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (!IsDisposed)
+                        MessageBox.Show(this, mensaje, "No se pudo aplicar el bloqueo web", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }));
+            }
+            catch (InvalidOperationException) { }
+        }
+
+        private void Bloqueador_DescansoIniciado(
+    object sender,
+    DescansoIniciadoEventArgs e)
+        {
+            if (IsDisposed || !IsHandleCreated)
+                return;
+
+            if (InvokeRequired)
+            {
+                try
+                {
+                    BeginInvoke(new Action(
+                        () => MostrarAvisoDescanso(e)));
+                }
+                catch (InvalidOperationException)
+                {
+                    // El formulario pudo cerrarse antes de procesar el aviso.
+                }
+
+                return;
+            }
+
+            MostrarAvisoDescanso(e);
+        }
+
+        private void MostrarAvisoDescanso(
+            DescansoIniciadoEventArgs e)
+        {
+            if (IsDisposed)
+                return;
+
+            if (avisoBloqueo != null && !avisoBloqueo.IsDisposed)
+                avisoBloqueo.Close();
+
+            if (formularioDescanso == null ||
+                formularioDescanso.IsDisposed)
+            {
+                formularioDescanso = new frmDescanso();
+
+                formularioDescanso.FormClosed += (s, args) =>
+                {
+                    formularioDescanso = null;
+                };
+            }
+
+            formularioDescanso.IniciarCuentaRegresiva(
+                e.NombreTarea,
+                e.FinDescanso,
+                e.DescansosRestantes);
+
+            formularioDescanso.TopMost = true;
+
+            if (!formularioDescanso.Visible)
+                formularioDescanso.Show();
+        }
+
+        private void btnMinimizar_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
         }
     }
 }

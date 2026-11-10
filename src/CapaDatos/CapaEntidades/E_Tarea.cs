@@ -11,6 +11,8 @@ namespace CapaEntidades
         public DateTime FechaFin { get; set; }
         public char Estado { get; set; } = 'P';
         public bool EsPlantilla { get; set; }
+        public bool NoBloquearApps { get; set; }
+        public bool NoBloquearWebs { get; set; }
 
         public bool TieneFechasValidas => FechaInicio < FechaFin;
 

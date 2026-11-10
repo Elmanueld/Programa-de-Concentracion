@@ -50,23 +50,11 @@ namespace CapaNegocio
             }
             if (String.IsNullOrEmpty(usuario.Nombre))
             {
-                foreach (var encontrado in Datos.BuscarUsuario(correo))
-                {
-                    if (encontrado.IdUsuario == usuario.IdUsuario)
-                    {
-                        usuario.Nombre = encontrado.Nombre;
-                        break;
-                    }
-                }
+                usuario.Nombre = Datos.BuscarNombreUsuario(usuario.IdUsuario);
             }
             intentosFallidos = 0;
             usuario.ContrasenaHash = null;
             return usuario;
-        }
-
-        public List<E_Usuario> BuscarUsuario(string buscar)
-        {
-            return Datos.BuscarUsuario(buscar ?? String.Empty);
         }
 
         public void RegistrarUsuario(E_Usuario usuario)

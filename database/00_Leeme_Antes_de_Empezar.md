@@ -5,42 +5,21 @@
 * SQL Server
 * SQL Server Management Studio (SSMS)
 
-## Orden de ejecución
+## Instalación nueva
 
-Los archivos SQL deben ejecutarse en el siguiente orden:
+Ejecuta los archivos en este orden:
 
-### 1. `01_CrearBaseDeDatos.sql`
+1. `01_CrearBaseDeDatos.sql`
+2. `02_CrearTablas.sql`
+3. `03_CrearRelaciones.sql`
+4. `04_CrearProcedimientos.sql`
+5. `05_CrearIndices.sql`
 
-Crea la base de datos **ProgramaConcentracion** y establece esta base de datos como contexto para los siguientes scripts.
+`InstalarBaseDatos.ps1` ejecuta estos pasos en orden. La verificación de correo está incluida en `04_CrearProcedimientos.sql`; los scripts de instalación quedan consolidados. Si el certificado del servidor local no es de confianza, ejecuta el instalador con `-ConfiarCertificadoServidor` solo para esa instancia.
 
-### 2. `02_CrearTablas.sql`
+## Base de prueba existente
 
-Crea todas las tablas necesarias para el funcionamiento de la aplicación, incluyendo:
+La estructura anterior tenía catálogos globales. Para aplicar el nuevo esquema desde cero, elimina la base `ProgramaConcentracion` y ejecuta la instalación completa con `InstalarBaseDatos.ps1` o los archivos en el orden indicado. Esto elimina las cuentas, tareas y configuraciones guardadas. Conserva una copia si quieres mantener esos datos.
 
-* Usuarios
-* Tareas
-* Descansos
-* Configuraciones
-* Aplicaciones
-* Webs
-* Tablas intermedias para las relaciones entre tareas, aplicaciones y sitios web.
+La tabla de aplicaciones y la de webs ahora pertenecen a un usuario. Las tareas, descansos y asociaciones guardan también el propietario, y las claves compuestas impiden relacionar datos de cuentas distintas.
 
-### 3. `03_CrearRelaciones.sql`
-
-Define las relaciones entre las tablas mediante claves foráneas, claves primarias compuestas, restricciones `UNIQUE` y otras restricciones necesarias para mantener la integridad de los datos.
-
-### 4. `04_CrearProcedimientos.sql`
-
-Crea los procedimientos almacenados (`Stored Procedures`) utilizados por la aplicación para realizar operaciones sobre la base de datos, como registrar, buscar, modificar y eliminar información.
-
-### 5. `05_CrearIndices.sql`
-
-Crea un índice único filtrado para permitir como máximo una tarea marcada como plantilla (`EsPlantilla = 1`) por usuario. Ejecuta este archivo después de crear las tablas.
-
-## Importante
-
-Los scripts deben ejecutarse en el orden indicado, ya que algunos archivos dependen de objetos creados por los archivos anteriores.
-
-Todos los scripts pertenecen a la misma base de datos:
-
-**ProgramaConcentracion**

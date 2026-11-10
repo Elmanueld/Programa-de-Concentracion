@@ -24,6 +24,7 @@ namespace CapaNegocio
         {
             if (configuracion == null) throw new ArgumentNullException("configuracion");
             ValidarId(configuracion.IdConfiguracion, "configuración");
+            ValidarId(configuracion.IdUsuario, "usuario");
             Datos.ModificarConfiguracion(configuracion);
         }
 

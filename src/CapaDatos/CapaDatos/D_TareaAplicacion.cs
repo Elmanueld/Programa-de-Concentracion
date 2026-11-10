@@ -5,10 +5,11 @@ namespace CapaDatos
 {
     public class D_TareaAplicacion
     {
-        public void Insertar(int idTarea, int idAplicacion)
+        public void Insertar(int idUsuario, int idTarea, int idAplicacion)
         {
             D_Comun.Ejecutar("sp_InsertarTareaAplicacion", comando =>
             {
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
                 D_Comun.Entero(comando, "@IdAplicacion", idAplicacion);
             });
@@ -29,10 +30,11 @@ namespace CapaDatos
             });
         }
 
-        public void Eliminar(int idTarea, int idAplicacion)
+        public void Eliminar(int idUsuario, int idTarea, int idAplicacion)
         {
             D_Comun.Ejecutar("sp_EliminarTareaAplicacion", comando =>
             {
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
                 D_Comun.Entero(comando, "@IdAplicacion", idAplicacion);
             });

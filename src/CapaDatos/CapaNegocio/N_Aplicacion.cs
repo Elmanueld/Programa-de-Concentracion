@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CapaDatos;
 using CapaEntidades;
+using System.Linq;
 
 namespace CapaNegocio
 {
@@ -9,29 +10,36 @@ namespace CapaNegocio
     {
         private readonly D_Aplicacion Datos = new D_Aplicacion();
 
-        public List<E_Aplicacion> BuscarAplicacion(string buscar)
+        public List<E_Aplicacion> BuscarAplicacion(int idUsuario, string buscar)
         {
-            return Datos.BuscarAplicacion(buscar ?? String.Empty);
+            ValidarIdUsuario(idUsuario);
+            return Datos.BuscarAplicacion(idUsuario, buscar ?? String.Empty);
         }
 
-        public void InsertarAplicacion(E_Aplicacion aplicacion)
+        public int InsertarAplicacion(int idUsuario, E_Aplicacion aplicacion)
         {
+            ValidarIdUsuario(idUsuario);
             ValidarAplicacion(aplicacion);
-            Datos.InsertarAplicacion(aplicacion);
+            ValidarPropietario(idUsuario, aplicacion.IdUsuario);
+            aplicacion.IdUsuario = idUsuario;
+            return Datos.InsertarAplicacion(idUsuario, aplicacion);
         }
 
-        public void ModificarAplicacion(E_Aplicacion aplicacion)
+        public void ModificarAplicacion(int idUsuario, E_Aplicacion aplicacion)
         {
+            ValidarIdUsuario(idUsuario);
             if (aplicacion == null) throw new ArgumentNullException("aplicacion");
+            ValidarPropietario(idUsuario, aplicacion.IdUsuario);
             ValidarId(aplicacion.IdAplicacion);
             ValidarAplicacion(aplicacion);
-            Datos.ModificarAplicacion(aplicacion);
+            Datos.ModificarAplicacion(idUsuario, aplicacion);
         }
 
-        public void EliminarAplicacion(int idAplicacion)
+        public void EliminarAplicacion(int idUsuario, int idAplicacion)
         {
+            ValidarIdUsuario(idUsuario);
             ValidarId(idAplicacion);
-            Datos.EliminarAplicacion(idAplicacion);
+            Datos.EliminarAplicacion(idUsuario, idAplicacion);
         }
 
         private static void ValidarAplicacion(E_Aplicacion aplicacion)
@@ -50,6 +58,57 @@ namespace CapaNegocio
         private static void ValidarId(int id)
         {
             if (id <= 0) throw new ArgumentException("El ID de aplicación no es válido.");
+        }
+
+        public List<E_Aplicacion> OrdenarAppsPorBusqueda(
+        IEnumerable<E_Aplicacion> aplicaciones,
+        string termino)
+            {
+                return new D_ExploradorAplicaciones()
+                    .OrdenarPorRelevancia(aplicaciones, termino);
+        }
+
+        public List<E_Aplicacion> BuscarAppsInstaladas(int idUsuario)
+        {
+            ValidarIdUsuario(idUsuario);
+            var instaladas =
+                new D_ExploradorAplicaciones().BuscarAppsInstaladas();
+
+            var registradas = Datos.BuscarAplicacion(idUsuario, "");
+
+            foreach (E_Aplicacion app in instaladas)
+            {
+                app.IdUsuario = idUsuario;
+                E_Aplicacion existente = registradas.FirstOrDefault(
+                    guardada => String.Equals(
+                        guardada.Identificador,
+                        app.Identificador,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                );
+
+                if (existente != null)
+                {
+                    app.IdAplicacion = existente.IdAplicacion;
+                    app.EsCritica = existente.EsCritica;
+                }
+            }
+
+            return instaladas
+                .OrderBy(app => app.Nombre)
+                .ToList();
+        }
+
+        private static void ValidarIdUsuario(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                throw new ArgumentException("El ID de usuario no es válido.");
+        }
+
+        private static void ValidarPropietario(int idUsuario, int propietario)
+        {
+            if (propietario > 0 && propietario != idUsuario)
+                throw new ArgumentException("La aplicación pertenece a otro usuario.");
         }
     }
 }

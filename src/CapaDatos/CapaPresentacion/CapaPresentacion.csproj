@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -12,6 +12,22 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -22,6 +38,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,9 +50,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AntdUI">
+      <HintPath>..\packages\AntdUI.2.4.19\lib\net48\AntdUI.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -54,15 +75,90 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmAviso.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmAviso.Designer.cs">
+      <DependentUpon>frmAviso.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmDescanso.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmDescanso.Designer.cs">
+      <DependentUpon>frmDescanso.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmSeleccionarApp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSeleccionarApp.Designer.cs">
+      <DependentUpon>frmSeleccionarApp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmSeleccionarWeb.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSeleccionarWeb.Designer.cs">
+      <DependentUpon>frmSeleccionarWeb.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmTareas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTareas.Designer.cs">
+      <DependentUpon>frmTareas.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Tipografia.cs" />
     <Compile Include="OperacionUI.cs" />
+    <Compile Include="ArrastreFormulario.cs" />
+    <Compile Include="NavegacionFormularios.cs" />
+    <Compile Include="PrincipalForm.Designer.cs">
+      <DependentUpon>PrincipalForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PrincipalForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TareaForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ucAplicacion.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucAplicacion.Designer.cs">
+      <DependentUpon>ucAplicacion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ucDia.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucDia.Designer.cs">
+      <DependentUpon>ucDia.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ucTareas.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucTareas.Designer.cs">
+      <DependentUpon>ucTareas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ucWeb.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucWeb.Designer.cs">
+      <DependentUpon>ucWeb.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="frmAviso.resx">
+      <DependentUpon>frmAviso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmDescanso.resx">
+      <DependentUpon>frmDescanso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSeleccionarApp.resx">
+      <DependentUpon>frmSeleccionarApp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSeleccionarWeb.resx">
+      <DependentUpon>frmSeleccionarWeb.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTareas.resx">
+      <DependentUpon>frmTareas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PrincipalForm.resx">
+      <DependentUpon>PrincipalForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -72,6 +168,19 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="ucAplicacion.resx">
+      <DependentUpon>ucAplicacion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucDia.resx">
+      <DependentUpon>ucDia.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucTareas.resx">
+      <DependentUpon>ucTareas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucWeb.resx">
+      <DependentUpon>ucWeb.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -84,6 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Properties\app.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -95,5 +205,43 @@
       <Project>{BE256DD1-A5F6-483D-AF95-AB0143FA0DFB}</Project>
       <Name>CapaEntidades</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 y x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Fonts\Inter-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\Inter-Bold.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\Inter-Italic.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\Inter-BoldItalic.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\OFL.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Aviso.Designer.html" />
+    <Content Include="Aviso.html">
+      <SubType>Component</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="src\block2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

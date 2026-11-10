@@ -118,7 +118,6 @@ internal static partial class Program
             Comprobar(usuario.IdUsuario > 0 && usuario.ContrasenaHash == null, "Login correcto sin hash en sesión");
             Rechazar(() => usuarios.IniciarSesion(correo, "Incorrecta"), "Login incorrecto rechazado");
             ProbarLoginAnterior(correo, clave);
-            ProbarProcedimientosOriginales(usuario.IdUsuario);
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
 

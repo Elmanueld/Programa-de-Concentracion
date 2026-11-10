@@ -27,7 +27,9 @@ internal static partial class Program
         }
         catch (SqlException ex)
         {
-            if (ex.Number >= 50001 && ex.Number <= 50006 || ex.Number == 2627 || ex.Number == 2601)
+            if ((ex.Number >= 50001 && ex.Number <= 50006) ||
+                (ex.Number >= 50015 && ex.Number <= 50020) ||
+                ex.Number == 2627 || ex.Number == 2601)
                 rechazo = true;
             else
                 throw;

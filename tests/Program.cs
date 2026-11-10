@@ -90,6 +90,8 @@ internal static partial class Program
         string otro = "otro-" + Guid.NewGuid().ToString("N") + "@example.com";
         var usuarios = new N_Usuario();
         var tareas = new N_Tarea();
+        var aplicaciones = new N_Aplicacion();
+        var webs = new N_Web();
         try
         {
             usuarios.RegistrarUsuario("Prueba", correo, clave);
@@ -117,10 +119,47 @@ internal static partial class Program
             ProbarProcedimientosOriginales(usuario.IdUsuario);
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
-            int id = tareas.InsertarTarea(new E_Tarea { IdUsuario = usuario.IdUsuario, Nombre = "Lectura", FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13) });
+
+            int aplicacionPropia = aplicaciones.InsertarAplicacion(usuario.IdUsuario,
+                new E_Aplicacion { Nombre = "Aplicación propia", Identificador = "prueba-propia-" + Guid.NewGuid().ToString("N") });
+            int aplicacionAjena = aplicaciones.InsertarAplicacion(idOtro,
+                new E_Aplicacion { Nombre = "Aplicación privada", Identificador = "prueba-ajena-" + Guid.NewGuid().ToString("N") });
+            int webPropia = webs.InsertarWeb(usuario.IdUsuario,
+                new E_Web { Nombre = "Web propia", Link = "https://propia.example.com/" + Guid.NewGuid().ToString("N") });
+            int webAjena = webs.InsertarWeb(idOtro,
+                new E_Web { Nombre = "Web privada", Link = "https://ajena.example.com/" + Guid.NewGuid().ToString("N") });
+
+            Comprobar(aplicaciones.BuscarAplicacion(usuario.IdUsuario, "").Any(x => x.IdAplicacion == aplicacionPropia) &&
+                !aplicaciones.BuscarAplicacion(usuario.IdUsuario, "").Any(x => x.IdAplicacion == aplicacionAjena),
+                "El catálogo de aplicaciones solo devuelve las del usuario");
+            Comprobar(webs.BuscarWeb(usuario.IdUsuario, "").Any(x => x.IdWeb == webPropia) &&
+                !webs.BuscarWeb(usuario.IdUsuario, "").Any(x => x.IdWeb == webAjena),
+                "El catálogo de webs solo devuelve las del usuario");
+            Rechazar(() => aplicaciones.ModificarAplicacion(idOtro,
+                new E_Aplicacion { IdUsuario = idOtro, IdAplicacion = aplicacionPropia, Nombre = "Ajena", Identificador = "intento-ajeno" }),
+                "SQL impide modificar una aplicación ajena");
+            Rechazar(() => aplicaciones.EliminarAplicacion(idOtro, aplicacionPropia),
+                "SQL impide eliminar una aplicación ajena");
+            Rechazar(() => webs.ModificarWeb(idOtro,
+                new E_Web { IdUsuario = idOtro, IdWeb = webPropia, Nombre = "Ajena", Link = "https://intento-ajeno.example.com" }),
+                "SQL impide modificar una web ajena");
+            Rechazar(() => webs.EliminarWeb(idOtro, webPropia),
+                "SQL impide eliminar una web ajena");
+
+            int id = tareas.InsertarTarea(new E_Tarea {
+                IdUsuario = usuario.IdUsuario, Nombre = "Lectura",
+                FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13),
+                NoBloquearApps = true, NoBloquearWebs = true
+            });
             var tarea = tareas.BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id);
             Comprobar(tarea.Estado == 'P', "Crear y listar tarea persistida");
+            Comprobar(tarea.NoBloquearApps && tarea.NoBloquearWebs,
+                "Las opciones de omitir bloqueos se guardan en la tarea");
             Comprobar(!tareas.BuscarTarea(idOtro, "").Any(x => x.IdTarea == id), "Otro usuario no lista tarea ajena");
+            Rechazar(() => new N_TareaAplicacion().Insertar(usuario.IdUsuario, id, aplicacionAjena),
+                "SQL impide asociar a la tarea una aplicación de otra cuenta");
+            Rechazar(() => new N_TareaWeb().Insertar(usuario.IdUsuario, id, webAjena),
+                "SQL impide asociar a la tarea una web de otra cuenta");
             Rechazar(() => tareas.EliminarTarea(idOtro, id), "SQL rechaza borrar tarea ajena");
             tarea.IdUsuario = idOtro;
             Rechazar(() => tareas.ModificarTarea(tarea), "SQL rechaza editar tarea ajena");
@@ -143,7 +182,16 @@ internal static partial class Program
         finally
         {
             foreach (string email in new[] { correo, otro })
-                Sql("DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+                Sql(@"DECLARE @IdUsuario INT = (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo);
+                    DELETE FROM Tarea_Web WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Tarea_Aplicacion WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Descansos WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Tareas WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Webs WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Aplicaciones WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM Configuraciones WHERE IdUsuario=@IdUsuario;
+                    DELETE FROM CodigosVerificacion WHERE Correo=@Correo;
+                    DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }
     }
 

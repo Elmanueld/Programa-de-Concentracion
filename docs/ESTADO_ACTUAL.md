@@ -11,7 +11,7 @@
 
 ## Pruebas
 
-Compilación Release: 0 errores. Pruebas ejecutadas el 14/11/2026: 22 unitarias, 34 de interfaz y 68 de integración. Ver [reporte](REPORTE_DE_PRUEBAS.md) y [logs](../tests/evidencias/README.md).
+Compilación Release: 0 errores. Pruebas ejecutadas el 14/11/2026: 22 unitarias, 34 de interfaz y 71 de integración. Ver [reporte](REPORTE_DE_PRUEBAS.md) y [logs](../tests/evidencias/README.md).
 
 La integración se limitó a `(localdb)\Entregable3Pruebas`. No se ejecutó contra la base del usuario.
 

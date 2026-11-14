@@ -54,7 +54,10 @@ CORRECTO: SQL impide eliminar una web ajena
 CORRECTO: Dos usuarios con tareas del mismo nombre y horario solo leen las propias
 CORRECTO: No se puede eliminar la tarea homónima de otro usuario
 CORRECTO: Crear y listar tarea persistida
+CORRECTO: Las opciones de omitir bloqueos se guardan en la tarea
 CORRECTO: Otro usuario no lista tarea ajena
+CORRECTO: SQL impide asociar a la tarea una aplicación de otra cuenta
+CORRECTO: SQL impide asociar a la tarea una web de otra cuenta
 CORRECTO: SQL rechaza borrar tarea ajena
 CORRECTO: SQL rechaza editar tarea ajena
 CORRECTO: Editar y recuperar en otra consulta
@@ -66,4 +69,4 @@ CORRECTO: La finalización de tarea se conserva
 CORRECTO: Eliminación persistente
 CORRECTO: Borrado inexistente informa error
 CORRECTO: Cuenta eliminada no accede
-Total correcto: 68
+Total correcto: 71

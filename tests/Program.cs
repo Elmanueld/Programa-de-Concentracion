@@ -28,7 +28,7 @@ internal static partial class Program
         }
         catch (SqlException ex)
         {
-            if (ex.Number >= 50001 && ex.Number <= 50006 || ex.Number >= 50015 && ex.Number <= 50018 || ex.Number == 2627 || ex.Number == 2601)
+            if (ex.Number >= 50001 && ex.Number <= 50006 || ex.Number >= 50015 && ex.Number <= 50020 || ex.Number == 2627 || ex.Number == 2601)
                 rechazo = true;
             else
                 throw;
@@ -132,7 +132,12 @@ internal static partial class Program
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
             ProbarAislamientoCatalogos(usuario.IdUsuario, idOtro, Comprobar, Rechazar);
-            int id = tareas.InsertarTarea(new E_Tarea { IdUsuario = usuario.IdUsuario, Nombre = "Lectura", FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13) });
+            int id = tareas.InsertarTarea(new E_Tarea
+            {
+                IdUsuario = usuario.IdUsuario, Nombre = "Lectura",
+                FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13),
+                NoBloquearApps = true, NoBloquearWebs = true
+            });
             int idTareaMisma = tareas.InsertarTarea(new E_Tarea
             {
                 IdUsuario = idOtro, Nombre = "Lectura",
@@ -148,7 +153,19 @@ internal static partial class Program
                 "No se puede eliminar la tarea homónima de otro usuario");
             var tarea = tareas.BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id);
             Comprobar(tarea.Estado == 'P', "Crear y listar tarea persistida");
+            Comprobar(tarea.NoBloquearApps && tarea.NoBloquearWebs,
+                "Las opciones de omitir bloqueos se guardan en la tarea");
             Comprobar(!tareas.BuscarTarea(idOtro, "").Any(x => x.IdTarea == id), "Otro usuario no lista tarea ajena");
+            string identificadorRelacion = "relacion-" + Guid.NewGuid().ToString("N");
+            string enlaceRelacion = "https://example.com/relacion/" + Guid.NewGuid().ToString("N");
+            int aplicacionAjena = new N_Aplicacion().InsertarAplicacion(idOtro,
+                new E_Aplicacion { Nombre = "Aplicación ajena", Identificador = identificadorRelacion });
+            int webAjena = new N_Web().InsertarWeb(idOtro,
+                new E_Web { Nombre = "Web ajena", Link = enlaceRelacion });
+            Rechazar(() => new N_TareaAplicacion().Insertar(usuario.IdUsuario, id, aplicacionAjena),
+                "SQL impide asociar a la tarea una aplicación de otra cuenta");
+            Rechazar(() => new N_TareaWeb().Insertar(usuario.IdUsuario, id, webAjena),
+                "SQL impide asociar a la tarea una web de otra cuenta");
             Rechazar(() => tareas.EliminarTarea(idOtro, id), "SQL rechaza borrar tarea ajena");
             tarea.IdUsuario = idOtro;
             Rechazar(() => tareas.ModificarTarea(tarea), "SQL rechaza editar tarea ajena");
@@ -178,7 +195,7 @@ internal static partial class Program
         finally
         {
             foreach (string email in new[] { correo, otro })
-                Sql("DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+                Sql("DELETE FROM Tarea_Aplicacion WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tarea_Web WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Descansos WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Configuraciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM CodigosVerificacion WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }
     }
 
@@ -225,7 +242,7 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", anterior);
             foreach (string email in new[] { correo, otro })
-                Sql("DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+                Sql("DELETE FROM Tarea_Aplicacion WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tarea_Web WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Descansos WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Configuraciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM CodigosVerificacion WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }
     }
 }

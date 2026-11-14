@@ -43,6 +43,6 @@ El preparador no borra ni sobrescribe una instancia/base existente. La suite ver
 | Compilación Release de `tests/Pruebas.csproj` | Aprobada, 0 errores y 2 advertencias ya existentes en `Tipografia.cs` y `frmSeleccionarApp.Designer.cs`. |
 | Unitarias y componentes | 22 comprobaciones aprobadas. |
 | Interfaz (`--interfaz`) | 34 comprobaciones aprobadas: 22 base y 12 de interfaz. |
-| Integración LocalDB (`--integracion`) | 68 comprobaciones aprobadas: 22 base y 46 SQL. |
+| Integración LocalDB (`--integracion`) | 71 comprobaciones aprobadas: 22 base y 49 SQL. Incluye opciones de tarea y rechazo de relaciones con aplicaciones/webs de otro propietario. |
 
 Los logs completos y las imágenes resumen están en `tests/evidencias/`. Las pruebas automatizadas de interfaz no reemplazan una revisión visual manual en las pantallas del equipo destino. No se ha probado el envío a un buzón real.

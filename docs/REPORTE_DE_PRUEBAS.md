@@ -11,7 +11,7 @@
 | Compilación de `tests/Pruebas.csproj` | Aprobada, 0 errores, 2 advertencias de código existentes | [log](../tests/evidencias/compilacion.log) · [resumen](../tests/evidencias/evidencia-compilacion.png) |
 | Unitarias/componentes | **22 aprobadas** | [log](../tests/evidencias/unitarias.log) · [resumen](../tests/evidencias/evidencia-unitarias.png) |
 | Interfaz WinForms | **34 aprobadas** (22 base + 12 de interfaz) | [log](../tests/evidencias/interfaz.log) · [resumen](../tests/evidencias/evidencia-interfaz.png) |
-| Integración LocalDB | **68 aprobadas** (22 base + 46 SQL) | [log](../tests/evidencias/integracion.log) · [resumen](../tests/evidencias/evidencia-integracion.png) |
+| Integración LocalDB | **71 aprobadas** (22 base + 49 SQL) | [log](../tests/evidencias/integracion.log) · [resumen](../tests/evidencias/evidencia-integracion.png) |
 
 La integración corrió únicamente en `(localdb)\Entregable3Pruebas`. Las cuentas y datos temporales se limpian al terminar. La prueba SMTP utiliza un servidor TCP local y no envía correo a cuentas reales. La base SQLite de prueba usa una ruta temporal configurada por el ejecutable y se elimina al finalizar.
 

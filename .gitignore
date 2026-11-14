@@ -1,5 +1,7 @@
 .vs/
 **/bin/
 **/obj/
+**/packages/
+**/UpgradeLog.htm
 *.user
 *.suo

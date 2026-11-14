@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidades;
@@ -15,11 +15,16 @@ namespace CapaPresentacion
     public partial class ucWeb : UserControl
     {
         private TextBox txtEditarNombre;
+        private readonly Image imagenIconoDisenador;
+        private bool seleccionada;
         private static readonly object _bloqueoCacheIconos = new object();
 
         private static readonly Dictionary<string, byte[]> _cacheIconos =
             new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConcurrentDictionary<string, Lazy<Task<byte[]>>> _descargasIconos =
+            new ConcurrentDictionary<string, Lazy<Task<byte[]>>>(StringComparer.OrdinalIgnoreCase);
         public E_Web Web { get; private set; }
+        public bool Seleccionada { get { return seleccionada; } }
 
         public event EventHandler SeleccionarSolicitado;
         public event EventHandler QuitarSolicitado;
@@ -27,7 +32,14 @@ namespace CapaPresentacion
         public ucWeb()
         {
             InitializeComponent();
-            Tipografia.Aplicar(this);
+            if (FormularioSuave.EnModoDiseno) return;
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer, true);
+            BackColor = Color.Transparent;
+            lblNombre.BackColor = Color.Transparent;
+            lblLink.BackColor = Color.Transparent;
+            TemaAplicacion.Preparar(this);
+            imagenIconoDisenador = pbIcono.Image;
 
             lblNombre.DoubleClick += lblNombre_DoubleClick;
             btnQuitar.Click += (s, e) =>
@@ -42,8 +54,23 @@ namespace CapaPresentacion
             pbIcono.Click += (s, e) =>
                 SeleccionarSolicitado?.Invoke(this, EventArgs.Empty);
 
-            pbIcono.SizeMode = PictureBoxSizeMode.Zoom;
 
+        }
+
+        public void EstablecerSeleccionada(bool valor)
+        {
+            seleccionada = valor;
+            Invalidate();
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            if (seleccionada)
+            {
+                using (var pincel = new SolidBrush(PaletaAplicacion.AzulHover))
+                    e.Graphics.FillRectangle(pincel, ClientRectangle);
+            }
+            else base.OnPaintBackground(e);
         }
 
         private bool CargarIconoDesdeCache(string link)
@@ -109,8 +136,8 @@ namespace CapaPresentacion
         {
             Image anterior = pbIcono.Image;
             pbIcono.Image = nuevaImagen;
-
-            if (anterior != null)
+            if (anterior != null && !ReferenceEquals(anterior, imagenIconoDisenador) &&
+                !ReferenceEquals(anterior, nuevaImagen))
                 anterior.Dispose();
         }
 
@@ -143,16 +170,14 @@ namespace CapaPresentacion
         public void Configurar(E_Web web, bool mostrarBotonQuitar)
         {
             Web = web ?? throw new ArgumentNullException("web");
+            btnQuitar.Visible = mostrarBotonQuitar;
 
             lblNombre.Text = web.Nombre;
             lblLink.Text = FormatearLink(web.Link);
-            btnQuitar.Visible = mostrarBotonQuitar;
-
+            ReemplazarImagen(imagenIconoDisenador);
             if (!CargarIconoDesdeCache(web.Link))
-            {
-                pbIcono.Image = SystemIcons.Application.ToBitmap();
                 CargarIconoAsync(web.Link);
-            }
+
         }
 
         private async void CargarIconoAsync(string link)
@@ -166,147 +191,69 @@ namespace CapaPresentacion
                 return;
             }
 
-            bool esIp = IPAddress.TryParse(sitio.Host, out _);
-            bool esLocalhost = String.Equals(
-                sitio.Host, "localhost", StringComparison.OrdinalIgnoreCase);
+            string clave = ObtenerClaveCache(link);
+            if (clave == null) return;
+            Uri icono = new Uri(clave + "/favicon.ico");
+            Lazy<Task<byte[]>> descarga = _descargasIconos.GetOrAdd(clave,
+                _ => new Lazy<Task<byte[]>>(() => DescargarIconoAltaResolucionAsync(icono, clave)));
+            try
+            {
+                byte[] datos = await descarga.Value;
+                if (datos == null || datos.Length == 0 || IsDisposed) return;
+                GuardarIconoEnCache(link, datos);
+                if (Web == null || !String.Equals(ObtenerClaveCache(Web.Link), clave,
+                    StringComparison.OrdinalIgnoreCase)) return;
+                using (var memoria = new MemoryStream(datos))
+                using (var imagenTemporal = Image.FromStream(memoria))
+                    ReemplazarImagen(new Bitmap(imagenTemporal));
+            }
+            catch (WebException) { }
+            catch (ArgumentException) { }
+            catch (InvalidOperationException) { }
+        }
 
-            // Evita intentar resolver entradas como "youtube".
-            if (!esIp && !esLocalhost && !sitio.Host.Contains("."))
-                return;
+        private static async Task<byte[]> DescargarIconoAsync(Uri icono)
+        {
+            try
+            {
+                using (var cliente = new WebClientConTimeout())
+                {
+                    cliente.Headers[HttpRequestHeader.UserAgent] = "Mozilla/5.0";
+                    return await cliente.DownloadDataTaskAsync(icono).ConfigureAwait(false);
+                }
+            }
+            catch (WebException) { return null; }
+        }
 
-            var candidatos = new List<Tuple<int, Uri>>();
+        private static async Task<byte[]> DescargarIconoAltaResolucionAsync(Uri icono, string origen)
+        {
+            byte[] datos = await DescargarIconoAsync(icono).ConfigureAwait(false);
+            if (TieneResolucionUtil(datos)) return datos;
 
             try
             {
-                string html;
-
-                using (var cliente = new WebClientConTimeout())
-                {
-                    cliente.Headers[HttpRequestHeader.UserAgent] =
-                        "Mozilla/5.0";
-
-                    html = await cliente.DownloadStringTaskAsync(sitio);
-                }
-
-                foreach (Match etiqueta in Regex.Matches(
-                    html ?? String.Empty,
-                    @"<link\b[^>]*>",
-                    RegexOptions.IgnoreCase))
-                {
-                    string tag = etiqueta.Value;
-                    string rel = ObtenerAtributoHtml(tag, "rel");
-                    string href = ObtenerAtributoHtml(tag, "href");
-                    string sizes = ObtenerAtributoHtml(tag, "sizes");
-
-                    if (String.IsNullOrWhiteSpace(href))
-                        continue;
-
-                    bool esIcono =
-                        (!String.IsNullOrWhiteSpace(rel) &&
-                         (rel.IndexOf("icon", StringComparison.OrdinalIgnoreCase) >= 0));
-
-                    if (!esIcono)
-                        continue;
-
-                    Uri uriIcono;
-                    if (!Uri.TryCreate(sitio, href, out uriIcono))
-                        continue;
-
-                    int tamano = 0;
-                    Match matchTamano = Regex.Match(
-                        sizes ?? String.Empty,
-                        @"(\d+)\s*x\s*(\d+)",
-                        RegexOptions.IgnoreCase);
-
-                    if (matchTamano.Success)
-                    {
-                        int ancho;
-                        int alto;
-
-                        if (Int32.TryParse(matchTamano.Groups[1].Value, out ancho) &&
-                            Int32.TryParse(matchTamano.Groups[2].Value, out alto))
-                        {
-                            tamano = Math.Min(ancho, alto);
-                        }
-                    }
-
-                    candidatos.Add(Tuple.Create(tamano, uriIcono));
-                }
+                var altaResolucion = new Uri("https://www.google.com/s2/favicons?domain_url=" +
+                    Uri.EscapeDataString(origen) + "&sz=128");
+                byte[] alternativa = await DescargarIconoAsync(altaResolucion).ConfigureAwait(false);
+                return TieneResolucionUtil(alternativa) ? alternativa : datos ?? alternativa;
             }
-            catch (WebException)
+            catch (UriFormatException)
             {
-                // Sin internet o el sitio no responde; se prueban iconos estándar.
-            }
-
-            // El sitio puede ofrecer el icono táctil en mayor resolución.
-            candidatos.Add(Tuple.Create(
-                180,
-                new Uri(sitio.GetLeftPart(UriPartial.Authority) +
-                        "/apple-touch-icon.png")));
-
-            candidatos.Add(Tuple.Create(
-                16,
-                new Uri(sitio.GetLeftPart(UriPartial.Authority) +
-                        "/favicon.ico")));
-
-            foreach (var candidato in candidatos
-                .OrderByDescending(item => item.Item1))
-            {
-                try
-                {
-                    byte[] datos;
-
-                    using (var cliente = new WebClientConTimeout())
-                    {
-                        cliente.Headers[HttpRequestHeader.UserAgent] =
-                            "Mozilla/5.0";
-
-                        datos = await cliente.DownloadDataTaskAsync(candidato.Item2);
-                    }
-
-                    // Guarda los bytes descargados para los próximos refresh del FlowLayout.
-                    GuardarIconoEnCache(link, datos);
-
-                    // Actualiza esta tarjeta solo si todavía corresponde a este enlace.
-                    if (Web != null &&
-                        String.Equals(
-                            ObtenerClaveCache(Web.Link),
-                            ObtenerClaveCache(link),
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        using (var memoria = new MemoryStream(datos))
-                        using (var imagenTemporal = Image.FromStream(memoria))
-                        {
-                            ReemplazarImagen(new Bitmap(imagenTemporal));
-                        }
-                    }
-
-                    return;
-                }
-                catch (WebException)
-                {
-                    // Intenta el siguiente icono declarado o estándar.
-                }
-                catch (ArgumentException)
-                {
-                    // El archivo no es una imagen compatible; intenta el siguiente.
-                }
-                catch (InvalidOperationException)
-                {
-                    // El control pudo cerrarse mientras se descargaba.
-                    return;
-                }
+                return datos;
             }
         }
 
-        private static string ObtenerAtributoHtml(string etiqueta, string atributo)
+        private static bool TieneResolucionUtil(byte[] datos)
         {
-            Match match = Regex.Match(
-                etiqueta,
-                atributo + @"\s*=\s*[""']([^""']*)[""']",
-                RegexOptions.IgnoreCase);
-
-            return match.Success ? WebUtility.HtmlDecode(match.Groups[1].Value) : null;
+            if (datos == null || datos.Length == 0) return false;
+            try
+            {
+                using (var memoria = new MemoryStream(datos))
+                using (var imagen = Image.FromStream(memoria))
+                    return imagen.Width >= 64 && imagen.Height >= 64;
+            }
+            catch (ArgumentException) { return false; }
+            catch (OutOfMemoryException) { return false; }
         }
 
         private sealed class WebClientConTimeout : WebClient

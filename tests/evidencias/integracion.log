@@ -43,12 +43,16 @@ CORRECTO: Código de un solo uso
 CORRECTO: Login correcto sin hash en sesión
 CORRECTO: Login incorrecto rechazado
 CORRECTO: Login con procedimiento anterior recupera Nombre y no expone el hash
-CORRECTO: Editar con el procedimiento original sin migración
-CORRECTO: Procedimiento original no permite borrar tarea ajena
-CORRECTO: Procedimiento original no permite editar tarea ajena
-CORRECTO: Procedimiento original protege tarea activa al editar
-CORRECTO: Procedimiento original protege tarea activa al eliminar
-CORRECTO: Eliminar con el procedimiento original sin migración
+CORRECTO: Dos usuarios pueden guardar el mismo valor de aplicación en catálogos privados
+CORRECTO: La búsqueda de aplicaciones solo devuelve el registro del propietario
+CORRECTO: SQL impide modificar una aplicación ajena
+CORRECTO: SQL impide eliminar una aplicación ajena
+CORRECTO: Dos usuarios pueden guardar el mismo valor de web en catálogos privados
+CORRECTO: La búsqueda de webs solo devuelve el registro del propietario
+CORRECTO: SQL impide modificar una web ajena
+CORRECTO: SQL impide eliminar una web ajena
+CORRECTO: Dos usuarios con tareas del mismo nombre y horario solo leen las propias
+CORRECTO: No se puede eliminar la tarea homónima de otro usuario
 CORRECTO: Crear y listar tarea persistida
 CORRECTO: Otro usuario no lista tarea ajena
 CORRECTO: SQL rechaza borrar tarea ajena
@@ -56,8 +60,10 @@ CORRECTO: SQL rechaza editar tarea ajena
 CORRECTO: Editar y recuperar en otra consulta
 CORRECTO: Tarea activa no editable
 CORRECTO: Tarea activa no eliminable
-CORRECTO: RF-006 permite editar completadas
+CORRECTO: Tarea completada no editable
+CORRECTO: Tarea completada no eliminable
+CORRECTO: La finalización de tarea se conserva
 CORRECTO: Eliminación persistente
 CORRECTO: Borrado inexistente informa error
 CORRECTO: Cuenta eliminada no accede
-Total correcto: 62
+Total correcto: 68

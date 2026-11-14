@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidades;
 
@@ -9,8 +12,10 @@ namespace CapaPresentacion
 {
     public partial class ucAplicacion : UserControl
     {
-        private Color colorNormalPanel;
-        private Color colorNormalNombre;
+        private static readonly ConcurrentDictionary<string, Lazy<Task<byte[]>>> cacheIconos =
+            new ConcurrentDictionary<string, Lazy<Task<byte[]>>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly SemaphoreSlim limiteExtraccionIconos = new SemaphoreSlim(3, 3);
+        private readonly Image imagenIconoDisenador;
 
         public E_Aplicacion Aplicacion { get; private set; }
         public bool Seleccionada { get; private set; }
@@ -22,12 +27,15 @@ namespace CapaPresentacion
         public ucAplicacion()
         {
             InitializeComponent();
-            Tipografia.Aplicar(this);
-
-            panel1.Dock = DockStyle.Fill;
-            colorNormalPanel = panel1.BackColor;
-            colorNormalNombre = lblNombreApp.BackColor;
-            btnQuitar.Visible = false;
+            if (FormularioSuave.EnModoDiseno) return;
+            BackColor = Color.Transparent;
+            panel1.BackColor = Color.Transparent;
+            pbIcono.BackColor = Color.Transparent;
+            lblNombreApp.BackColor = Color.Transparent;
+            TemaAplicacion.Preparar(this);
+            imagenIconoDisenador = pbIcono.Image;
+            ControlesPresentacion.Optimizar(panel1);
+            panel1.BackColor = Color.Transparent;
             btnQuitar.Click += (s, e) => QuitarSolicitado?.Invoke(this, EventArgs.Empty);
 
             EnlazarClick(this);
@@ -36,49 +44,71 @@ namespace CapaPresentacion
         public void Configurar(E_Aplicacion aplicacion, bool mostrarBotonQuitar = false)
         {
             Aplicacion = aplicacion;
-            btnQuitar.Visible = mostrarBotonQuitar;
             permitirSeleccion = !mostrarBotonQuitar;
+            btnQuitar.Visible = mostrarBotonQuitar;
             lblNombreApp.Text = aplicacion.Nombre;
-            pbIcono.SizeMode = PictureBoxSizeMode.Zoom;
 
-            Image imagen = ExtraerIcono(
-                aplicacion.RutaIcono,
-                aplicacion.IndiceIcono
-            );
+            // Restablece el recurso del diseñador mientras se carga el icono
+            // propio de esta aplicación, sin cambiar su color original.
+            ReemplazarImagen(imagenIconoDisenador);
+            string clave = (aplicacion.RutaIcono ?? String.Empty) + "|" +
+                aplicacion.IndiceIcono + "|" + (aplicacion.Identificador ?? String.Empty);
+            Lazy<Task<byte[]>> carga = cacheIconos.GetOrAdd(clave,
+                _ => new Lazy<Task<byte[]>>(() => Task.Run(async () =>
+                {
+                    await limiteExtraccionIconos.WaitAsync().ConfigureAwait(false);
+                    try { return ExtraerIconoBytes(aplicacion); }
+                    finally { limiteExtraccionIconos.Release(); }
+                })));
+            CargarIconoAsync(aplicacion, carga.Value);
+        }
 
-            if (imagen == null)
-            {
-                imagen = ExtraerIconoDelShell(
-                    aplicacion.Identificador
-                );
-            }
-
-            if (imagen == null &&
-                !String.IsNullOrWhiteSpace(aplicacion.Identificador) &&
+        private static byte[] ExtraerIconoBytes(E_Aplicacion aplicacion)
+        {
+            Image imagen = ExtraerIcono(aplicacion.RutaIcono, aplicacion.IndiceIcono);
+            if (imagen == null) imagen = ExtraerIconoDelShell(aplicacion.Identificador);
+            if (imagen == null && !String.IsNullOrWhiteSpace(aplicacion.Identificador) &&
                 File.Exists(aplicacion.Identificador))
             {
                 try
                 {
-                    using (Icon icono =
-                        Icon.ExtractAssociatedIcon(
-                            aplicacion.Identificador
-                        ))
-                    {
-                        if (icono != null)
-                            imagen = icono.ToBitmap();
-                    }
+                    using (Icon icono = Icon.ExtractAssociatedIcon(aplicacion.Identificador))
+                        if (icono != null) imagen = icono.ToBitmap();
                 }
-                catch
-                {
-                    // Se intentará mostrar un icono genérico al final.
-                }
+                catch { }
             }
+            if (imagen == null) imagen = SystemIcons.Application.ToBitmap();
+            using (imagen)
+            using (var flujo = new MemoryStream())
+            {
+                imagen.Save(flujo, System.Drawing.Imaging.ImageFormat.Png);
+                return flujo.ToArray();
+            }
+        }
 
-            // No deja la tarjeta con la imagen del documento en blanco.
-            if (imagen == null)
-                imagen = SystemIcons.Application.ToBitmap();
+        private async void CargarIconoAsync(E_Aplicacion aplicacion, Task<byte[]> carga)
+        {
+            try
+            {
+                byte[] datos = await carga;
+                if (datos == null || IsDisposed || Aplicacion != aplicacion) return;
+                using (var memoria = new MemoryStream(datos))
+                using (var temporal = Image.FromStream(memoria))
+                    ReemplazarImagen(new Bitmap(temporal));
+            }
+            catch
+            {
+                // Se conserva el icono genérico si Windows no encuentra el recurso.
+            }
+        }
 
-            pbIcono.Image = imagen;
+        private void ReemplazarImagen(Image nueva)
+        {
+            Image anterior = pbIcono.Image;
+            pbIcono.Image = nueva;
+            if (anterior != null && !ReferenceEquals(anterior, imagenIconoDisenador) &&
+                !ReferenceEquals(anterior, nueva))
+                anterior.Dispose();
         }
 
         private void EnlazarClick(Control control)
@@ -97,25 +127,21 @@ namespace CapaPresentacion
         public void EstablecerSeleccionada(bool seleccionada)
         {
             Seleccionada = seleccionada;
-            panel1.BackColor = seleccionada ? Color.LightGreen : colorNormalPanel;
-            lblNombreApp.BackColor = seleccionada ? Color.LightGreen : colorNormalNombre;
+            AplicarColorSeleccion();
         }
+
         private void CambiarSeleccion()
         {
             Seleccionada = !Seleccionada;
-
-            if (Seleccionada)
-            {
-                panel1.BackColor = Color.LightGreen;
-                lblNombreApp.BackColor = Color.LightGreen;
-            }
-            else
-            {
-                panel1.BackColor = colorNormalPanel;
-                lblNombreApp.BackColor = colorNormalNombre;
-            }
-
+            AplicarColorSeleccion();
             SeleccionCambiada?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void AplicarColorSeleccion()
+        {
+            panel1.BackColor = permitirSeleccion && Seleccionada
+                ? PaletaAplicacion.AzulHover : Color.Transparent;
+            lblNombreApp.ForeColor = PaletaAplicacion.ColorTextoContraste(panel1);
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)]

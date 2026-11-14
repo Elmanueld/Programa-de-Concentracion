@@ -10,22 +10,28 @@ namespace CapaDatos
     {
         public int InsertarTarea(E_Tarea tarea)
         {
-            object id = D_Comun.Escalar("sp_InsertarTarea", comando =>
+            if (String.IsNullOrEmpty(tarea.SyncId)) tarea.SyncId = Guid.NewGuid().ToString("D");
+            return D_SincronizacionOffline.ConFallbackEscritura(tarea.IdUsuario, () =>
             {
-                D_Comun.Entero(comando, "@IdUsuario", tarea.IdUsuario);
-                D_Comun.Texto(comando, "@Nombre", 70, tarea.Nombre);
-                D_Comun.Fecha(comando, "@FechaInicio", tarea.FechaInicio);
-                D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
-                D_Comun.Booleano(comando, "@EsPlantilla", tarea.EsPlantilla);
-                D_Comun.Booleano(comando, "@NoBloquearApps", tarea.NoBloquearApps);
-                D_Comun.Booleano(comando, "@NoBloquearWebs", tarea.NoBloquearWebs);
-            });
-            return Convert.ToInt32(id);
+                object id = D_Comun.Escalar("sp_InsertarTarea", comando =>
+                {
+                    D_Comun.Entero(comando, "@IdUsuario", tarea.IdUsuario);
+                    comando.Parameters.Add("@SyncId", SqlDbType.UniqueIdentifier).Value = Guid.Parse(tarea.SyncId);
+                    D_Comun.Texto(comando, "@Nombre", 70, tarea.Nombre);
+                    D_Comun.Fecha(comando, "@FechaInicio", tarea.FechaInicio);
+                    D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
+                    D_Comun.Booleano(comando, "@EsPlantilla", tarea.EsPlantilla);
+                    D_Comun.Booleano(comando, "@NoBloquearApps", tarea.NoBloquearApps);
+                    D_Comun.Booleano(comando, "@NoBloquearWebs", tarea.NoBloquearWebs);
+                });
+                tarea.IdTarea = Convert.ToInt32(id);
+                return tarea.IdTarea;
+            }, () => D_SincronizacionOffline.InsertarTarea(tarea));
         }
 
         public List<E_Tarea> BuscarTarea(int idUsuario, string buscar)
         {
-            return D_Comun.Consultar("sp_BuscarTarea", comando =>
+            return D_SincronizacionOffline.ConFallback(idUsuario, () => D_Comun.Consultar("sp_BuscarTarea", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Texto(comando, "@Buscar", 70, buscar);
@@ -40,12 +46,13 @@ namespace CapaDatos
                 EsPlantilla = false,
                 NoBloquearApps = D_Comun.LeerBooleano(lector, "NoBloquearApps"),
                 NoBloquearWebs = D_Comun.LeerBooleano(lector, "NoBloquearWebs")
-            });
+            }), () => D_SincronizacionOffline.BuscarTareas(idUsuario, buscar));
         }
 
         public void ModificarTarea(E_Tarea tarea)
         {
-            EjecutarCambio("sp_ModificarTarea", tarea.IdUsuario, tarea.IdTarea, comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(tarea.IdUsuario,
+            () => EjecutarCambio("sp_ModificarTarea", tarea.IdUsuario, tarea.IdTarea, comando =>
             {
                 D_Comun.Entero(comando, "@IdTarea", tarea.IdTarea);
                 D_Comun.Texto(comando, "@Nombre", 70, tarea.Nombre);
@@ -53,31 +60,61 @@ namespace CapaDatos
                 D_Comun.Fecha(comando, "@FechaFin", tarea.FechaFin);
                 D_Comun.Booleano(comando, "@NoBloquearApps", tarea.NoBloquearApps);
                 D_Comun.Booleano(comando, "@NoBloquearWebs", tarea.NoBloquearWebs);
-            });
+            }), () => D_SincronizacionOffline.ModificarTarea(tarea));
         }
 
         public void EliminarTarea(int idUsuario, int idTarea)
         {
-            EjecutarCambio("sp_EliminarTarea", idUsuario, idTarea, comando => {
+            D_SincronizacionOffline.ConFallbackEscritura(idUsuario,
+            () => EjecutarCambio("sp_EliminarTarea", idUsuario, idTarea, comando => {
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
-            });
+            }), () => D_SincronizacionOffline.EliminarTarea(idUsuario, idTarea));
         }
 
         public void CambiarEstadoTarea(int idUsuario, int idTarea, char estado)
         {
-            EjecutarCambio("sp_CambiarEstadoTarea", idUsuario, idTarea, comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(idUsuario,
+            () => EjecutarCambio("sp_CambiarEstadoTarea", idUsuario, idTarea, comando =>
             {
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
                 D_Comun.Caracter(comando, "@Estado", estado);
-            });
+            }), () => D_SincronizacionOffline.CambiarEstadoTarea(idUsuario, idTarea, estado));
         }
 
         public int? BuscarPlantilla(int idUsuario)
         {
+            return D_SincronizacionOffline.ConFallback(idUsuario, () =>
+            {
             object valor = D_Comun.Escalar("sp_BuscarPlantilla", comando =>
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario));
             return D_Comun.EnteroNullable(valor);
+            }, () => D_SincronizacionOffline.BuscarPlantilla(idUsuario));
         }
+
+        public E_Tarea ObtenerPlantilla(int idUsuario)
+        {
+            return D_SincronizacionOffline.ConFallback(idUsuario, () =>
+            {
+                List<E_Tarea> resultados = D_Comun.Consultar("sp_ObtenerPlantilla", comando =>
+                {
+                    D_Comun.Entero(comando, "@IdUsuario", idUsuario);
+                }, lector => new E_Tarea
+                {
+                    IdTarea = D_Comun.LeerEntero(lector, "IdTarea"),
+                    IdUsuario = idUsuario,
+                    Nombre = D_Comun.LeerTexto(lector, "Nombre"),
+                    FechaInicio = D_Comun.LeerFecha(lector, "FechaInicio"),
+                    FechaFin = D_Comun.LeerFecha(lector, "FechaFin"),
+                    Estado = D_Comun.LeerCaracter(lector, "Estado"),
+                    EsPlantilla = true,
+                    NoBloquearApps = D_Comun.LeerBooleano(lector, "NoBloquearApps"),
+                    NoBloquearWebs = D_Comun.LeerBooleano(lector, "NoBloquearWebs"),
+                    SyncId = D_Comun.LeerTexto(lector, "SyncId")
+                });
+                return resultados.Count == 0 ? null : resultados[0];
+            }, () => D_SincronizacionOffline.ObtenerPlantilla(idUsuario));
+        }
+
         private void EjecutarCambio(string procedimiento, int idUsuario, int idTarea, Action<SqlCommand> parametros)
         {
             using (var cn = ConexionDB.Instancia.CrearConexion())
@@ -95,8 +132,9 @@ namespace CapaDatos
                         object estado = consulta.ExecuteScalar();
                         if (estado == null || estado == DBNull.Value)
                             throw new ArgumentException("La tarea no existe o no pertenece al usuario.");
-                        if (procedimiento != "sp_CambiarEstadoTarea" && Convert.ToString(estado) == "A")
-                            throw new ArgumentException("Una tarea activa no se puede editar ni eliminar.");
+                        if (procedimiento != "sp_CambiarEstadoTarea" &&
+                            (Convert.ToString(estado) == "A" || Convert.ToString(estado) == "X" || Convert.ToString(estado) == "C"))
+                            throw new ArgumentException("Una tarea activa, completada o detenida no se puede editar ni eliminar.");
                         bool recibeUsuario;
                         using (var revision = new SqlCommand(@"SELECT COUNT(*) FROM sys.parameters
                             WHERE object_id=OBJECT_ID(@Procedimiento) AND name='@IdUsuario'", cn, transaccion))
@@ -114,7 +152,8 @@ namespace CapaDatos
                             {
                                 string siguiente = Convert.ToString(cmd.Parameters["@Estado"].Value);
                                 string actual = Convert.ToString(estado);
-                                if (!((actual == "P" && siguiente == "A") || (actual == "A" && siguiente == "C")))
+                                if (!((actual == "P" && (siguiente == "A" || siguiente == "X")) ||
+                                      (actual == "A" && (siguiente == "C" || siguiente == "X"))))
                                     throw new ArgumentException("La transición de estado no es válida.");
                             }
                             if (recibeUsuario) D_Comun.Entero(cmd, "@IdUsuario", idUsuario);

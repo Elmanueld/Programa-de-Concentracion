@@ -7,6 +7,22 @@ namespace CapaDatos
 {
     internal static class D_Comun
     {
+        public static bool EsFalloDeConexion(SqlException excepcion)
+        {
+            if (excepcion == null) return false;
+            foreach (SqlError error in excepcion.Errors)
+            {
+                switch (error.Number)
+                {
+                    case -2: case 2: case 53: case 64: case 121: case 233:
+                    case 258: case 10053: case 10054: case 10060: case 11001:
+                    case 4060:
+                        return true;
+                }
+            }
+            return false;
+        }
+
         public static void Ejecutar(string procedimiento, Action<SqlCommand> agregarParametros)
         {
             using (SqlConnection conexion = ConexionDB.Instancia.CrearConexion())

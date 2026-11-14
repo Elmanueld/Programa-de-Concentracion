@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -34,11 +35,34 @@ namespace CapaPresentacion
             if (EsInteractivo(control))
                 return;
 
+            Point inicioPantalla = Point.Empty;
+            bool esperandoArrastre = false;
+
             control.MouseDown += (sender, e) =>
             {
                 if (e.Button != MouseButtons.Left || formulario.IsDisposed)
                     return;
 
+                inicioPantalla = control.PointToScreen(e.Location);
+                esperandoArrastre = true;
+            };
+
+            control.MouseMove += (sender, e) =>
+            {
+                if (!esperandoArrastre || e.Button != MouseButtons.Left || formulario.IsDisposed)
+                    return;
+
+                Point actual = control.PointToScreen(e.Location);
+                Size umbral = SystemInformation.DragSize;
+                var areaArrastre = new Rectangle(
+                    inicioPantalla.X - umbral.Width / 2,
+                    inicioPantalla.Y - umbral.Height / 2,
+                    umbral.Width,
+                    umbral.Height);
+                if (areaArrastre.Contains(actual))
+                    return;
+
+                esperandoArrastre = false;
                 ReleaseCapture();
                 SendMessage(
                     formulario.Handle,
@@ -46,6 +70,8 @@ namespace CapaPresentacion
                     HTCAPTION,
                     IntPtr.Zero);
             };
+
+            control.MouseUp += (sender, e) => esperandoArrastre = false;
 
             foreach (Control hijo in control.Controls)
                 EnlazarControles(formulario, hijo);

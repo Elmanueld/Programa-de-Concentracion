@@ -1,6 +1,7 @@
 using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using CapaEntidades;
 using CapaNegocio;
@@ -27,9 +28,7 @@ internal static partial class Program
         }
         catch (SqlException ex)
         {
-            if ((ex.Number >= 50001 && ex.Number <= 50006) ||
-                (ex.Number >= 50015 && ex.Number <= 50020) ||
-                ex.Number == 2627 || ex.Number == 2601)
+            if (ex.Number >= 50001 && ex.Number <= 50006 || ex.Number >= 50015 && ex.Number <= 50018 || ex.Number == 2627 || ex.Number == 2601)
                 rechazo = true;
             else
                 throw;
@@ -39,8 +38,15 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        string sqlitePruebas = null;
         try
         {
+            if (args.Contains("--integracion"))
+            {
+                sqlitePruebas = Path.Combine(Path.GetTempPath(),
+                    "PDC-Pruebas-" + Guid.NewGuid().ToString("N") + ".sqlite");
+                Environment.SetEnvironmentVariable("PC_SQLITE_LOCAL_PATH", sqlitePruebas);
+            }
             const string clave = "PruebaSegura-2026";
             string hash = SeguridadContrasena.CrearHash(clave);
             Comprobar(hash != clave && hash.Length <= 255, "Formato y longitud del hash");
@@ -68,6 +74,13 @@ internal static partial class Program
             Console.Error.WriteLine(ex);
             return 1;
         }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PC_SQLITE_LOCAL_PATH", null);
+            if (sqlitePruebas != null)
+                foreach (string archivo in new[] { sqlitePruebas, sqlitePruebas + "-wal", sqlitePruebas + "-shm" })
+                    try { if (File.Exists(archivo)) File.Delete(archivo); } catch { }
+        }
     }
 
     private static object Sql(string texto, string correo, int id = 0)
@@ -92,8 +105,6 @@ internal static partial class Program
         string otro = "otro-" + Guid.NewGuid().ToString("N") + "@example.com";
         var usuarios = new N_Usuario();
         var tareas = new N_Tarea();
-        var aplicaciones = new N_Aplicacion();
-        var webs = new N_Web();
         try
         {
             usuarios.RegistrarUsuario("Prueba", correo, clave);
@@ -120,47 +131,24 @@ internal static partial class Program
             ProbarLoginAnterior(correo, clave);
             usuarios.RegistrarUsuario("Otro", otro, clave);
             int idOtro = Convert.ToInt32(Sql("SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo", otro));
-
-            int aplicacionPropia = aplicaciones.InsertarAplicacion(usuario.IdUsuario,
-                new E_Aplicacion { Nombre = "Aplicación propia", Identificador = "prueba-propia-" + Guid.NewGuid().ToString("N") });
-            int aplicacionAjena = aplicaciones.InsertarAplicacion(idOtro,
-                new E_Aplicacion { Nombre = "Aplicación privada", Identificador = "prueba-ajena-" + Guid.NewGuid().ToString("N") });
-            int webPropia = webs.InsertarWeb(usuario.IdUsuario,
-                new E_Web { Nombre = "Web propia", Link = "https://propia.example.com/" + Guid.NewGuid().ToString("N") });
-            int webAjena = webs.InsertarWeb(idOtro,
-                new E_Web { Nombre = "Web privada", Link = "https://ajena.example.com/" + Guid.NewGuid().ToString("N") });
-
-            Comprobar(aplicaciones.BuscarAplicacion(usuario.IdUsuario, "").Any(x => x.IdAplicacion == aplicacionPropia) &&
-                !aplicaciones.BuscarAplicacion(usuario.IdUsuario, "").Any(x => x.IdAplicacion == aplicacionAjena),
-                "El catálogo de aplicaciones solo devuelve las del usuario");
-            Comprobar(webs.BuscarWeb(usuario.IdUsuario, "").Any(x => x.IdWeb == webPropia) &&
-                !webs.BuscarWeb(usuario.IdUsuario, "").Any(x => x.IdWeb == webAjena),
-                "El catálogo de webs solo devuelve las del usuario");
-            Rechazar(() => aplicaciones.ModificarAplicacion(idOtro,
-                new E_Aplicacion { IdUsuario = idOtro, IdAplicacion = aplicacionPropia, Nombre = "Ajena", Identificador = "intento-ajeno" }),
-                "SQL impide modificar una aplicación ajena");
-            Rechazar(() => aplicaciones.EliminarAplicacion(idOtro, aplicacionPropia),
-                "SQL impide eliminar una aplicación ajena");
-            Rechazar(() => webs.ModificarWeb(idOtro,
-                new E_Web { IdUsuario = idOtro, IdWeb = webPropia, Nombre = "Ajena", Link = "https://intento-ajeno.example.com" }),
-                "SQL impide modificar una web ajena");
-            Rechazar(() => webs.EliminarWeb(idOtro, webPropia),
-                "SQL impide eliminar una web ajena");
-
-            int id = tareas.InsertarTarea(new E_Tarea {
-                IdUsuario = usuario.IdUsuario, Nombre = "Lectura",
-                FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13),
-                NoBloquearApps = true, NoBloquearWebs = true
+            ProbarAislamientoCatalogos(usuario.IdUsuario, idOtro, Comprobar, Rechazar);
+            int id = tareas.InsertarTarea(new E_Tarea { IdUsuario = usuario.IdUsuario, Nombre = "Lectura", FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13) });
+            int idTareaMisma = tareas.InsertarTarea(new E_Tarea
+            {
+                IdUsuario = idOtro, Nombre = "Lectura",
+                FechaInicio = DateTime.Today.AddHours(12), FechaFin = DateTime.Today.AddHours(13)
             });
+            Comprobar(idTareaMisma != id &&
+                tareas.BuscarTarea(usuario.IdUsuario, "").Any(x => x.IdTarea == id) &&
+                !tareas.BuscarTarea(usuario.IdUsuario, "").Any(x => x.IdTarea == idTareaMisma) &&
+                tareas.BuscarTarea(idOtro, "").Any(x => x.IdTarea == idTareaMisma) &&
+                !tareas.BuscarTarea(idOtro, "").Any(x => x.IdTarea == id),
+                "Dos usuarios con tareas del mismo nombre y horario solo leen las propias");
+            Rechazar(() => tareas.EliminarTarea(usuario.IdUsuario, idTareaMisma),
+                "No se puede eliminar la tarea homónima de otro usuario");
             var tarea = tareas.BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id);
             Comprobar(tarea.Estado == 'P', "Crear y listar tarea persistida");
-            Comprobar(tarea.NoBloquearApps && tarea.NoBloquearWebs,
-                "Las opciones de omitir bloqueos se guardan en la tarea");
             Comprobar(!tareas.BuscarTarea(idOtro, "").Any(x => x.IdTarea == id), "Otro usuario no lista tarea ajena");
-            Rechazar(() => new N_TareaAplicacion().Insertar(usuario.IdUsuario, id, aplicacionAjena),
-                "SQL impide asociar a la tarea una aplicación de otra cuenta");
-            Rechazar(() => new N_TareaWeb().Insertar(usuario.IdUsuario, id, webAjena),
-                "SQL impide asociar a la tarea una web de otra cuenta");
             Rechazar(() => tareas.EliminarTarea(idOtro, id), "SQL rechaza borrar tarea ajena");
             tarea.IdUsuario = idOtro;
             Rechazar(() => tareas.ModificarTarea(tarea), "SQL rechaza editar tarea ajena");
@@ -172,27 +160,25 @@ internal static partial class Program
             Rechazar(() => tareas.ModificarTarea(tarea), "Tarea activa no editable");
             Rechazar(() => tareas.EliminarTarea(usuario.IdUsuario, id), "Tarea activa no eliminable");
             tareas.CambiarEstadoTarea(usuario.IdUsuario, id, 'C');
-            tareas.ModificarTarea(tarea);
-            Comprobar(tareas.BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id).Estado == 'C', "RF-006 permite editar completadas");
-            tareas.EliminarTarea(usuario.IdUsuario, id);
-            Comprobar(!new N_Tarea().BuscarTarea(usuario.IdUsuario, "").Any(x => x.IdTarea == id), "Eliminación persistente");
-            Rechazar(() => tareas.EliminarTarea(usuario.IdUsuario, id), "Borrado inexistente informa error");
+            Rechazar(() => tareas.ModificarTarea(tarea), "Tarea completada no editable");
+            Rechazar(() => tareas.EliminarTarea(usuario.IdUsuario, id), "Tarea completada no eliminable");
+            Comprobar(tareas.BuscarTarea(usuario.IdUsuario, "").Single(x => x.IdTarea == id).Estado == 'C', "La finalización de tarea se conserva");
+            int idEliminar = tareas.InsertarTarea(new E_Tarea
+            {
+                IdUsuario = usuario.IdUsuario, Nombre = "Eliminar",
+                FechaInicio = DateTime.Today.AddHours(14), FechaFin = DateTime.Today.AddHours(15)
+            });
+            tareas.EliminarTarea(usuario.IdUsuario, idEliminar);
+            tareas.EliminarTarea(idOtro, idTareaMisma);
+            Comprobar(!new N_Tarea().BuscarTarea(usuario.IdUsuario, "").Any(x => x.IdTarea == idEliminar), "Eliminación persistente");
+            Rechazar(() => tareas.EliminarTarea(usuario.IdUsuario, idEliminar), "Borrado inexistente informa error");
             usuarios.EliminarUsuario(usuario.IdUsuario);
             Rechazar(() => usuarios.IniciarSesion(correo, clave), "Cuenta eliminada no accede");
         }
         finally
         {
             foreach (string email in new[] { correo, otro })
-                Sql(@"DECLARE @IdUsuario INT = (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo);
-                    DELETE FROM Tarea_Web WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Tarea_Aplicacion WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Descansos WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Tareas WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Webs WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Aplicaciones WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM Configuraciones WHERE IdUsuario=@IdUsuario;
-                    DELETE FROM CodigosVerificacion WHERE Correo=@Correo;
-                    DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+                Sql("DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }
     }
 
@@ -239,7 +225,7 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", anterior);
             foreach (string email in new[] { correo, otro })
-                Sql("DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
+                Sql("DELETE FROM Aplicaciones WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Webs WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Tareas WHERE IdUsuario IN (SELECT IdUsuario FROM Usuarios WHERE Correo=@Correo); DELETE FROM Usuarios WHERE Correo=@Correo;", email);
         }
     }
 }

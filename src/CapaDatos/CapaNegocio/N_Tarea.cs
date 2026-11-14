@@ -19,7 +19,7 @@ namespace CapaNegocio
 
         public List<E_Tarea> BuscarTarea(int idUsuario, string buscar)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             return Datos.BuscarTarea(idUsuario, buscar ?? String.Empty);
         }
 
@@ -27,31 +27,37 @@ namespace CapaNegocio
         {
             if (tarea == null) throw new ArgumentNullException("tarea");
             ValidarId(tarea.IdTarea, "tarea");
-            ValidarId(tarea.IdUsuario, "usuario");
+            ValidarUsuario(tarea.IdUsuario);
             ValidarContenido(tarea);
             Datos.ModificarTarea(tarea);
         }
 
         public void EliminarTarea(int idUsuario, int idTarea)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
             Datos.EliminarTarea(idUsuario, idTarea);
         }
 
         public void CambiarEstadoTarea(int idUsuario, int idTarea, char estado)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
-            if (estado != 'A' && estado != 'C')
-                throw new ArgumentException("El nuevo estado debe ser A (activa) o C (completa).");
+            if (estado != 'A' && estado != 'C' && estado != 'X')
+                throw new ArgumentException("El nuevo estado debe ser A (activa), C (completa) o X (detenida).");
             Datos.CambiarEstadoTarea(idUsuario, idTarea, estado);
         }
 
         public int? BuscarPlantilla(int idUsuario)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             return Datos.BuscarPlantilla(idUsuario);
+        }
+
+        public E_Tarea ObtenerPlantilla(int idUsuario)
+        {
+            ValidarUsuario(idUsuario);
+            return Datos.ObtenerPlantilla(idUsuario);
         }
 
         private static void ValidarContenido(E_Tarea tarea)
@@ -69,7 +75,12 @@ namespace CapaNegocio
 
         private static void ValidarId(int id, string tipo)
         {
-            if (id <= 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+            if (id == 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+        }
+
+        private static void ValidarUsuario(int idUsuario)
+        {
+            if (idUsuario <= 0) throw new ArgumentException("El ID de usuario no es válido.");
         }
     }
 }

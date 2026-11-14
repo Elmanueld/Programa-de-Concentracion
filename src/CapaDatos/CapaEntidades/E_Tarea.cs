@@ -13,10 +13,11 @@ namespace CapaEntidades
         public bool EsPlantilla { get; set; }
         public bool NoBloquearApps { get; set; }
         public bool NoBloquearWebs { get; set; }
+        public string SyncId { get; set; }
 
         public bool TieneFechasValidas => FechaInicio < FechaFin;
 
         public bool TieneEstadoValido =>
-            Estado == 'P' || Estado == 'A' || Estado == 'C';
+            Estado == 'P' || Estado == 'A' || Estado == 'C' || Estado == 'X';
     }
 }

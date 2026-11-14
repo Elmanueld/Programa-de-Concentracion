@@ -4,7 +4,6 @@ using System.Data.OleDb;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Xml;
 using CapaEntidades;
 using Microsoft.Win32;
@@ -224,16 +223,16 @@ namespace CapaDatos
                     }
                     finally
                     {
-                        LiberarCom(enlaceObject);
-                        LiberarCom(elementoObject);
+                        DiferirLiberacionCom(enlaceObject);
+                        DiferirLiberacionCom(elementoObject);
                     }
                 }
             }
             finally
             {
-                LiberarCom(elementosObject);
-                LiberarCom(carpetaObject);
-                LiberarCom(shellObject);
+                DiferirLiberacionCom(elementosObject);
+                DiferirLiberacionCom(carpetaObject);
+                DiferirLiberacionCom(shellObject);
             }
 
             AgregarAccesosDirectosMenuInicio(
@@ -351,7 +350,7 @@ namespace CapaDatos
                         }
                         finally
                         {
-                            LiberarCom(accesoObject);
+                            DiferirLiberacionCom(accesoObject);
                         }
                     }
                 }
@@ -362,7 +361,7 @@ namespace CapaDatos
             }
             finally
             {
-                LiberarCom(shellObject);
+                DiferirLiberacionCom(shellObject);
             }
         }
 
@@ -1230,10 +1229,13 @@ namespace CapaDatos
             );
         }
 
-        private static void LiberarCom(object objeto)
+        private static void DiferirLiberacionCom(object objeto)
         {
-            if (objeto != null && Marshal.IsComObject(objeto))
-                Marshal.FinalReleaseComObject(objeto);
+            // Shell.Application puede compartir RCW entre objetos/proxies. Forzar
+            // FinalReleaseComObject aquí desconecta ese wrapper y provoca
+            // InvalidComObjectException si la enumeración lo vuelve a reutilizar.
+            // Al salir de estos ámbitos, el GC libera los RCW sin invalidarlos.
+            GC.KeepAlive(objeto);
         }
     }
 }

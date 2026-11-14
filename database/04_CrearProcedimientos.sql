@@ -110,6 +110,7 @@ GO
    =============================== */
 CREATE PROCEDURE dbo.sp_InsertarTarea
     @IdUsuario INT,
+    @SyncId UNIQUEIDENTIFIER,
     @Nombre VARCHAR(70),
     @FechaInicio DATETIME,
     @FechaFin DATETIME,
@@ -125,16 +126,34 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0)
             THROW 50001, 'El usuario no existe o está eliminado.', 1;
 
+        DECLARE @IdTareaExistente INT;
+        SELECT @IdTareaExistente=IdTarea FROM dbo.Tareas WITH (UPDLOCK,HOLDLOCK)
+        WHERE IdUsuario=@IdUsuario AND SyncId=@SyncId;
+        IF @IdTareaExistente IS NOT NULL
+        BEGIN
+            SELECT @IdTareaExistente AS IdTarea;
+            COMMIT TRANSACTION;
+            RETURN;
+        END;
+
         IF @EsPlantilla=1
+        BEGIN
+            INSERT dbo.SyncTombstones(IdUsuario,TipoEntidad,SyncId,EliminadoUtc)
+            SELECT T.IdUsuario,'Tarea',T.SyncId,SYSUTCDATETIME()
+            FROM dbo.Tareas T
+            WHERE T.IdUsuario=@IdUsuario AND T.EsPlantilla=1
+              AND NOT EXISTS (SELECT 1 FROM dbo.SyncTombstones S
+                  WHERE S.IdUsuario=T.IdUsuario AND S.TipoEntidad='Tarea' AND S.SyncId=T.SyncId);
             DELETE dbo.Tareas WHERE IdUsuario=@IdUsuario AND EsPlantilla=1;
+        END;
 
         INSERT dbo.Tareas (
             IdUsuario, Nombre, FechaInicio, FechaFin, EsPlantilla, Estado,
-            NoBloquearApps, NoBloquearWebs
+            NoBloquearApps, NoBloquearWebs, SyncId
         )
         VALUES (
             @IdUsuario, @Nombre, @FechaInicio, @FechaFin, @EsPlantilla, 'P',
-            @NoBloquearApps, @NoBloquearWebs
+            @NoBloquearApps, @NoBloquearWebs, @SyncId
         );
         SELECT CONVERT(INT, SCOPE_IDENTITY()) AS IdTarea;
         COMMIT TRANSACTION;
@@ -175,9 +194,10 @@ BEGIN
     SET NOCOUNT ON;
     UPDATE dbo.Tareas
     SET Nombre=@Nombre, FechaInicio=@FechaInicio, FechaFin=@FechaFin,
-        NoBloquearApps=@NoBloquearApps, NoBloquearWebs=@NoBloquearWebs
+        NoBloquearApps=@NoBloquearApps, NoBloquearWebs=@NoBloquearWebs,
+        SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdTarea=@IdTarea AND IdUsuario=@IdUsuario
-      AND EsPlantilla=0 AND Estado<>'A'
+      AND EsPlantilla=0 AND Estado='P'
       AND EXISTS (SELECT 1 FROM dbo.Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0);
     IF @@ROWCOUNT=0 THROW 50002, 'No se puede editar: tarea inexistente, ajena o activa.', 1;
 END;
@@ -190,9 +210,15 @@ CREATE PROCEDURE dbo.sp_EliminarTarea @IdTarea INT, @IdUsuario INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    INSERT dbo.SyncTombstones(IdUsuario,TipoEntidad,SyncId,EliminadoUtc)
+    SELECT T.IdUsuario,'Tarea',T.SyncId,SYSUTCDATETIME() FROM dbo.Tareas T
+    WHERE T.IdTarea=@IdTarea AND T.IdUsuario=@IdUsuario
+      AND T.EsPlantilla=0 AND T.Estado='P'
+      AND EXISTS (SELECT 1 FROM dbo.Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0)
+      AND NOT EXISTS (SELECT 1 FROM dbo.SyncTombstones S WHERE S.IdUsuario=T.IdUsuario AND S.TipoEntidad='Tarea' AND S.SyncId=T.SyncId);
     DELETE dbo.Tareas
     WHERE IdTarea=@IdTarea AND IdUsuario=@IdUsuario
-      AND EsPlantilla=0 AND Estado<>'A'
+      AND EsPlantilla=0 AND Estado='P'
       AND EXISTS (SELECT 1 FROM dbo.Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0);
     IF @@ROWCOUNT=0 THROW 50003, 'No se puede eliminar: tarea inexistente, ajena o activa.', 1;
 END;
@@ -206,10 +232,10 @@ CREATE PROCEDURE dbo.sp_CambiarEstadoTarea
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.Tareas SET Estado=@Estado
+    UPDATE dbo.Tareas SET Estado=@Estado, SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdTarea=@IdTarea AND IdUsuario=@IdUsuario AND EsPlantilla=0
       AND EXISTS (SELECT 1 FROM dbo.Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0)
-      AND ((Estado='P' AND @Estado='A') OR (Estado='A' AND @Estado='C'));
+      AND ((Estado='P' AND @Estado IN('A','X')) OR (Estado='A' AND @Estado IN('C','X')));
     IF @@ROWCOUNT=0 THROW 50004, 'La transición de estado no es válida para esta tarea.', 1;
 END;
 GO
@@ -228,17 +254,33 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
+CREATE PROCEDURE dbo.sp_ObtenerPlantilla @IdUsuario INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT TOP (1) IdTarea,Nombre,FechaInicio,FechaFin,Estado,EsPlantilla,
+        NoBloquearApps,NoBloquearWebs,SyncId
+    FROM dbo.Tareas
+    WHERE IdUsuario=@IdUsuario AND EsPlantilla=1
+      AND EXISTS (SELECT 1 FROM dbo.Usuarios U WHERE U.IdUsuario=@IdUsuario AND U.Eliminado=0);
+END;
+GO
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /* ===============================
    DESCANSOS
    =============================== */
 CREATE PROCEDURE dbo.sp_InsertarDescanso
-    @IdUsuario INT, @IdTarea INT,
+    @IdUsuario INT, @SyncId UNIQUEIDENTIFIER, @IdTarea INT,
     @IntervaloDescanso INT, @DuracionDescanso INT
 AS
 BEGIN
     SET NOCOUNT ON;
-    INSERT dbo.Descansos (IdTarea, IdUsuario, IntervaloDescanso, DuracionDescanso)
-    SELECT @IdTarea, @IdUsuario, @IntervaloDescanso, @DuracionDescanso
+    IF EXISTS (SELECT 1 FROM dbo.Descansos WHERE IdUsuario=@IdUsuario AND SyncId=@SyncId) RETURN;
+    INSERT dbo.Descansos (IdTarea, IdUsuario, IntervaloDescanso, DuracionDescanso, SyncId)
+    SELECT @IdTarea, @IdUsuario, @IntervaloDescanso, @DuracionDescanso, @SyncId
     WHERE EXISTS (SELECT 1 FROM dbo.Tareas WHERE IdTarea=@IdTarea AND IdUsuario=@IdUsuario);
     IF @@ROWCOUNT=0 THROW 50011, 'La tarea no existe o pertenece a otro usuario.', 1;
 END;
@@ -266,7 +308,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE dbo.Descansos SET IntervaloDescanso=@IntervaloDescanso,
-        DuracionDescanso=@DuracionDescanso
+        DuracionDescanso=@DuracionDescanso, SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdDescanso=@IdDescanso AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50012, 'El descanso no existe o pertenece a otro usuario.', 1;
 END;
@@ -279,6 +321,10 @@ CREATE PROCEDURE dbo.sp_EliminarDescanso @IdUsuario INT, @IdDescanso INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    INSERT dbo.SyncTombstones(IdUsuario,TipoEntidad,SyncId,EliminadoUtc)
+    SELECT D.IdUsuario,'Descanso',D.SyncId,SYSUTCDATETIME() FROM dbo.Descansos D
+    WHERE D.IdDescanso=@IdDescanso AND D.IdUsuario=@IdUsuario
+      AND NOT EXISTS (SELECT 1 FROM dbo.SyncTombstones S WHERE S.IdUsuario=D.IdUsuario AND S.TipoEntidad='Descanso' AND S.SyncId=D.SyncId);
     DELETE dbo.Descansos WHERE IdDescanso=@IdDescanso AND IdUsuario=@IdUsuario;
 END;
 GO
@@ -320,7 +366,7 @@ CREATE PROCEDURE dbo.sp_ModificarConfiguracion
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.Configuraciones SET AutoSesion=@AutoSesion
+    UPDATE dbo.Configuraciones SET AutoSesion=@AutoSesion, SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdConfiguracion=@IdConfiguracion AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50014, 'La configuración no existe o pertenece a otro usuario.', 1;
 END;
@@ -333,7 +379,7 @@ GO
    CATÁLOGOS PRIVADOS
    =============================== */
 CREATE PROCEDURE dbo.sp_InsertarAplicacion
-    @IdUsuario INT, @Nombre VARCHAR(100),
+    @IdUsuario INT, @SyncId UNIQUEIDENTIFIER, @Nombre VARCHAR(100),
     @Identificador VARCHAR(255), @EsCritica BIT=0
 AS
 BEGIN
@@ -341,13 +387,15 @@ BEGIN
     SET XACT_ABORT ON;
     BEGIN TRANSACTION;
     DECLARE @IdAplicacion INT;
-    SELECT @IdAplicacion=IdAplicacion
-    FROM dbo.Aplicaciones WITH (UPDLOCK, HOLDLOCK)
-    WHERE IdUsuario=@IdUsuario AND Identificador=@Identificador;
+    SELECT @IdAplicacion=IdAplicacion FROM dbo.Aplicaciones WITH (UPDLOCK,HOLDLOCK)
+    WHERE IdUsuario=@IdUsuario AND SyncId=@SyncId;
+    IF @IdAplicacion IS NULL
+        SELECT @IdAplicacion=IdAplicacion FROM dbo.Aplicaciones WITH (UPDLOCK,HOLDLOCK)
+        WHERE IdUsuario=@IdUsuario AND Identificador=@Identificador;
     IF @IdAplicacion IS NULL
     BEGIN
-        INSERT dbo.Aplicaciones (IdUsuario, Nombre, Identificador, EsCritica)
-        VALUES (@IdUsuario, @Nombre, @Identificador, @EsCritica);
+        INSERT dbo.Aplicaciones (IdUsuario, Nombre, Identificador, EsCritica, SyncId)
+        VALUES (@IdUsuario, @Nombre, @Identificador, @EsCritica, @SyncId);
         SET @IdAplicacion=CONVERT(INT, SCOPE_IDENTITY());
     END;
     SELECT @IdAplicacion AS IdAplicacion;
@@ -378,7 +426,8 @@ CREATE PROCEDURE dbo.sp_ModificarAplicacion
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.Aplicaciones SET Nombre=@Nombre, Identificador=@Identificador
+    UPDATE dbo.Aplicaciones SET Nombre=@Nombre, Identificador=@Identificador,
+        SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdAplicacion=@IdAplicacion AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50015, 'La aplicación no existe o pertenece a otro usuario.', 1;
 END;
@@ -391,6 +440,10 @@ CREATE PROCEDURE dbo.sp_EliminarAplicacion @IdUsuario INT, @IdAplicacion INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    INSERT dbo.SyncTombstones(IdUsuario,TipoEntidad,SyncId,EliminadoUtc)
+    SELECT A.IdUsuario,'Aplicacion',A.SyncId,SYSUTCDATETIME() FROM dbo.Aplicaciones A
+    WHERE A.IdAplicacion=@IdAplicacion AND A.IdUsuario=@IdUsuario
+      AND NOT EXISTS (SELECT 1 FROM dbo.SyncTombstones S WHERE S.IdUsuario=A.IdUsuario AND S.TipoEntidad='Aplicacion' AND S.SyncId=A.SyncId);
     DELETE dbo.Aplicaciones WHERE IdAplicacion=@IdAplicacion AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50016, 'La aplicación no existe o pertenece a otro usuario.', 1;
 END;
@@ -399,7 +452,7 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
-CREATE PROCEDURE dbo.sp_InsertarWeb @IdUsuario INT, @Nombre VARCHAR(100), @Link VARCHAR(2048)
+CREATE PROCEDURE dbo.sp_InsertarWeb @IdUsuario INT, @SyncId UNIQUEIDENTIFIER, @Nombre VARCHAR(100), @Link VARCHAR(2048)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -407,11 +460,13 @@ BEGIN
     BEGIN TRANSACTION;
     DECLARE @IdWeb INT;
     SELECT @IdWeb=IdWeb FROM dbo.Webs WITH (UPDLOCK, HOLDLOCK)
+    WHERE IdUsuario=@IdUsuario AND SyncId=@SyncId;
+    IF @IdWeb IS NULL SELECT @IdWeb=IdWeb FROM dbo.Webs WITH (UPDLOCK,HOLDLOCK)
     WHERE IdUsuario=@IdUsuario
       AND HashLink=CONVERT(VARBINARY(32), HASHBYTES('SHA2_256', @Link));
     IF @IdWeb IS NULL
     BEGIN
-        INSERT dbo.Webs (IdUsuario, Nombre, Link) VALUES (@IdUsuario, @Nombre, @Link);
+        INSERT dbo.Webs (IdUsuario, Nombre, Link, SyncId) VALUES (@IdUsuario, @Nombre, @Link, @SyncId);
         SET @IdWeb=CONVERT(INT, SCOPE_IDENTITY());
     END;
     SELECT @IdWeb AS IdWeb;
@@ -440,7 +495,7 @@ CREATE PROCEDURE dbo.sp_ModificarWeb
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.Webs SET Nombre=@Nombre, Link=@Link
+    UPDATE dbo.Webs SET Nombre=@Nombre, Link=@Link, SyncUpdatedUtc=SYSUTCDATETIME()
     WHERE IdWeb=@IdWeb AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50017, 'La web no existe o pertenece a otro usuario.', 1;
 END;
@@ -453,6 +508,10 @@ CREATE PROCEDURE dbo.sp_EliminarWeb @IdUsuario INT, @IdWeb INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    INSERT dbo.SyncTombstones(IdUsuario,TipoEntidad,SyncId,EliminadoUtc)
+    SELECT W.IdUsuario,'Web',W.SyncId,SYSUTCDATETIME() FROM dbo.Webs W
+    WHERE W.IdWeb=@IdWeb AND W.IdUsuario=@IdUsuario
+      AND NOT EXISTS (SELECT 1 FROM dbo.SyncTombstones S WHERE S.IdUsuario=W.IdUsuario AND S.TipoEntidad='Web' AND S.SyncId=W.SyncId);
     DELETE dbo.Webs WHERE IdWeb=@IdWeb AND IdUsuario=@IdUsuario;
     IF @@ROWCOUNT=0 THROW 50018, 'La web no existe o pertenece a otro usuario.', 1;
 END;

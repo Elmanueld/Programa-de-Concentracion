@@ -53,6 +53,24 @@
     <Reference Include="AntdUI">
       <HintPath>..\packages\AntdUI.2.4.19\lib\net48\AntdUI.dll</HintPath>
     </Reference>
+    <Reference Include="Svg">
+      <HintPath>..\packages\Svg.3.4.8\lib\net462\Svg.dll</HintPath>
+    </Reference>
+    <Reference Include="ExCSS">
+      <HintPath>..\packages\ExCSS.4.2.3\lib\net48\ExCSS.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Configuration" />
@@ -64,22 +82,37 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
+    <Compile Include="frmLogin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="frmLogin.Designer.cs">
+      <DependentUpon>frmLogin.cs</DependentUpon>
     </Compile>
     <Compile Include="frmAviso.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmAviso.Designer.cs">
       <DependentUpon>frmAviso.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmAjustes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmAjustes.Designer.cs">
+      <DependentUpon>frmAjustes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmApariencia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmApariencia.Designer.cs">
+      <DependentUpon>frmApariencia.cs</DependentUpon>
     </Compile>
     <Compile Include="frmDescanso.cs">
       <SubType>Form</SubType>
@@ -105,6 +138,12 @@
     <Compile Include="frmTareas.Designer.cs">
       <DependentUpon>frmTareas.cs</DependentUpon>
     </Compile>
+    <Compile Include="IconosMaterial.cs" />
+    <Compile Include="TemaAplicacion.cs" />
+    <Compile Include="ControlesPresentacion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AparienciaUsuario.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Tipografia.cs" />
     <Compile Include="OperacionUI.cs" />
@@ -141,8 +180,17 @@
     <Compile Include="ucWeb.Designer.cs">
       <DependentUpon>ucWeb.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmLogin.resx">
+      <DependentUpon>frmLogin.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmAviso.resx">
       <DependentUpon>frmAviso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmAjustes.resx">
+      <DependentUpon>frmAjustes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmApariencia.resx">
+      <DependentUpon>frmApariencia.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmDescanso.resx">
       <DependentUpon>frmDescanso.cs</DependentUpon>
@@ -241,6 +289,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="src\block2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="src\icons\*.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="src\icons\LICENSE.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

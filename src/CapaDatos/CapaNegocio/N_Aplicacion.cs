@@ -57,7 +57,7 @@ namespace CapaNegocio
 
         private static void ValidarId(int id)
         {
-            if (id <= 0) throw new ArgumentException("El ID de aplicación no es válido.");
+            if (id == 0) throw new ArgumentException("El ID de aplicación no es válido.");
         }
 
         public List<E_Aplicacion> OrdenarAppsPorBusqueda(

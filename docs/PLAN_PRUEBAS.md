@@ -2,72 +2,47 @@
 
 ## Alcance
 
-Validar las reglas de negocio de acceso, contraseña y verificación de correo; la persistencia y aislamiento de tareas en SQL Server; y la navegación básica de los formularios. Las pruebas SQL usan exclusivamente la instancia `(localdb)\Entregable3Pruebas`. No se envían correos reales: se usa un servidor SMTP TCP local de prueba.
+Valida acceso y contraseñas, verificación por correo, navegación WinForms, paginación de layouts, operaciones SQL y aislamiento entre cuentas. La integración solo se conecta a `(localdb)\Entregable3Pruebas` y usa cuentas aleatorias que limpia al terminar. Su copia SQLite usa un archivo temporal por ejecución.
 
-## Preparación y ejecución
+## Requisitos y preparación
 
-Requisitos: Windows, Visual Studio 2022 con .NET Framework 4.8 Developer Pack y SQL Server Express LocalDB para integración. Desde la raíz, en Developer PowerShell:
+Windows x64, Visual Studio 2022, .NET Framework 4.8 Developer Pack y SQL Server Express LocalDB.
+
+Desde PowerShell de Visual Studio, en la raíz del repositorio:
 
 ```powershell
 msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release
-New-Item -ItemType Directory -Force tests/evidencias | Out-Null
-& tests/bin/Release/Pruebas.exe 2>&1 | Tee-Object tests/evidencias/unitarias.log
-& tests/bin/Release/Pruebas.exe --interfaz 2>&1 | Tee-Object tests/evidencias/interfaz.log
+.\tests\bin\Release\Pruebas.exe
+.\tests\bin\Release\Pruebas.exe --interfaz
 ```
 
-Para integración, preparar una instancia de pruebas vacía una sola vez con `tests/PrepararPruebas.ps1`, luego:
+Para la primera integración, prepara la instancia dedicada una sola vez:
 
 ```powershell
-& tests/bin/Release/Pruebas.exe --integracion 2>&1 | Tee-Object tests/evidencias/integracion.log
+.\tests\PrepararPruebas.ps1
+.\tests\bin\Release\Pruebas.exe --integracion
 ```
 
-La prueba de interfaz no guarda capturas de las pantallas. Las imágenes de evidencia de esta entrega presentan los resultados reales de los logs; los archivos de texto completos están en `tests/evidencias/`. No ejecutar el preparador si ya existe la instancia `Entregable3Pruebas`: se detiene deliberadamente para preservar sus datos.
+El preparador no borra ni sobrescribe una instancia/base existente. La suite verifica también que la conexión corresponde a `Entregable3Pruebas` antes de insertar datos. No cambies `tests/App.config` para apuntar a una base de usuario.
 
-## Casos unitarios y de componente
+## Cobertura
 
-Los casos se ejecutan con `Pruebas.exe`; un caso aprobado imprime `CORRECTO:` y uno fallido termina con código distinto de cero.
+| Área | Casos cubiertos |
+| --- | --- |
+| Contraseñas y validación | PBKDF2, sal distinta, contraseña válida/inválida, hash malformado, campos y fechas inválidas. |
+| Cuenta y código | Lectura de login anterior/nuevo, registro, código aleatorio de seis dígitos, hash con sal, expiración, límite de reenvío/intentos, uso único y SMTP localhost de pruebas. |
+| Interfaz | Login, registro y verificación; campos de contraseña ocultos; navegación entre vistas; límites; barra de paginación, botones AntdUI no recortados, contador de páginas, encabezado fijado y nombres de tarjetas. |
+| Privacidad SQL | Dos usuarios con tareas, aplicaciones y webs de valores iguales; consultas aisladas; SQL rechaza modificación/eliminación cruzada. |
+| Reglas de tareas | Creación y edición propia; estados activo y completado impiden editar/borrar; tarea pendiente puede eliminarse; borrado inexistente informa error. |
+| Datos offline de prueba | SQLite temporal separado de `%LOCALAPPDATA%`; el test de integración no reemplaza la base offline real. |
 
-| ID | Caso y resultado esperado | Implementación |
-| --- | --- | --- |
-| U01 | El hash PBKDF2 no revela la contraseña y respeta el límite de almacenamiento. | `tests/Program.cs` |
-| U02 | La misma contraseña produce hashes distintos por su sal aleatoria. | `tests/Program.cs` |
-| U03 | La contraseña correcta verifica y una incorrecta no. | `tests/Program.cs` |
-| U04 | Un hash con formato inválido se rechaza sin excepción no controlada. | `tests/Program.cs` |
-| U05 | Contraseñas cortas, nombre vacío y correo con nombre de presentación se rechazan. | `tests/Program.cs` |
-| U06 | Fechas de tarea inválidas y un ID de usuario inválido se rechazan. | `tests/Program.cs` |
-| U07 | El lector de sesión admite el resultado SQL anterior sin `Nombre` y conserva `Nombre` cuando existe. | `tests/PruebasAcceso.cs` |
-| U08 | Los códigos son numéricos de seis dígitos, varían y se persiste su hash con sal. | `tests/PruebasAcceso.cs` |
-| U09 | Código corto/no numérico, SMTP incompleto y SMTP remoto sin TLS se rechazan. | `tests/PruebasAcceso.cs` |
-| U10 | El servidor SMTP local recibe el código y su vigencia; un puerto cerrado expone el fallo. | `tests/PruebasAcceso.cs` |
-| U11 | La configuración de demostración habilita el flujo previsto sin marcar como verificada la cuenta. | `tests/Program.cs` |
-
-## Pruebas de integración
-
-| ID | Proceso completo | Validaciones |
-| --- | --- | --- |
-| I01 | Registrar cuenta y verificar por código recibido en SMTP local. | Hash almacenado; correo duplicado rechazado; cuenta pendiente no inicia sesión; expiración, cinco intentos, éxito y uso único. |
-| I02 | Iniciar sesión en una cuenta verificada. | Credenciales válidas; incorrectas y cuenta eliminada rechazadas; el objeto de sesión no expone el hash. |
-| I03 | Compatibilidad con procedimiento anterior de login. | Se simula resultado sin `Nombre`, el negocio recupera el nombre y restaura la definición del procedimiento al terminar. |
-| I04 | Crear y consultar tarea. | Persistencia, estado inicial y aislamiento por usuario. |
-| I05 | Intentar editar y eliminar tarea de otro usuario. | SQL rechaza ambos accesos cruzados. |
-| I06 | Editar, cambiar estado y eliminar tarea propia. | Cambios recuperables; estado activo impide edición/eliminación; completada admite edición; borrado persiste. |
-| I07 | Limpiar los datos temporales del escenario. | Se borran solo cuentas de correo aleatorio creadas por esa ejecución. |
-| I08 | Probar el modo demostración con una cuenta pendiente. | Credenciales correctas admitidas solo en demostración; contraseña incorrecta rechazada y cuenta aún pendiente; modo normal sigue rechazándola. |
-| I09 | Probar compatibilidad con procedimientos originales de tareas. | Propiedad de usuario y estado activo protegidos antes de la migración; operaciones propias compatibles. |
-
-## Prueba de interfaz y evidencias
-
-`Pruebas.exe --interfaz` recorre las tres pestañas y verifica campos de contraseña ocultos, navegación a verificación y límites de controles. El resultado queda en el log; esta prueba no sustituye una revisión visual manual en Windows ni integra la interfaz con SQL.
-
-## Resultados
+## Resultados ejecutados el 14 de noviembre de 2026
 
 | Ejecución | Resultado |
 | --- | --- |
-| Compilación Release de `tests/Pruebas.csproj` | Aprobada con MSBuild de Visual Studio 2022 y .NET Framework 4.8. Evidencia: `tests/evidencias/compilacion.log`. |
-| Unitarias/componentes (`Pruebas.exe`) | Aprobadas: **22 comprobaciones**. Evidencia: `tests/evidencias/unitarias.log`. |
-| Integración LocalDB (`--integracion`) | Aprobada: **62 comprobaciones** sobre `(localdb)\Entregable3Pruebas`. Evidencia: `tests/evidencias/integracion.log`. |
-| Interfaz (`--interfaz`) | Aprobada: **28 comprobaciones** (22 unitarias/componentes + 6 de interfaz). Evidencia: `tests/evidencias/interfaz.log` y `tests/evidencias/evidencia-interfaz.png`. |
+| Compilación Release de `tests/Pruebas.csproj` | Aprobada, 0 errores y 2 advertencias ya existentes en `Tipografia.cs` y `frmSeleccionarApp.Designer.cs`. |
+| Unitarias y componentes | 22 comprobaciones aprobadas. |
+| Interfaz (`--interfaz`) | 34 comprobaciones aprobadas: 22 base y 12 de interfaz. |
+| Integración LocalDB (`--integracion`) | 68 comprobaciones aprobadas: 22 base y 46 SQL. |
 
-La primera integración detectó que la instancia existente no tenía `sp_PrepararVerificacionCorreo`. Se aplicó el script aditivo `database/07_VerificacionCorreo.sql` a la instancia de pruebas y se repitió el flujo completo con éxito. No se ejecutó el instalador `PrepararPruebas.ps1`, ya que detiene la ejecución si la instancia ya existe.
-
-Actualizar esta tabla y conservar los logs e imágenes solo después de ejecutar el comando correspondiente. Un caso aprobado requiere una línea `CORRECTO:`; el total aparece al final como `Total correcto: N`.
+Los logs completos y las imágenes resumen están en `tests/evidencias/`. Las pruebas automatizadas de interfaz no reemplazan una revisión visual manual en las pantallas del equipo destino. No se ha probado el envío a un buzón real.

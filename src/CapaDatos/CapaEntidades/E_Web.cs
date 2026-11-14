@@ -8,6 +8,7 @@ namespace CapaEntidades
         public int IdUsuario { get; set; }
         public string Nombre { get; set; }
         public string Link { get; set; }
+        public string SyncId { get; set; }
 
     }
 }

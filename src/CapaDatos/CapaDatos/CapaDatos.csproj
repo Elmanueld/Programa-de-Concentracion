@@ -40,12 +40,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConexionDB.cs" />
+    <Compile Include="SQLiteLocal.cs" />
     <Compile Include="D_Comun.cs" />
     <Compile Include="D_ExploradorAplicaciones.cs" />
     <Compile Include="D_Usuario.cs" />
     <Compile Include="D_Tarea.cs" />
     <Compile Include="D_Descanso.cs" />
     <Compile Include="D_Configuracion.cs" />
+    <Compile Include="D_SincronizacionOffline.cs" />
+    <Compile Include="D_ProcesadorSincronizacionOffline.cs" />
     <Compile Include="D_Aplicacion.cs" />
     <Compile Include="D_Web.cs" />
     <Compile Include="D_TareaAplicacion.cs" />

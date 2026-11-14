@@ -7,17 +7,17 @@ namespace CapaDatos
     {
         public void Insertar(int idUsuario, int idTarea, int idWeb)
         {
-            D_Comun.Ejecutar("sp_InsertarTareaWeb", comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(idUsuario, () => D_Comun.Ejecutar("sp_InsertarTareaWeb", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
                 D_Comun.Entero(comando, "@IdWeb", idWeb);
-            });
+            }), () => D_SincronizacionOffline.InsertarTareaWeb(idUsuario, idTarea, idWeb));
         }
 
         public List<E_TareaWeb> Buscar(int idUsuario, int idTarea)
         {
-            return D_Comun.Consultar("sp_BuscarTareaWeb", comando =>
+            return D_SincronizacionOffline.ConFallback(idUsuario, () => D_Comun.Consultar("sp_BuscarTareaWeb", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
@@ -27,17 +27,17 @@ namespace CapaDatos
                 IdWeb = D_Comun.LeerEntero(lector, "IdWeb"),
                 NombreWeb = D_Comun.LeerTexto(lector, "Web"),
                 NombreTarea = D_Comun.LeerTexto(lector, "Tarea")
-            });
+            }), () => D_SincronizacionOffline.BuscarTareaWeb(idUsuario, idTarea));
         }
 
         public void Eliminar(int idUsuario, int idTarea, int idWeb)
         {
-            D_Comun.Ejecutar("sp_EliminarTareaWeb", comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(idUsuario, () => D_Comun.Ejecutar("sp_EliminarTareaWeb", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario);
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
                 D_Comun.Entero(comando, "@IdWeb", idWeb);
-            });
+            }), () => D_SincronizacionOffline.EliminarTareaWeb(idUsuario, idTarea, idWeb));
         }
     }
 }

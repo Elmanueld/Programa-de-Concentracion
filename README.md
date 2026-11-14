@@ -1,84 +1,71 @@
 # Programa de Concentración
 
-Aplicación de escritorio para planificar sesiones de concentración, seleccionar aplicaciones y webs y aplicar bloqueos durante las tareas. Está construida con Windows Forms sobre .NET Framework 4.8 y SQL Server.
-
-## Funciones
-
-- Registro, inicio y cierre de sesión.
-- Tareas con horario, descansos, aplicaciones y webs asociadas.
-- Opciones por tarea para omitir el bloqueo de aplicaciones o de webs.
-- Catálogos de aplicaciones y webs privados por usuario. Las tareas y sus asociaciones también incluyen al propietario; las claves foráneas compuestas impiden vincular recursos de cuentas distintas.
-- Bloqueo de aplicaciones y webs mientras hay una sesión activa, con avisos y formularios de descanso.
-- Interfaz en español con fuente Inter y controles AntdUI.
+Aplicación de escritorio Windows Forms para organizar tareas, gestionar aplicaciones y webs asociadas, configurar preferencias y mantener datos utilizables sin conexión.
 
 ## Requisitos
 
-- Windows 10/11.
-- Visual Studio 2022 con desarrollo de escritorio de .NET y el Developer Pack de .NET Framework 4.8.
-- SQL Server Express (por ejemplo, la instancia local `SQLEXPRESS`) y, para instalar desde PowerShell, `sqlcmd`.
-- NuGet para restaurar AntdUI 2.4.19. Visual Studio también puede restaurar el paquete al compilar.
+- Windows 10/11 de 64 bits.
+- Visual Studio 2022 con desarrollo de escritorio .NET.
+- .NET Framework 4.8 Developer Pack.
+- SQL Server Express (instancia local predeterminada `SQLEXPRESS`) para el almacén principal.
+- SQL Server Express LocalDB para preparar y ejecutar las pruebas de integración.
 
-## Obtener el proyecto
+Los proyectos usan AntdUI, Svg y sus dependencias NuGet. Restaura los paquetes desde Visual Studio o MSBuild antes de compilar.
 
-La rama activa es `main`:
+## Solución
 
-```powershell
-git clone https://github.com/Elmanueld/Programa-de-Concentracion.git
-cd Programa-de-Concentracion
-```
+Abre `Programa-de-Concentracion.slnx` en Visual Studio o `src/CapaDatos/CapaDatos.sln` en una versión compatible. `CapaPresentacion` es el proyecto de inicio. La solución conserva las cuatro capas:
 
-## Instalar la base de datos
+- `src/CapaDatos/CapaPresentacion`: formularios y controles de interfaz.
+- `src/CapaDatos/CapaNegocio`: validación y reglas.
+- `src/CapaDatos/CapaEntidades`: entidades del dominio.
+- `src/CapaDatos/CapaDatos`: acceso a SQL Server, SQLite local y sincronización.
 
-La instalación crea una base nueva y se detiene si `ProgramaConcentracion` ya existe. Desde PowerShell, en la raíz del repositorio:
+## Base de datos
+
+Para una instalación nueva, ejecuta desde PowerShell en la raíz:
 
 ```powershell
 .\database\InstalarBaseDatos.ps1 -Servidor '.\SQLEXPRESS'
 ```
 
-También puedes ejecutar en SSMS, en este orden:
+También puedes ejecutar en SSMS, en este orden: `01_CrearBaseDeDatos.sql`, `02_CrearTablas.sql`, `04_CrearProcedimientos.sql`, `05_CrearIndices.sql`, `06_MigracionSincronizacionOffline.sql`, `07_MigracionPlantillaPredeterminada.sql` y `08_MigracionTareasDetenidas.sql`. El archivo `03_CrearRelaciones.sql` se conserva por compatibilidad; las relaciones se crean en el script 02 actualizado.
 
-1. `database/01_CrearBaseDeDatos.sql`
-2. `database/02_CrearTablas.sql`
-3. `database/03_CrearRelaciones.sql`
-4. `database/04_CrearProcedimientos.sql`
-5. `database/05_CrearIndices.sql`
+El instalador se detiene si `ProgramaConcentracion` ya existe. Para una base existente, respáldala y aplica las migraciones 06–08 según las notas en [`database/00_Leeme_Antes_de_Empezar.md`](database/00_Leeme_Antes_de_Empezar.md). No vuelvas a ejecutar scripts de creación sobre una base con datos.
 
-Los scripts crean el esquema actual desde cero; no son migraciones ni deben ejecutarse sobre una base existente. Para reinstalar, respalda primero los datos y elimina la base por separado. La tabla de usuarios, tareas, aplicaciones, webs, descansos y relaciones está organizada para mantener los datos vinculados a su propietario.
+El esquema actual incluye identificadores estables para sincronizar, tablas de propietario y relaciones con claves compuestas por `IdUsuario`. Los procedimientos y las capas de datos validan el propietario antes de leer o cambiar registros. Las pruebas cubren que dos cuentas con valores iguales en tareas, aplicaciones y webs no se accedan mutuamente.
 
-## Configurar y ejecutar
+## Conexión y funcionamiento sin conexión
 
-La conexión está en `src/CapaDatos/CapaPresentacion/App.config`. El valor de ejemplo usa autenticación integrada de Windows:
+La conexión SQL principal se configura en `src/CapaDatos/CapaPresentacion/App.config`, en la entrada `conexion`. El valor del repositorio apunta a `Server=.\SQLEXPRESS`. Cambia la instancia si tu instalación usa otro nombre.
 
-```xml
-<add name="conexion"
-     connectionString="Server=.\SQLEXPRESS;Database=ProgramaConcentracion;Integrated Security=True;"
-     providerName="System.Data.SqlClient" />
-```
+La copia local SQLite se guarda en `%LOCALAPPDATA%\Programa-de-Concentracion\DatosOffline\ProgramaConcentracion.sqlite`. Al iniciar sesión se obtiene una copia de los datos de esa cuenta. Cuando SQL Server deja de responder, las operaciones compatibles usan SQLite y guardan cambios pendientes en la cola local; al reconectar, la aplicación intenta sincronizarlos. La base remota en la nube no está configurada todavía.
 
-Cambia el servidor si tu instancia tiene otro nombre. La cuenta de Windows que ejecuta el programa debe tener permisos sobre la base.
+El registro usa actualmente `ModoDemostracion=true` en `App.config`, así que el flujo de demostración no envía correo y no verifica automáticamente la cuenta. El transporte SMTP y la configuración de nube quedan pendientes para una fase posterior; no agregues credenciales al repositorio.
 
-El archivo de ejemplo tiene `ModoDemostracion=true`: permite probar el acceso sin SMTP y no marca el correo como verificado. Para usar la verificación normal, configura SMTP mediante las variables de entorno `PC_SMTPHOST`, `PC_SMTPPUERTO`, `PC_SMTPSSL`, `PC_SMTPREMITENTE`, `PC_SMTPUSUARIO` y `PC_SMTPCLAVE`, y cambia `ModoDemostracion` a `false`. No guardes credenciales en Git.
+## Compilar
 
-Abre `src/CapaDatos/CapaDatos.sln` en Visual Studio, selecciona `CapaPresentacion` como proyecto de inicio y compila. Desde Developer PowerShell también puedes ejecutar:
+Desde Developer PowerShell de Visual Studio:
 
 ```powershell
-nuget restore src/CapaDatos/CapaDatos.sln
-msbuild src/CapaDatos/CapaDatos.sln /t:Rebuild /p:Configuration=Release
+msbuild src/CapaDatos/CapaDatos.sln /restore /t:Rebuild /p:Configuration=Release
+msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release
 ```
+
+También puedes abrir la solución, restaurar paquetes y compilar Release desde Visual Studio.
 
 ## Pruebas
 
-Las pruebas usan una instancia LocalDB separada llamada `Entregable3Pruebas`; no apuntan a `SQLEXPRESS` ni a la base de desarrollo.
+Consulta el [plan de pruebas](docs/PLAN_PRUEBAS.md), el [reporte](docs/REPORTE_DE_PRUEBAS.md), el [registro de incidencias](docs/INCIDENCIAS_PRUEBAS.md) y los [logs](tests/evidencias/README.md).
 
 ```powershell
-nuget restore src/CapaDatos/CapaDatos.sln
-msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release
 .\tests\bin\Release\Pruebas.exe
 .\tests\bin\Release\Pruebas.exe --interfaz
-.\tests\PrepararPruebas.ps1
 .\tests\bin\Release\Pruebas.exe --integracion
 ```
 
-`PrepararPruebas.ps1` crea la instancia y la base de pruebas, y ejecuta los cinco scripts SQL actuales. Si la instancia ya existe, se detiene sin borrar ni reemplazar sus datos. La integración comprueba registro y acceso, privacidad entre cuentas, operaciones de tareas y el envío de verificación a un servidor SMTP local de prueba. La prueba `--interfaz` abre los formularios sin consultar SQL.
+Las pruebas de integración están limitadas a `(localdb)\Entregable3Pruebas`. Si esa instancia no existe, prepararla una vez con `tests/PrepararPruebas.ps1`. El preparador conserva una instancia existente y se niega a sobrescribir una base de pruebas existente. No apunta a `SQLEXPRESS` ni a la base del programa.
 
-GitHub Actions compila el proyecto y las pruebas en Windows y ejecuta las pruebas unitarias, de interfaz e integración en cada cambio a `main` y en solicitudes de incorporación a esa rama.
+## Estado de configuración externa
+
+El flujo de acceso y las preferencias se encuentran implementados en el proyecto. Antes de distribuirlo, configura el servidor de correo real y define el endpoint remoto futuro; estos datos no forman parte de este push. Revisa los pasos y límites conocidos en [`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md).

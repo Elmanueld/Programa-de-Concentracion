@@ -14,9 +14,11 @@ if ($ConfiarCertificadoServidor) {
 $orden = @(
     '01_CrearBaseDeDatos.sql'
     '02_CrearTablas.sql'
-    '03_CrearRelaciones.sql'
     '04_CrearProcedimientos.sql'
     '05_CrearIndices.sql'
+    '06_MigracionSincronizacionOffline.sql'
+    '07_MigracionPlantillaPredeterminada.sql'
+    '08_MigracionTareasDetenidas.sql'
 )
 
 $sqlcmd = Get-Command 'sqlcmd' -ErrorAction SilentlyContinue

@@ -42,7 +42,7 @@ internal static class PruebasAcceso
         try
         {
             Environment.SetEnvironmentVariable("PC_MODO_DEMOSTRACION", "true");
-            using (var ventana = new CapaPresentacion.Form1())
+            using (var ventana = new CapaPresentacion.frmLogin())
             {
                 var pestanas = (System.Windows.Forms.TabControl)ventana.Controls.Find("pestanas", true)[0];
                 comprobar(pestanas.TabPages.Count == 2 &&

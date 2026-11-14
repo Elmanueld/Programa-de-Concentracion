@@ -5,6 +5,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace CapaPresentacion
@@ -15,6 +16,18 @@ namespace CapaPresentacion
         private static readonly PrivateFontCollection FuentesPrivadas;
         private static readonly FontFamily[] FamiliasInter;
         private static readonly Dictionary<string, Font> Cache = new Dictionary<string, Font>();
+        private static readonly ConditionalWeakTable<Control, FuenteBase> FuentesBase =
+            new ConditionalWeakTable<Control, FuenteBase>();
+        private static string familiaActual = "Inter";
+        private static float escalaActual = 1f;
+        private static bool configuracionPersonalizada;
+        public static float EscalaActual { get { return escalaActual; } }
+        public static bool TienePersonalizacion { get { return configuracionPersonalizada; } }
+
+        private sealed class FuenteBase
+        {
+            public Font Fuente;
+        }
 
         static Tipografia()
         {
@@ -38,38 +51,59 @@ namespace CapaPresentacion
 
         public static void Aplicar(Control control)
         {
-            if (control == null || FamiliasInter.Length == 0) return;
-            try
+            // La sustitución de fuentes queda desactivada para respetar el diseñador.
+        }
+
+        public static void Configurar(string familia, string tamano)
+        {
+            familiaActual = String.IsNullOrWhiteSpace(familia) ? "Inter" : familia.Trim();
+            configuracionPersonalizada = !String.Equals(familiaActual, "Inter", StringComparison.OrdinalIgnoreCase) ||
+                !String.Equals((tamano ?? "Normal").Trim(), "Normal", StringComparison.OrdinalIgnoreCase);
+            switch ((tamano ?? "Normal").Trim().ToLowerInvariant())
             {
-                Font fuenteActual = control.Font;
-                Font fuenteInter = Obtener(fuenteActual.Size, fuenteActual.Style, fuenteActual.Unit);
-                if (fuenteInter != null) control.Font = fuenteInter;
+                case "pequeño":
+                case "pequeno":
+                    escalaActual = 0.92f;
+                    break;
+                case "grande":
+                    escalaActual = 1.10f;
+                    break;
+                default:
+                    escalaActual = 1f;
+                    break;
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.TraceWarning("No se pudo aplicar Inter a un control: " + ex.Message);
-                return;
-            }
-            foreach (Control hijo in control.Controls)
-                Aplicar(hijo);
         }
 
         private static Font Obtener(float tamano, FontStyle estilo, GraphicsUnit unidad)
         {
             FontStyle estiloBase = estilo & (FontStyle.Bold | FontStyle.Italic);
-            string clave = tamano.ToString("R", CultureInfo.InvariantCulture) + "|" +
+            string clave = familiaActual + "|" + tamano.ToString("R", CultureInfo.InvariantCulture) + "|" +
                 ((int)estilo).ToString(CultureInfo.InvariantCulture) + "|" + ((int)unidad).ToString(CultureInfo.InvariantCulture);
             Font fuente;
             lock (Cache)
             {
                 if (Cache.TryGetValue(clave, out fuente)) return fuente;
-                FontFamily familia = FamiliasInter.FirstOrDefault(f => f.IsStyleAvailable(estiloBase))
-                    ?? FamiliasInter.FirstOrDefault(f => f.IsStyleAvailable(FontStyle.Regular));
+                FontFamily familia = ObtenerFamilia(familiaActual);
                 if (familia == null) return null;
-                fuente = new Font(familia, tamano, estilo, unidad);
+                FontStyle estiloFinal = familia.IsStyleAvailable(estiloBase)
+                    ? estilo
+                    : (estilo & ~(FontStyle.Bold | FontStyle.Italic));
+                fuente = new Font(familia, Math.Max(7f, Math.Min(28f, tamano)), estiloFinal, unidad);
                 Cache.Add(clave, fuente);
                 return fuente;
             }
+        }
+
+        private static FontFamily ObtenerFamilia(string nombre)
+        {
+            if (String.Equals(nombre, "Inter", StringComparison.OrdinalIgnoreCase))
+                return FamiliasInter.FirstOrDefault(f => f.IsStyleAvailable(FontStyle.Regular));
+            try
+            {
+                return FontFamily.Families.FirstOrDefault(f =>
+                    String.Equals(f.Name, nombre, StringComparison.OrdinalIgnoreCase));
+            }
+            catch { return null; }
         }
 
         private static PrivateFontCollection CargarFuentes()

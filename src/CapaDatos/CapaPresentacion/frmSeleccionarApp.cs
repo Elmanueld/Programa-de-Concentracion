@@ -1,17 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidades;
 using CapaNegocio;
 
 namespace CapaPresentacion
 {
-    public partial class frmSeleccionarApp : Form
+    public partial class frmSeleccionarApp : FormularioSuave
     {
         private readonly List<E_Aplicacion> _appsInstaladas = new List<E_Aplicacion>();
         private readonly List<E_Aplicacion> _appsManuales = new List<E_Aplicacion>();
@@ -19,17 +21,29 @@ namespace CapaPresentacion
         private readonly HashSet<string> _idsSeleccionados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly N_Aplicacion _negocioAplicaciones = new N_Aplicacion();
         private readonly int _idUsuario;
-        private readonly System.Windows.Forms.Timer _timerBusqueda = new System.Windows.Forms.Timer();
-        private readonly Label _estadoCarga = new Label();
+        private readonly System.Windows.Forms.Timer _timerBusqueda;
+        private readonly IndicadorCarga _estadoCarga;
         private bool _cargaIniciada;
+        private int _versionAppsActivas;
+
+        public frmSeleccionarApp() : this(0)
+        {
+        }
 
         public frmSeleccionarApp(int idUsuario)
         {
+            InitializeComponent();
+            if (EnModoDiseno) return;
             if (idUsuario <= 0)
                 throw new ArgumentException("El ID de usuario no es válido.");
             _idUsuario = idUsuario;
-            InitializeComponent();
-            Tipografia.Aplicar(this);
+            _timerBusqueda = new System.Windows.Forms.Timer();
+            _estadoCarga = new IndicadorCarga();
+            IconosGoogle.Aplicar(btnCerrar, "close");
+            ControlesPresentacion.Optimizar(flApps);
+            // El FlowLayoutPanel transparente no repinta bien el área que deja
+            // libre al desplazarse sobre el panel redondeado de AntdUI.
+            ActualizarFondoLista();
             ArrastreFormulario.Habilitar(this, pnlTop);
             SendMessage(txtBuscar.Handle, EM_SETCUEBANNER, 0, "Busca una aplicación...");
 
@@ -50,20 +64,20 @@ namespace CapaPresentacion
                 _timerBusqueda.Stop();
                 _timerBusqueda.Start();
             };
-            chkAppsAbiertas.CheckedChanged += (s, e) =>
+            chkAppsAbiertas.CheckedChanged += async (s, e) =>
             {
-                txtBuscar.Visible = !chkAppsAbiertas.Checked;
 
                 if (chkAppsAbiertas.Checked)
-                    ActualizarAppsActivas();
-
-                MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
+                    await ActualizarAppsActivasAsync();
+                else
+                {
+                    _versionAppsActivas++;
+                    _appsActivas.Clear();
+                    MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
+                }
             };
 
-            _estadoCarga.AutoSize = true;
-            _estadoCarga.Text = "Buscando aplicaciones instaladas...";
-            _estadoCarga.Left = 12;
-            _estadoCarga.Top = 12;
+            _estadoCarga.Mensaje = "Buscando aplicaciones instaladas...";
             flApps.Controls.Add(_estadoCarga);
         }
 
@@ -96,9 +110,11 @@ namespace CapaPresentacion
                 catch (Exception ex) { error = ex; }
 
                 if (IsDisposed || !IsHandleCreated) return;
-                BeginInvoke((Action)(() =>
+                BeginInvoke((Action)(async () =>
                 {
-                    _estadoCarga.Dispose();
+                    if (flApps.Controls.Contains(_estadoCarga))
+                        flApps.Controls.Remove(_estadoCarga);
+                    if (!_estadoCarga.IsDisposed) _estadoCarga.Dispose();
                     if (error != null)
                     {
                         MessageBox.Show(this, error.Message, "Error al buscar aplicaciones",
@@ -107,8 +123,9 @@ namespace CapaPresentacion
                     }
                     _appsInstaladas.AddRange(resultado ?? new List<E_Aplicacion>());
                     if (chkAppsAbiertas.Checked)
-                        ActualizarAppsActivas();
-                    MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
+                        await ActualizarAppsActivasAsync();
+                    else
+                        MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
                 }));
             });
             hilo.IsBackground = true;
@@ -130,14 +147,30 @@ namespace CapaPresentacion
                 .Select(g => g.First());
         }
 
-        private void ActualizarAppsActivas()
+        private async Task ActualizarAppsActivasAsync()
         {
+            int version = ++_versionAppsActivas;
+            var indicador = new IndicadorCarga { Mensaje = "Buscando aplicaciones abiertas..." };
+            ControlesPresentacion.Reemplazar(flApps, indicador);
+            List<E_Aplicacion> resultado = await Task.Run(ObtenerAppsActivas);
+            if (IsDisposed || version != _versionAppsActivas) return;
             _appsActivas.Clear();
+            _appsActivas.AddRange(resultado);
+            MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
+        }
+
+        private List<E_Aplicacion> ObtenerAppsActivas()
+        {
+            var resultado = new List<E_Aplicacion>();
 
             int procesoActual = Process.GetCurrentProcess().Id;
             int sesionActual = Process.GetCurrentProcess().SessionId;
             var identificadoresVistos = new HashSet<string>(
                 StringComparer.OrdinalIgnoreCase);
+            var instaladasPorRuta = _appsInstaladas
+                .Where(app => !String.IsNullOrWhiteSpace(app.Identificador))
+                .GroupBy(app => app.Identificador, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(grupo => grupo.Key, grupo => grupo.First(), StringComparer.OrdinalIgnoreCase);
 
             foreach (Process proceso in Process.GetProcesses())
             {
@@ -172,13 +205,10 @@ namespace CapaPresentacion
                             continue;
                         }
 
-                        E_Aplicacion registrada = _appsInstaladas.FirstOrDefault(app =>
-                            String.Equals(
-                                app.Identificador,
-                                ruta,
-                                StringComparison.OrdinalIgnoreCase));
+                        E_Aplicacion registrada;
+                        instaladasPorRuta.TryGetValue(ruta, out registrada);
 
-                        _appsActivas.Add(registrada ?? new E_Aplicacion
+                        resultado.Add(registrada ?? new E_Aplicacion
                         {
                             Nombre = proceso.ProcessName,
                             Identificador = ruta,
@@ -193,6 +223,7 @@ namespace CapaPresentacion
                     }
                 }
             }
+            return resultado;
         }
 
         [DllImport("user32.dll")]
@@ -201,42 +232,45 @@ namespace CapaPresentacion
         private void MostrarAplicaciones(IEnumerable<E_Aplicacion> aplicaciones)
         {
             List<E_Aplicacion> lista = aplicaciones.ToList();
-            flApps.SuspendLayout();
-            try
+            var controles = new List<Control>(lista.Count);
+            if (lista.Count == 0 && chkAppsAbiertas.Checked)
             {
-                foreach (Control anterior in flApps.Controls.Cast<Control>().ToArray())
+                controles.Add(new Label
                 {
-                    flApps.Controls.Remove(anterior);
-                    anterior.Dispose();
-                }
-
-                if (lista.Count == 0 && chkAppsAbiertas.Checked)
-                {
-                    var mensaje = new Label
-                    {
-                        AutoSize = true,
-                        Margin = new Padding(12),
-                        Text = "No se encontraron aplicaciones abiertas con ventana visible."
-                    };
-                    flApps.Controls.Add(mensaje);
-                }
-
-                foreach (E_Aplicacion app in lista)
-                {
-                    var tarjeta = new ucAplicacion();
-                    tarjeta.Configurar(app);
-                    tarjeta.SeleccionCambiada += (s, e) =>
-                    {
-                        var control = (ucAplicacion)s;
-                        if (control.Seleccionada) _idsSeleccionados.Add(control.Aplicacion.Identificador);
-                        else _idsSeleccionados.Remove(control.Aplicacion.Identificador);
-                    };
-                    if (_idsSeleccionados.Contains(app.Identificador))
-                        tarjeta.EstablecerSeleccionada(true);
-                    flApps.Controls.Add(tarjeta);
-                }
+                    AutoSize = true,
+                    Margin = new Padding(12),
+                    Text = "No se encontraron aplicaciones abiertas con ventana visible."
+                });
             }
-            finally { flApps.ResumeLayout(true); }
+
+            foreach (E_Aplicacion app in lista)
+            {
+                var tarjeta = new ucAplicacion { Margin = new Padding(6) };
+                tarjeta.Configurar(app);
+                tarjeta.SeleccionCambiada += (s, e) =>
+                {
+                    var control = (ucAplicacion)s;
+                    if (control.Seleccionada) _idsSeleccionados.Add(control.Aplicacion.Identificador);
+                    else _idsSeleccionados.Remove(control.Aplicacion.Identificador);
+                };
+                if (_idsSeleccionados.Contains(app.Identificador))
+                    tarjeta.EstablecerSeleccionada(true);
+                controles.Add(tarjeta);
+            }
+            ControlesPresentacion.Reemplazar(flApps, controles.ToArray());
+            foreach (ucAplicacion tarjeta in flApps.Controls.OfType<ucAplicacion>())
+                if (tarjeta.Aplicacion != null && _idsSeleccionados.Contains(tarjeta.Aplicacion.Identificador))
+                    tarjeta.EstablecerSeleccionada(true);
+        }
+
+        private void ActualizarFondoLista()
+        {
+            // Conserva la superficie visible del panel del diseñador. Solo la
+            // lista y sus tarjetas permanecen transparentes sobre ella.
+            pnlLayoutApp.Back = Color.LightSteelBlue;
+            pnlLayoutApp.BackColor = Color.Transparent;
+            pnlLayoutApp.BorderColor = Color.Black;
+            flApps.BackColor = Color.Transparent;
         }
 
         private void btnManual_Click(object sender, EventArgs e)

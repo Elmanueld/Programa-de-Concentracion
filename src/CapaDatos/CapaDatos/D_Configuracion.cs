@@ -7,15 +7,17 @@ namespace CapaDatos
     {
         public void InsertarConfiguracion(E_Configuracion configuracion)
         {
-            D_Comun.Ejecutar("sp_InsertarConfiguracion", comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(configuracion.IdUsuario, () => D_Comun.Ejecutar("sp_InsertarConfiguracion", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", configuracion.IdUsuario);
                 D_Comun.Booleano(comando, "@AutoSesion", configuracion.AutoSesion);
-            });
+            }), () => D_SincronizacionOffline.InsertarConfiguracion(configuracion));
         }
 
         public E_Configuracion BuscarConfiguracion(int idUsuario)
         {
+            return D_SincronizacionOffline.ConFallback(idUsuario, () =>
+            {
             List<E_Configuracion> resultados = D_Comun.Consultar("sp_BuscarConfiguracion", comando =>
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario), lector => new E_Configuracion
                 {
@@ -25,16 +27,17 @@ namespace CapaDatos
                 });
 
             return resultados.Count == 0 ? null : resultados[0];
+            }, () => D_SincronizacionOffline.BuscarConfiguracion(idUsuario));
         }
 
         public void ModificarConfiguracion(E_Configuracion configuracion)
         {
-            D_Comun.Ejecutar("sp_ModificarConfiguracion", comando =>
+            D_SincronizacionOffline.ConFallbackEscritura(configuracion.IdUsuario, () => D_Comun.Ejecutar("sp_ModificarConfiguracion", comando =>
             {
                 D_Comun.Entero(comando, "@IdUsuario", configuracion.IdUsuario);
                 D_Comun.Entero(comando, "@IdConfiguracion", configuracion.IdConfiguracion);
                 D_Comun.Booleano(comando, "@AutoSesion", configuracion.AutoSesion);
-            });
+            }), () => D_SincronizacionOffline.ModificarConfiguracion(configuracion));
         }
     }
 }

@@ -10,5 +10,6 @@ namespace CapaEntidades
         public bool CorreoVerificado { get; set; }
         public string ContrasenaHash { get; set; }
         public bool Eliminado { get; set; }
+        public bool SesionSinConexion { get; set; }
     }
 }

@@ -177,7 +177,7 @@ namespace CapaNegocio
 
             foreach (E_Tarea tarea in tareas)
             {
-                if (tarea == null || tarea.Estado == 'C' || tarea.NoBloquearWebs)
+                if (tarea == null || tarea.Estado == 'C' || tarea.Estado == 'X' || tarea.NoBloquearWebs)
                     continue;
                 var regla = new ReglaWeb
                 {

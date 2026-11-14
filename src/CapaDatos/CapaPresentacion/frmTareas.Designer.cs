@@ -1,4 +1,4 @@
-﻿namespace CapaPresentacion
+namespace CapaPresentacion
 {
     partial class frmTareas
     {
@@ -29,136 +29,136 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmTareas));
-            this.label9 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblTargetaNombre = new System.Windows.Forms.Label();
+            this.lblSubTargetaTiempoDescanso = new System.Windows.Forms.Label();
+            this.lblSubTargetaAgregarWeb = new System.Windows.Forms.Label();
+            this.lblSubTargetaAgregarApp = new System.Windows.Forms.Label();
+            this.lblTargetaHoraFin = new System.Windows.Forms.Label();
+            this.lblTargetaHoraInicio = new System.Windows.Forms.Label();
             this.cbNoBloquearWebs = new System.Windows.Forms.CheckBox();
             this.cbNoBloquearApps = new System.Windows.Forms.CheckBox();
-            this.flLista = new System.Windows.Forms.FlowLayoutPanel();
-            this.pnlLista = new AntdUI.Panel();
-            this.panel2 = new AntdUI.Panel();
+            this.flLista = new CapaPresentacion.BufferedFlowLayoutPanel();
+            this.pnlLayoutLista = new AntdUI.Panel();
+            this.pnlTargetaTiempoDescanso = new AntdUI.Panel();
             this.btnSumarDescanso = new AntdUI.Button();
             this.btnRestarDescanso = new AntdUI.Button();
-            this.image3D1 = new AntdUI.Image3D();
+            this.pbSubTargetaTiempoDescanso = new AntdUI.Image3D();
             this.nudDescanso = new AntdUI.Input();
-            this.panel1 = new AntdUI.Panel();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.image3D3 = new AntdUI.Image3D();
-            this.panel3 = new AntdUI.Panel();
+            this.pnlTargetaDescansos = new AntdUI.Panel();
+            this.lblDescripcionDescanso = new System.Windows.Forms.Label();
+            this.lblTargetaDescanso = new System.Windows.Forms.Label();
+            this.pbTargetaDescanso = new AntdUI.Image3D();
+            this.pnlTargetaIntervalo = new AntdUI.Panel();
             this.btnSumarIntervalo = new AntdUI.Button();
             this.btnRestarIntervalo = new AntdUI.Button();
-            this.image3D2 = new AntdUI.Image3D();
+            this.pbTargetaIntervalo = new AntdUI.Image3D();
             this.nudIntervalo = new AntdUI.Input();
-            this.label6 = new System.Windows.Forms.Label();
-            this.panel4 = new AntdUI.Panel();
-            this.pnlWebs = new AntdUI.Panel();
+            this.lblTargetaIntervalo = new System.Windows.Forms.Label();
+            this.pnlTargetaAgregar = new AntdUI.Panel();
+            this.pnlSubTargetaAgregarWeb = new AntdUI.Panel();
             this.btnAgregarWeb = new AntdUI.Button();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.image3D4 = new AntdUI.Image3D();
-            this.pnlApps = new AntdUI.Panel();
+            this.lblDescripcionAgregar = new System.Windows.Forms.Label();
+            this.lblTargetaAgregar = new System.Windows.Forms.Label();
+            this.pbTargetaAgregar = new AntdUI.Image3D();
+            this.pnlSubTargetaAgregaApp = new AntdUI.Panel();
             this.btnAgregarApp = new AntdUI.Button();
-            this.panel5 = new AntdUI.Panel();
+            this.pnlTargetaTarea = new AntdUI.Panel();
             this.txtNombreTarea = new AntdUI.Input();
             this.dtpHoraFin = new AntdUI.TimePicker();
             this.dtpHoraInicio = new AntdUI.TimePicker();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
-            this.image3D5 = new AntdUI.Image3D();
+            this.lblDescripcionTarea = new System.Windows.Forms.Label();
+            this.lblTargetaTarea = new System.Windows.Forms.Label();
+            this.pbTargetaTarea = new AntdUI.Image3D();
             this.btnGuardar = new AntdUI.Button();
-            this.pnlTop = new System.Windows.Forms.Panel();
             this.btnCerrar = new AntdUI.Button();
-            this.button1 = new AntdUI.Button();
-            this.label15 = new System.Windows.Forms.Label();
-            this.pnlLista.SuspendLayout();
-            this.panel2.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.panel3.SuspendLayout();
-            this.panel4.SuspendLayout();
-            this.pnlWebs.SuspendLayout();
-            this.pnlApps.SuspendLayout();
-            this.panel5.SuspendLayout();
+            this.lblPanelTop = new System.Windows.Forms.Label();
+            this.pnlTop = new System.Windows.Forms.Panel();
+            this.btnCancelar = new AntdUI.Button();
+            this.pnlLayoutLista.SuspendLayout();
+            this.pnlTargetaTiempoDescanso.SuspendLayout();
+            this.pnlTargetaDescansos.SuspendLayout();
+            this.pnlTargetaIntervalo.SuspendLayout();
+            this.pnlTargetaAgregar.SuspendLayout();
+            this.pnlSubTargetaAgregarWeb.SuspendLayout();
+            this.pnlSubTargetaAgregaApp.SuspendLayout();
+            this.pnlTargetaTarea.SuspendLayout();
             this.pnlTop.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // label9
-            // 
-            this.label9.BackColor = System.Drawing.Color.Transparent;
-            this.label9.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.ForeColor = System.Drawing.Color.White;
-            this.label9.Location = new System.Drawing.Point(12, 108);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(156, 32);
-            this.label9.TabIndex = 39;
-            this.label9.Text = "Nombre";
-            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label5
-            // 
-            this.label5.BackColor = System.Drawing.Color.Transparent;
-            this.label5.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.ForeColor = System.Drawing.Color.White;
-            this.label5.Location = new System.Drawing.Point(60, 12);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(180, 36);
-            this.label5.TabIndex = 30;
-            this.label5.Text = "Tiempo de descanso";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label4
-            // 
-            this.label4.BackColor = System.Drawing.Color.Transparent;
-            this.label4.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.Color.White;
-            this.label4.Location = new System.Drawing.Point(48, 12);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(144, 37);
-            this.label4.TabIndex = 29;
-            this.label4.Text = "Agregar Web";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label3
-            // 
-            this.label3.BackColor = System.Drawing.Color.Transparent;
-            this.label3.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(0, 12);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(240, 37);
-            this.label3.TabIndex = 28;
-            this.label3.Text = "Agregar aplicación";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label2
-            // 
-            this.label2.BackColor = System.Drawing.Color.Transparent;
-            this.label2.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(12, 204);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(156, 36);
-            this.label2.TabIndex = 26;
-            this.label2.Text = "Hora de fin";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label1
-            // 
-            this.label1.BackColor = System.Drawing.Color.Transparent;
-            this.label1.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(12, 156);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(156, 30);
-            this.label1.TabIndex = 25;
-            this.label1.Text = "Hora de inicio";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
+            //
+            // lblTargetaNombre
+            //
+            this.lblTargetaNombre.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaNombre.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaNombre.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaNombre.Location = new System.Drawing.Point(12, 108);
+            this.lblTargetaNombre.Name = "lblTargetaNombre";
+            this.lblTargetaNombre.Size = new System.Drawing.Size(156, 32);
+            this.lblTargetaNombre.TabIndex = 39;
+            this.lblTargetaNombre.Text = "Nombre";
+            this.lblTargetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // lblSubTargetaTiempoDescanso
+            //
+            this.lblSubTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.lblSubTargetaTiempoDescanso.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubTargetaTiempoDescanso.ForeColor = System.Drawing.Color.White;
+            this.lblSubTargetaTiempoDescanso.Location = new System.Drawing.Point(60, 12);
+            this.lblSubTargetaTiempoDescanso.Name = "lblSubTargetaTiempoDescanso";
+            this.lblSubTargetaTiempoDescanso.Size = new System.Drawing.Size(180, 36);
+            this.lblSubTargetaTiempoDescanso.TabIndex = 30;
+            this.lblSubTargetaTiempoDescanso.Text = "Tiempo de descanso";
+            this.lblSubTargetaTiempoDescanso.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // lblSubTargetaAgregarWeb
+            //
+            this.lblSubTargetaAgregarWeb.BackColor = System.Drawing.Color.Transparent;
+            this.lblSubTargetaAgregarWeb.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubTargetaAgregarWeb.ForeColor = System.Drawing.Color.White;
+            this.lblSubTargetaAgregarWeb.Location = new System.Drawing.Point(0, 12);
+            this.lblSubTargetaAgregarWeb.Name = "lblSubTargetaAgregarWeb";
+            this.lblSubTargetaAgregarWeb.Size = new System.Drawing.Size(240, 37);
+            this.lblSubTargetaAgregarWeb.TabIndex = 29;
+            this.lblSubTargetaAgregarWeb.Text = "Agregar Web";
+            this.lblSubTargetaAgregarWeb.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // lblSubTargetaAgregarApp
+            //
+            this.lblSubTargetaAgregarApp.BackColor = System.Drawing.Color.Transparent;
+            this.lblSubTargetaAgregarApp.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubTargetaAgregarApp.ForeColor = System.Drawing.Color.White;
+            this.lblSubTargetaAgregarApp.Location = new System.Drawing.Point(0, 12);
+            this.lblSubTargetaAgregarApp.Name = "lblSubTargetaAgregarApp";
+            this.lblSubTargetaAgregarApp.Size = new System.Drawing.Size(240, 37);
+            this.lblSubTargetaAgregarApp.TabIndex = 28;
+            this.lblSubTargetaAgregarApp.Text = "Agregar aplicación";
+            this.lblSubTargetaAgregarApp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // lblTargetaHoraFin
+            //
+            this.lblTargetaHoraFin.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaHoraFin.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaHoraFin.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaHoraFin.Location = new System.Drawing.Point(12, 204);
+            this.lblTargetaHoraFin.Name = "lblTargetaHoraFin";
+            this.lblTargetaHoraFin.Size = new System.Drawing.Size(156, 36);
+            this.lblTargetaHoraFin.TabIndex = 26;
+            this.lblTargetaHoraFin.Text = "Hora de fin";
+            this.lblTargetaHoraFin.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // lblTargetaHoraInicio
+            //
+            this.lblTargetaHoraInicio.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaHoraInicio.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaHoraInicio.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaHoraInicio.Location = new System.Drawing.Point(12, 156);
+            this.lblTargetaHoraInicio.Name = "lblTargetaHoraInicio";
+            this.lblTargetaHoraInicio.Size = new System.Drawing.Size(156, 30);
+            this.lblTargetaHoraInicio.TabIndex = 25;
+            this.lblTargetaHoraInicio.Text = "Hora de inicio";
+            this.lblTargetaHoraInicio.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
             // cbNoBloquearWebs
-            // 
+            //
             this.cbNoBloquearWebs.AutoSize = true;
             this.cbNoBloquearWebs.BackColor = System.Drawing.Color.Transparent;
             this.cbNoBloquearWebs.Font = new System.Drawing.Font("Inter", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -169,253 +169,288 @@
             this.cbNoBloquearWebs.TabIndex = 46;
             this.cbNoBloquearWebs.Text = "No bloquear páginas web";
             this.cbNoBloquearWebs.UseVisualStyleBackColor = false;
-            // 
+            //
+            // cbNoBloquearApps
+            //
+            this.cbNoBloquearApps.AutoSize = true;
+            this.cbNoBloquearApps.BackColor = System.Drawing.Color.Transparent;
+            this.cbNoBloquearApps.Font = new System.Drawing.Font("Inter", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbNoBloquearApps.ForeColor = System.Drawing.Color.White;
+            this.cbNoBloquearApps.Location = new System.Drawing.Point(24, 108);
+            this.cbNoBloquearApps.Name = "cbNoBloquearApps";
+            this.cbNoBloquearApps.Size = new System.Drawing.Size(181, 21);
+            this.cbNoBloquearApps.TabIndex = 47;
+            this.cbNoBloquearApps.Text = "No bloquear aplicaciones";
+            this.cbNoBloquearApps.UseVisualStyleBackColor = false;
+            //
             // flLista
-            // 
+            //
             this.flLista.AutoScroll = true;
             this.flLista.BackColor = System.Drawing.Color.Transparent;
+            this.flLista.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.flLista.Location = new System.Drawing.Point(12, 12);
             this.flLista.Name = "flLista";
-            this.flLista.Size = new System.Drawing.Size(600, 264);
+            this.flLista.Size = new System.Drawing.Size(684, 288);
             this.flLista.TabIndex = 47;
-            // 
-            // pnlLista
-            // 
-            this.pnlLista.Back = System.Drawing.Color.White;
-            this.pnlLista.BackColor = System.Drawing.Color.Transparent;
-            this.pnlLista.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(205)))), ((int)(((byte)(232)))));
-            this.pnlLista.BorderWidth = 0.75F;
-            this.pnlLista.Controls.Add(this.flLista);
-            this.pnlLista.Location = new System.Drawing.Point(552, 360);
-            this.pnlLista.Name = "pnlLista";
-            this.pnlLista.Radius = 12;
-            this.pnlLista.Size = new System.Drawing.Size(624, 288);
-            this.pnlLista.TabIndex = 55;
-            this.pnlLista.Text = "pnlLista";
-            // 
-            // panel2
-            // 
-            this.panel2.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.panel2.BackColor = System.Drawing.Color.Transparent;
-            this.panel2.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(15)))), ((int)(((byte)(28)))));
-            this.panel2.BorderWidth = 1F;
-            this.panel2.Controls.Add(this.btnSumarDescanso);
-            this.panel2.Controls.Add(this.btnRestarDescanso);
-            this.panel2.Controls.Add(this.image3D1);
-            this.panel2.Controls.Add(this.nudDescanso);
-            this.panel2.Controls.Add(this.label5);
-            this.panel2.Location = new System.Drawing.Point(24, 108);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(276, 142);
-            this.panel2.TabIndex = 49;
-            this.panel2.Text = "panel2";
-            // 
+            //
+            // pnlLayoutLista
+            //
+            this.pnlLayoutLista.Back = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(205)))), ((int)(((byte)(232)))));
+            this.pnlLayoutLista.BackColor = System.Drawing.Color.Transparent;
+            this.pnlLayoutLista.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlLayoutLista.BorderWidth = 1F;
+            this.pnlLayoutLista.Controls.Add(this.flLista);
+            this.pnlLayoutLista.Location = new System.Drawing.Point(552, 360);
+            this.pnlLayoutLista.Name = "pnlLayoutLista";
+            this.pnlLayoutLista.Radius = 12;
+            this.pnlLayoutLista.Size = new System.Drawing.Size(708, 312);
+            this.pnlLayoutLista.TabIndex = 55;
+            this.pnlLayoutLista.Text = "pnlLista";
+            this.pnlLayoutLista.Click += new System.EventHandler(this.PnlLayoutLista_Click);
+            //
+            // pnlTargetaTiempoDescanso
+            //
+            this.pnlTargetaTiempoDescanso.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            this.pnlTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.pnlTargetaTiempoDescanso.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlTargetaTiempoDescanso.BorderWidth = 1F;
+            this.pnlTargetaTiempoDescanso.Controls.Add(this.btnSumarDescanso);
+            this.pnlTargetaTiempoDescanso.Controls.Add(this.btnRestarDescanso);
+            this.pnlTargetaTiempoDescanso.Controls.Add(this.pbSubTargetaTiempoDescanso);
+            this.pnlTargetaTiempoDescanso.Controls.Add(this.nudDescanso);
+            this.pnlTargetaTiempoDescanso.Controls.Add(this.lblSubTargetaTiempoDescanso);
+            this.pnlTargetaTiempoDescanso.Location = new System.Drawing.Point(24, 120);
+            this.pnlTargetaTiempoDescanso.Name = "pnlTargetaTiempoDescanso";
+            this.pnlTargetaTiempoDescanso.Size = new System.Drawing.Size(324, 142);
+            this.pnlTargetaTiempoDescanso.TabIndex = 49;
+            this.pnlTargetaTiempoDescanso.Text = "panel2";
+            //
             // btnSumarDescanso
-            // 
+            //
             this.btnSumarDescanso.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarDescanso.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarDescanso.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
+            this.btnSumarDescanso.BorderWidth = 1F;
             this.btnSumarDescanso.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnSumarDescanso.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnSumarDescanso.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSumarDescanso.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnSumarDescanso.Location = new System.Drawing.Point(144, 84);
+            this.btnSumarDescanso.Location = new System.Drawing.Point(156, 84);
             this.btnSumarDescanso.Name = "btnSumarDescanso";
             this.btnSumarDescanso.Size = new System.Drawing.Size(84, 48);
             this.btnSumarDescanso.TabIndex = 34;
             this.btnSumarDescanso.Text = "+";
-            // 
+            //
             // btnRestarDescanso
-            // 
+            //
+            this.btnRestarDescanso.BorderWidth = 1F;
             this.btnRestarDescanso.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnRestarDescanso.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnRestarDescanso.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRestarDescanso.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnRestarDescanso.Location = new System.Drawing.Point(60, 84);
+            this.btnRestarDescanso.Location = new System.Drawing.Point(72, 84);
             this.btnRestarDescanso.Name = "btnRestarDescanso";
             this.btnRestarDescanso.Size = new System.Drawing.Size(84, 48);
             this.btnRestarDescanso.TabIndex = 33;
             this.btnRestarDescanso.Text = "-";
-            // 
-            // image3D1
-            // 
-            this.image3D1.BackColor = System.Drawing.Color.Transparent;
-            this.image3D1.Image = ((System.Drawing.Image)(resources.GetObject("image3D1.Image")));
-            this.image3D1.Location = new System.Drawing.Point(12, 12);
-            this.image3D1.Name = "image3D1";
-            this.image3D1.Size = new System.Drawing.Size(40, 38);
-            this.image3D1.TabIndex = 32;
-            this.image3D1.Text = "image3D1";
-            // 
+            //
+            // pbSubTargetaTiempoDescanso
+            //
+            this.pbSubTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.pbSubTargetaTiempoDescanso.Image = ((System.Drawing.Image)(resources.GetObject("pbSubTargetaTiempoDescanso.Image")));
+            this.pbSubTargetaTiempoDescanso.Location = new System.Drawing.Point(12, 12);
+            this.pbSubTargetaTiempoDescanso.Name = "pbSubTargetaTiempoDescanso";
+            this.pbSubTargetaTiempoDescanso.Size = new System.Drawing.Size(40, 38);
+            this.pbSubTargetaTiempoDescanso.TabIndex = 32;
+            this.pbSubTargetaTiempoDescanso.Text = "image3D1";
+            //
             // nudDescanso
-            // 
-            this.nudDescanso.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.nudDescanso.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            //
+            this.nudDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.nudDescanso.BorderActive = System.Drawing.Color.Transparent;
+            this.nudDescanso.BorderColor = System.Drawing.Color.Transparent;
+            this.nudDescanso.BorderHover = System.Drawing.Color.Transparent;
+            this.nudDescanso.BorderWidth = 0F;
             this.nudDescanso.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nudDescanso.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.nudDescanso.Location = new System.Drawing.Point(0, 48);
             this.nudDescanso.Name = "nudDescanso";
-            this.nudDescanso.Size = new System.Drawing.Size(276, 36);
+            this.nudDescanso.Size = new System.Drawing.Size(324, 36);
             this.nudDescanso.TabIndex = 31;
             this.nudDescanso.Text = "0 min";
             this.nudDescanso.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // panel1
-            // 
-            this.panel1.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
-            this.panel1.Controls.Add(this.label12);
-            this.panel1.Controls.Add(this.label11);
-            this.panel1.Controls.Add(this.image3D3);
-            this.panel1.Controls.Add(this.panel3);
-            this.panel1.Controls.Add(this.panel2);
-            this.panel1.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.panel1.Location = new System.Drawing.Point(552, 72);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(624, 264);
-            this.panel1.TabIndex = 50;
-            this.panel1.Text = "panel1";
-            // 
-            // label12
-            // 
-            this.label12.BackColor = System.Drawing.Color.Transparent;
-            this.label12.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.ForeColor = System.Drawing.Color.LightSteelBlue;
-            this.label12.Location = new System.Drawing.Point(108, 60);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(372, 36);
-            this.label12.TabIndex = 35;
-            this.label12.Text = "Configura cuánto tiempo descansas y cuándo";
-            // 
-            // label11
-            // 
-            this.label11.BackColor = System.Drawing.Color.Transparent;
-            this.label11.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.ForeColor = System.Drawing.Color.White;
-            this.label11.Location = new System.Drawing.Point(108, 24);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(384, 36);
-            this.label11.TabIndex = 35;
-            this.label11.Text = "Descansos";
-            // 
-            // image3D3
-            // 
-            this.image3D3.BackColor = System.Drawing.Color.Transparent;
-            this.image3D3.Image = ((System.Drawing.Image)(resources.GetObject("image3D3.Image")));
-            this.image3D3.Location = new System.Drawing.Point(24, 24);
-            this.image3D3.Name = "image3D3";
-            this.image3D3.Size = new System.Drawing.Size(72, 72);
-            this.image3D3.TabIndex = 35;
-            this.image3D3.Text = "image3D3";
-            // 
-            // panel3
-            // 
-            this.panel3.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.panel3.BackColor = System.Drawing.Color.Transparent;
-            this.panel3.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(15)))), ((int)(((byte)(28)))));
-            this.panel3.BorderWidth = 1F;
-            this.panel3.Controls.Add(this.btnSumarIntervalo);
-            this.panel3.Controls.Add(this.btnRestarIntervalo);
-            this.panel3.Controls.Add(this.image3D2);
-            this.panel3.Controls.Add(this.nudIntervalo);
-            this.panel3.Controls.Add(this.label6);
-            this.panel3.Location = new System.Drawing.Point(324, 108);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(276, 142);
-            this.panel3.TabIndex = 50;
-            this.panel3.Text = "panel3";
-            // 
+            //
+            // pnlTargetaDescansos
+            //
+            this.pnlTargetaDescansos.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
+            this.pnlTargetaDescansos.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlTargetaDescansos.BorderWidth = 1F;
+            this.pnlTargetaDescansos.Controls.Add(this.lblDescripcionDescanso);
+            this.pnlTargetaDescansos.Controls.Add(this.lblTargetaDescanso);
+            this.pnlTargetaDescansos.Controls.Add(this.pbTargetaDescanso);
+            this.pnlTargetaDescansos.Controls.Add(this.pnlTargetaIntervalo);
+            this.pnlTargetaDescansos.Controls.Add(this.pnlTargetaTiempoDescanso);
+            this.pnlTargetaDescansos.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.pnlTargetaDescansos.Location = new System.Drawing.Point(552, 72);
+            this.pnlTargetaDescansos.Name = "pnlTargetaDescansos";
+            this.pnlTargetaDescansos.Size = new System.Drawing.Size(708, 276);
+            this.pnlTargetaDescansos.TabIndex = 50;
+            this.pnlTargetaDescansos.Text = "panel1";
+            //
+            // lblDescripcionDescanso
+            //
+            this.lblDescripcionDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.lblDescripcionDescanso.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDescripcionDescanso.ForeColor = System.Drawing.Color.LightSteelBlue;
+            this.lblDescripcionDescanso.Location = new System.Drawing.Point(108, 60);
+            this.lblDescripcionDescanso.Name = "lblDescripcionDescanso";
+            this.lblDescripcionDescanso.Size = new System.Drawing.Size(372, 36);
+            this.lblDescripcionDescanso.TabIndex = 35;
+            this.lblDescripcionDescanso.Text = "Configura cuánto tiempo descansas y cuándo";
+            //
+            // lblTargetaDescanso
+            //
+            this.lblTargetaDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaDescanso.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaDescanso.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaDescanso.Location = new System.Drawing.Point(108, 24);
+            this.lblTargetaDescanso.Name = "lblTargetaDescanso";
+            this.lblTargetaDescanso.Size = new System.Drawing.Size(384, 36);
+            this.lblTargetaDescanso.TabIndex = 35;
+            this.lblTargetaDescanso.Text = "Descansos";
+            //
+            // pbTargetaDescanso
+            //
+            this.pbTargetaDescanso.BackColor = System.Drawing.Color.Transparent;
+            this.pbTargetaDescanso.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaDescanso.Image")));
+            this.pbTargetaDescanso.Location = new System.Drawing.Point(24, 24);
+            this.pbTargetaDescanso.Name = "pbTargetaDescanso";
+            this.pbTargetaDescanso.Size = new System.Drawing.Size(72, 72);
+            this.pbTargetaDescanso.TabIndex = 35;
+            this.pbTargetaDescanso.Text = "image3D3";
+            //
+            // pnlTargetaIntervalo
+            //
+            this.pnlTargetaIntervalo.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            this.pnlTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
+            this.pnlTargetaIntervalo.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlTargetaIntervalo.BorderWidth = 1F;
+            this.pnlTargetaIntervalo.Controls.Add(this.btnSumarIntervalo);
+            this.pnlTargetaIntervalo.Controls.Add(this.btnRestarIntervalo);
+            this.pnlTargetaIntervalo.Controls.Add(this.pbTargetaIntervalo);
+            this.pnlTargetaIntervalo.Controls.Add(this.nudIntervalo);
+            this.pnlTargetaIntervalo.Controls.Add(this.lblTargetaIntervalo);
+            this.pnlTargetaIntervalo.Location = new System.Drawing.Point(360, 120);
+            this.pnlTargetaIntervalo.Name = "pnlTargetaIntervalo";
+            this.pnlTargetaIntervalo.Size = new System.Drawing.Size(324, 142);
+            this.pnlTargetaIntervalo.TabIndex = 50;
+            this.pnlTargetaIntervalo.Text = "panel3";
+            //
             // btnSumarIntervalo
-            // 
+            //
             this.btnSumarIntervalo.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarIntervalo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarIntervalo.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
+            this.btnSumarIntervalo.BorderWidth = 1F;
             this.btnSumarIntervalo.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnSumarIntervalo.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnSumarIntervalo.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSumarIntervalo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnSumarIntervalo.Location = new System.Drawing.Point(144, 84);
+            this.btnSumarIntervalo.Location = new System.Drawing.Point(156, 84);
             this.btnSumarIntervalo.Name = "btnSumarIntervalo";
             this.btnSumarIntervalo.Size = new System.Drawing.Size(84, 48);
             this.btnSumarIntervalo.TabIndex = 34;
             this.btnSumarIntervalo.Text = "+";
-            // 
+            //
             // btnRestarIntervalo
-            // 
+            //
+            this.btnRestarIntervalo.BorderWidth = 1F;
             this.btnRestarIntervalo.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnRestarIntervalo.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnRestarIntervalo.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRestarIntervalo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnRestarIntervalo.Location = new System.Drawing.Point(60, 84);
+            this.btnRestarIntervalo.Location = new System.Drawing.Point(72, 84);
             this.btnRestarIntervalo.Name = "btnRestarIntervalo";
             this.btnRestarIntervalo.Size = new System.Drawing.Size(84, 48);
             this.btnRestarIntervalo.TabIndex = 33;
             this.btnRestarIntervalo.Text = "-";
-            // 
-            // image3D2
-            // 
-            this.image3D2.BackColor = System.Drawing.Color.Transparent;
-            this.image3D2.Image = ((System.Drawing.Image)(resources.GetObject("image3D2.Image")));
-            this.image3D2.Location = new System.Drawing.Point(12, 12);
-            this.image3D2.Name = "image3D2";
-            this.image3D2.Size = new System.Drawing.Size(40, 38);
-            this.image3D2.TabIndex = 32;
-            this.image3D2.Text = "image3D2";
-            // 
+            //
+            // pbTargetaIntervalo
+            //
+            this.pbTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
+            this.pbTargetaIntervalo.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaIntervalo.Image")));
+            this.pbTargetaIntervalo.Location = new System.Drawing.Point(12, 12);
+            this.pbTargetaIntervalo.Name = "pbTargetaIntervalo";
+            this.pbTargetaIntervalo.Size = new System.Drawing.Size(40, 38);
+            this.pbTargetaIntervalo.TabIndex = 32;
+            this.pbTargetaIntervalo.Text = "image3D2";
+            //
             // nudIntervalo
-            // 
-            this.nudIntervalo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.nudIntervalo.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            //
+            this.nudIntervalo.BackColor = System.Drawing.Color.Transparent;
+            this.nudIntervalo.BorderActive = System.Drawing.Color.Transparent;
+            this.nudIntervalo.BorderColor = System.Drawing.Color.Transparent;
+            this.nudIntervalo.BorderHover = System.Drawing.Color.Transparent;
+            this.nudIntervalo.BorderWidth = 0F;
             this.nudIntervalo.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nudIntervalo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.nudIntervalo.Location = new System.Drawing.Point(0, 48);
             this.nudIntervalo.Name = "nudIntervalo";
-            this.nudIntervalo.Size = new System.Drawing.Size(276, 36);
+            this.nudIntervalo.Size = new System.Drawing.Size(324, 36);
             this.nudIntervalo.TabIndex = 31;
             this.nudIntervalo.Text = "0 min";
             this.nudIntervalo.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label6
-            // 
-            this.label6.BackColor = System.Drawing.Color.Transparent;
-            this.label6.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.ForeColor = System.Drawing.Color.White;
-            this.label6.Location = new System.Drawing.Point(48, 12);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(204, 36);
-            this.label6.TabIndex = 30;
-            this.label6.Text = "Cada cuánto descansar";
-            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // panel4
-            // 
-            this.panel4.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
-            this.panel4.Controls.Add(this.pnlWebs);
-            this.panel4.Controls.Add(this.label7);
-            this.panel4.Controls.Add(this.label8);
-            this.panel4.Controls.Add(this.image3D4);
-            this.panel4.Controls.Add(this.pnlApps);
-            this.panel4.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.panel4.Location = new System.Drawing.Point(12, 360);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(528, 288);
-            this.panel4.TabIndex = 51;
-            this.panel4.Text = "panel4";
-            // 
-            // pnlWebs
-            // 
-            this.pnlWebs.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.pnlWebs.BackColor = System.Drawing.Color.Transparent;
-            this.pnlWebs.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(15)))), ((int)(((byte)(28)))));
-            this.pnlWebs.BorderWidth = 1F;
-            this.pnlWebs.Controls.Add(this.label4);
-            this.pnlWebs.Controls.Add(this.btnAgregarWeb);
-            this.pnlWebs.Controls.Add(this.cbNoBloquearWebs);
-            this.pnlWebs.Location = new System.Drawing.Point(264, 120);
-            this.pnlWebs.Name = "pnlWebs";
-            this.pnlWebs.Size = new System.Drawing.Size(236, 142);
-            this.pnlWebs.TabIndex = 51;
-            this.pnlWebs.Text = "panel7";
-            // 
+            //
+            // lblTargetaIntervalo
+            //
+            this.lblTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaIntervalo.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaIntervalo.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaIntervalo.Location = new System.Drawing.Point(48, 12);
+            this.lblTargetaIntervalo.Name = "lblTargetaIntervalo";
+            this.lblTargetaIntervalo.Size = new System.Drawing.Size(204, 36);
+            this.lblTargetaIntervalo.TabIndex = 30;
+            this.lblTargetaIntervalo.Text = "Cada cuánto descansar";
+            this.lblTargetaIntervalo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // pnlTargetaAgregar
+            //
+            this.pnlTargetaAgregar.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
+            this.pnlTargetaAgregar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlTargetaAgregar.BorderWidth = 1F;
+            this.pnlTargetaAgregar.Controls.Add(this.pnlSubTargetaAgregarWeb);
+            this.pnlTargetaAgregar.Controls.Add(this.lblDescripcionAgregar);
+            this.pnlTargetaAgregar.Controls.Add(this.lblTargetaAgregar);
+            this.pnlTargetaAgregar.Controls.Add(this.pbTargetaAgregar);
+            this.pnlTargetaAgregar.Controls.Add(this.pnlSubTargetaAgregaApp);
+            this.pnlTargetaAgregar.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.pnlTargetaAgregar.Location = new System.Drawing.Point(12, 360);
+            this.pnlTargetaAgregar.Name = "pnlTargetaAgregar";
+            this.pnlTargetaAgregar.Size = new System.Drawing.Size(528, 312);
+            this.pnlTargetaAgregar.TabIndex = 51;
+            this.pnlTargetaAgregar.Text = "panel4";
+            //
+            // pnlSubTargetaAgregarWeb
+            //
+            this.pnlSubTargetaAgregarWeb.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            this.pnlSubTargetaAgregarWeb.BackColor = System.Drawing.Color.Transparent;
+            this.pnlSubTargetaAgregarWeb.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlSubTargetaAgregarWeb.BorderWidth = 1F;
+            this.pnlSubTargetaAgregarWeb.Controls.Add(this.lblSubTargetaAgregarWeb);
+            this.pnlSubTargetaAgregarWeb.Controls.Add(this.btnAgregarWeb);
+            this.pnlSubTargetaAgregarWeb.Controls.Add(this.cbNoBloquearWebs);
+            this.pnlSubTargetaAgregarWeb.Location = new System.Drawing.Point(264, 132);
+            this.pnlSubTargetaAgregarWeb.Name = "pnlSubTargetaAgregarWeb";
+            this.pnlSubTargetaAgregarWeb.Size = new System.Drawing.Size(236, 142);
+            this.pnlSubTargetaAgregarWeb.TabIndex = 51;
+            this.pnlSubTargetaAgregarWeb.Text = "panel7";
+            //
             // btnAgregarWeb
-            // 
+            //
             this.btnAgregarWeb.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
+            this.btnAgregarWeb.BorderWidth = 1F;
             this.btnAgregarWeb.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnAgregarWeb.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnAgregarWeb.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAgregarWeb.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnAgregarWeb.Icon = ((System.Drawing.Image)(resources.GetObject("btnAgregarWeb.Icon")));
@@ -424,58 +459,60 @@
             this.btnAgregarWeb.Size = new System.Drawing.Size(60, 60);
             this.btnAgregarWeb.TabIndex = 36;
             this.btnAgregarWeb.Click += new System.EventHandler(this.btnAgregarWeb_Click);
-            // 
-            // label7
-            // 
-            this.label7.BackColor = System.Drawing.Color.Transparent;
-            this.label7.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.ForeColor = System.Drawing.Color.LightSteelBlue;
-            this.label7.Location = new System.Drawing.Point(108, 60);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(384, 48);
-            this.label7.TabIndex = 35;
-            this.label7.Text = "Agrega las aplicaciones y páginas webs que necesites";
-            // 
-            // label8
-            // 
-            this.label8.BackColor = System.Drawing.Color.Transparent;
-            this.label8.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.ForeColor = System.Drawing.Color.White;
-            this.label8.Location = new System.Drawing.Point(108, 24);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(348, 36);
-            this.label8.TabIndex = 35;
-            this.label8.Text = "Agregar";
-            // 
-            // image3D4
-            // 
-            this.image3D4.BackColor = System.Drawing.Color.Transparent;
-            this.image3D4.Image = ((System.Drawing.Image)(resources.GetObject("image3D4.Image")));
-            this.image3D4.Location = new System.Drawing.Point(24, 24);
-            this.image3D4.Name = "image3D4";
-            this.image3D4.Size = new System.Drawing.Size(72, 72);
-            this.image3D4.TabIndex = 35;
-            this.image3D4.Text = "image3D4";
-            // 
-            // pnlApps
-            // 
-            this.pnlApps.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
-            this.pnlApps.BackColor = System.Drawing.Color.Transparent;
-            this.pnlApps.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(15)))), ((int)(((byte)(28)))));
-            this.pnlApps.BorderWidth = 1F;
-            this.pnlApps.Controls.Add(this.label3);
-            this.pnlApps.Controls.Add(this.btnAgregarApp);
-            this.pnlApps.Controls.Add(this.cbNoBloquearApps);
-            this.pnlApps.Location = new System.Drawing.Point(24, 120);
-            this.pnlApps.Name = "pnlApps";
-            this.pnlApps.Size = new System.Drawing.Size(236, 142);
-            this.pnlApps.TabIndex = 50;
-            this.pnlApps.Text = "panel6";
-            // 
+            //
+            // lblDescripcionAgregar
+            //
+            this.lblDescripcionAgregar.BackColor = System.Drawing.Color.Transparent;
+            this.lblDescripcionAgregar.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDescripcionAgregar.ForeColor = System.Drawing.Color.LightSteelBlue;
+            this.lblDescripcionAgregar.Location = new System.Drawing.Point(108, 60);
+            this.lblDescripcionAgregar.Name = "lblDescripcionAgregar";
+            this.lblDescripcionAgregar.Size = new System.Drawing.Size(384, 48);
+            this.lblDescripcionAgregar.TabIndex = 35;
+            this.lblDescripcionAgregar.Text = "Agrega las aplicaciones y páginas webs que necesites";
+            //
+            // lblTargetaAgregar
+            //
+            this.lblTargetaAgregar.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaAgregar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaAgregar.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaAgregar.Location = new System.Drawing.Point(108, 24);
+            this.lblTargetaAgregar.Name = "lblTargetaAgregar";
+            this.lblTargetaAgregar.Size = new System.Drawing.Size(348, 36);
+            this.lblTargetaAgregar.TabIndex = 35;
+            this.lblTargetaAgregar.Text = "Agregar";
+            //
+            // pbTargetaAgregar
+            //
+            this.pbTargetaAgregar.BackColor = System.Drawing.Color.Transparent;
+            this.pbTargetaAgregar.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaAgregar.Image")));
+            this.pbTargetaAgregar.Location = new System.Drawing.Point(24, 24);
+            this.pbTargetaAgregar.Name = "pbTargetaAgregar";
+            this.pbTargetaAgregar.Size = new System.Drawing.Size(72, 72);
+            this.pbTargetaAgregar.TabIndex = 35;
+            this.pbTargetaAgregar.Text = "image3D4";
+            //
+            // pnlSubTargetaAgregaApp
+            //
+            this.pnlSubTargetaAgregaApp.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
+            this.pnlSubTargetaAgregaApp.BackColor = System.Drawing.Color.Transparent;
+            this.pnlSubTargetaAgregaApp.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlSubTargetaAgregaApp.BorderWidth = 1F;
+            this.pnlSubTargetaAgregaApp.Controls.Add(this.lblSubTargetaAgregarApp);
+            this.pnlSubTargetaAgregaApp.Controls.Add(this.btnAgregarApp);
+            this.pnlSubTargetaAgregaApp.Controls.Add(this.cbNoBloquearApps);
+            this.pnlSubTargetaAgregaApp.Location = new System.Drawing.Point(24, 132);
+            this.pnlSubTargetaAgregaApp.Name = "pnlSubTargetaAgregaApp";
+            this.pnlSubTargetaAgregaApp.Size = new System.Drawing.Size(236, 142);
+            this.pnlSubTargetaAgregaApp.TabIndex = 50;
+            this.pnlSubTargetaAgregaApp.Text = "panel6";
+            //
             // btnAgregarApp
-            // 
+            //
             this.btnAgregarApp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
+            this.btnAgregarApp.BorderWidth = 1F;
             this.btnAgregarApp.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnAgregarApp.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
             this.btnAgregarApp.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAgregarApp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnAgregarApp.Icon = ((System.Drawing.Image)(resources.GetObject("btnAgregarApp.Icon")));
@@ -484,239 +521,235 @@
             this.btnAgregarApp.Size = new System.Drawing.Size(60, 60);
             this.btnAgregarApp.TabIndex = 35;
             this.btnAgregarApp.Click += new System.EventHandler(this.btnAgregarApp_Click);
-            // 
-            // cbNoBloquearApps
-            // 
-            this.cbNoBloquearApps.AutoSize = true;
-            this.cbNoBloquearApps.BackColor = System.Drawing.Color.Transparent;
-            this.cbNoBloquearApps.Font = new System.Drawing.Font("Inter", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbNoBloquearApps.ForeColor = System.Drawing.Color.White;
-            this.cbNoBloquearApps.Location = new System.Drawing.Point(24, 108);
-            this.cbNoBloquearApps.Name = "cbNoBloquearApps";
-            this.cbNoBloquearApps.Size = new System.Drawing.Size(183, 21);
-            this.cbNoBloquearApps.TabIndex = 47;
-            this.cbNoBloquearApps.Text = "No bloquear aplicaciones";
-            this.cbNoBloquearApps.UseVisualStyleBackColor = false;
-            // 
-            // panel5
-            // 
-            this.panel5.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
-            this.panel5.Controls.Add(this.txtNombreTarea);
-            this.panel5.Controls.Add(this.dtpHoraFin);
-            this.panel5.Controls.Add(this.dtpHoraInicio);
-            this.panel5.Controls.Add(this.label13);
-            this.panel5.Controls.Add(this.label14);
-            this.panel5.Controls.Add(this.image3D5);
-            this.panel5.Controls.Add(this.label2);
-            this.panel5.Controls.Add(this.label9);
-            this.panel5.Controls.Add(this.label1);
-            this.panel5.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.panel5.Location = new System.Drawing.Point(12, 72);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(528, 276);
-            this.panel5.TabIndex = 52;
-            this.panel5.Text = "panel5";
-            // 
+            //
+            // pnlTargetaTarea
+            //
+            this.pnlTargetaTarea.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
+            this.pnlTargetaTarea.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pnlTargetaTarea.BorderWidth = 1F;
+            this.pnlTargetaTarea.Controls.Add(this.txtNombreTarea);
+            this.pnlTargetaTarea.Controls.Add(this.dtpHoraFin);
+            this.pnlTargetaTarea.Controls.Add(this.dtpHoraInicio);
+            this.pnlTargetaTarea.Controls.Add(this.lblDescripcionTarea);
+            this.pnlTargetaTarea.Controls.Add(this.lblTargetaTarea);
+            this.pnlTargetaTarea.Controls.Add(this.pbTargetaTarea);
+            this.pnlTargetaTarea.Controls.Add(this.lblTargetaHoraFin);
+            this.pnlTargetaTarea.Controls.Add(this.lblTargetaNombre);
+            this.pnlTargetaTarea.Controls.Add(this.lblTargetaHoraInicio);
+            this.pnlTargetaTarea.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.pnlTargetaTarea.Location = new System.Drawing.Point(12, 72);
+            this.pnlTargetaTarea.Name = "pnlTargetaTarea";
+            this.pnlTargetaTarea.Size = new System.Drawing.Size(528, 276);
+            this.pnlTargetaTarea.TabIndex = 52;
+            this.pnlTargetaTarea.Text = "panel5";
+            //
             // txtNombreTarea
-            // 
-            this.txtNombreTarea.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            //
+            this.txtNombreTarea.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.txtNombreTarea.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtNombreTarea.Location = new System.Drawing.Point(180, 96);
             this.txtNombreTarea.Name = "txtNombreTarea";
             this.txtNombreTarea.Size = new System.Drawing.Size(324, 48);
             this.txtNombreTarea.TabIndex = 53;
-            // 
+            //
             // dtpHoraFin
-            // 
+            //
+            this.dtpHoraFin.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.dtpHoraFin.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpHoraFin.Location = new System.Drawing.Point(180, 192);
             this.dtpHoraFin.Name = "dtpHoraFin";
             this.dtpHoraFin.Size = new System.Drawing.Size(324, 48);
             this.dtpHoraFin.TabIndex = 54;
-            // 
+            //
             // dtpHoraInicio
-            // 
+            //
+            this.dtpHoraInicio.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.dtpHoraInicio.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpHoraInicio.Location = new System.Drawing.Point(180, 144);
             this.dtpHoraInicio.Name = "dtpHoraInicio";
             this.dtpHoraInicio.Size = new System.Drawing.Size(324, 48);
             this.dtpHoraInicio.TabIndex = 53;
-            // 
-            // label13
-            // 
-            this.label13.BackColor = System.Drawing.Color.Transparent;
-            this.label13.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.ForeColor = System.Drawing.Color.LightSteelBlue;
-            this.label13.Location = new System.Drawing.Point(108, 60);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(384, 48);
-            this.label13.TabIndex = 35;
-            this.label13.Text = "Nombra tu tarea y programala";
-            // 
-            // label14
-            // 
-            this.label14.BackColor = System.Drawing.Color.Transparent;
-            this.label14.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.ForeColor = System.Drawing.Color.White;
-            this.label14.Location = new System.Drawing.Point(108, 24);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(348, 36);
-            this.label14.TabIndex = 35;
-            this.label14.Text = "Crea tarea";
-            // 
-            // image3D5
-            // 
-            this.image3D5.BackColor = System.Drawing.Color.Transparent;
-            this.image3D5.Image = ((System.Drawing.Image)(resources.GetObject("image3D5.Image")));
-            this.image3D5.Location = new System.Drawing.Point(24, 24);
-            this.image3D5.Name = "image3D5";
-            this.image3D5.Size = new System.Drawing.Size(72, 72);
-            this.image3D5.TabIndex = 35;
-            this.image3D5.Text = "image3D5";
-            // 
+            //
+            // lblDescripcionTarea
+            //
+            this.lblDescripcionTarea.BackColor = System.Drawing.Color.Transparent;
+            this.lblDescripcionTarea.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDescripcionTarea.ForeColor = System.Drawing.Color.LightSteelBlue;
+            this.lblDescripcionTarea.Location = new System.Drawing.Point(108, 60);
+            this.lblDescripcionTarea.Name = "lblDescripcionTarea";
+            this.lblDescripcionTarea.Size = new System.Drawing.Size(384, 48);
+            this.lblDescripcionTarea.TabIndex = 35;
+            this.lblDescripcionTarea.Text = "Nombra tu tarea y programala";
+            //
+            // lblTargetaTarea
+            //
+            this.lblTargetaTarea.BackColor = System.Drawing.Color.Transparent;
+            this.lblTargetaTarea.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTargetaTarea.ForeColor = System.Drawing.Color.White;
+            this.lblTargetaTarea.Location = new System.Drawing.Point(108, 24);
+            this.lblTargetaTarea.Name = "lblTargetaTarea";
+            this.lblTargetaTarea.Size = new System.Drawing.Size(348, 36);
+            this.lblTargetaTarea.TabIndex = 35;
+            this.lblTargetaTarea.Text = "Crear tarea";
+            //
+            // pbTargetaTarea
+            //
+            this.pbTargetaTarea.BackColor = System.Drawing.Color.Transparent;
+            this.pbTargetaTarea.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaTarea.Image")));
+            this.pbTargetaTarea.Location = new System.Drawing.Point(24, 24);
+            this.pbTargetaTarea.Name = "pbTargetaTarea";
+            this.pbTargetaTarea.Size = new System.Drawing.Size(72, 72);
+            this.pbTargetaTarea.TabIndex = 35;
+            this.pbTargetaTarea.Text = "image3D5";
+            //
             // btnGuardar
-            // 
+            //
             this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
+            this.btnGuardar.BorderWidth = 1F;
             this.btnGuardar.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.btnGuardar.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.btnGuardar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnGuardar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnGuardar.Icon = ((System.Drawing.Image)(resources.GetObject("btnGuardar.Icon")));
-            this.btnGuardar.Location = new System.Drawing.Point(444, 672);
+            this.btnGuardar.Location = new System.Drawing.Point(516, 696);
             this.btnGuardar.Name = "btnGuardar";
-            this.btnGuardar.Size = new System.Drawing.Size(228, 60);
+            this.btnGuardar.Size = new System.Drawing.Size(276, 60);
             this.btnGuardar.TabIndex = 47;
             this.btnGuardar.Text = "Guardar";
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
-            // 
-            // pnlTop
-            // 
-            this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
-            this.pnlTop.Controls.Add(this.btnCerrar);
-            this.pnlTop.Controls.Add(this.button1);
-            this.pnlTop.Controls.Add(this.label15);
-            this.pnlTop.Location = new System.Drawing.Point(0, 0);
-            this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
-            this.pnlTop.Size = new System.Drawing.Size(1200, 60);
-            this.pnlTop.TabIndex = 74;
-            // 
+            //
             // btnCerrar
-            // 
-            this.btnCerrar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.btnCerrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.btnCerrar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.btnCerrar.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            //
+            this.btnCerrar.BackActive = System.Drawing.Color.Transparent;
+            this.btnCerrar.BackColor = System.Drawing.Color.Transparent;
+            this.btnCerrar.BackHover = System.Drawing.Color.Transparent;
+            this.btnCerrar.DefaultBack = System.Drawing.Color.Transparent;
             this.btnCerrar.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCerrar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnCerrar.Icon = ((System.Drawing.Image)(resources.GetObject("btnCerrar.Icon")));
             this.btnCerrar.IconRatio = 2F;
-            this.btnCerrar.Location = new System.Drawing.Point(1116, 0);
+            this.btnCerrar.Location = new System.Drawing.Point(1188, 0);
             this.btnCerrar.Name = "btnCerrar";
             this.btnCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnCerrar.TabIndex = 73;
             this.btnCerrar.Click += new System.EventHandler(this.BtnCerrar_Click);
-            // 
-            // button1
-            // 
-            this.button1.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.button1.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
-            this.button1.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
-            this.button1.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.button1.Icon = ((System.Drawing.Image)(resources.GetObject("button1.Icon")));
-            this.button1.IconRatio = 2F;
-            this.button1.Location = new System.Drawing.Point(1248, 0);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(60, 60);
-            this.button1.TabIndex = 72;
-            // 
-            // label15
-            // 
-            this.label15.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.ForeColor = System.Drawing.Color.White;
-            this.label15.Location = new System.Drawing.Point(24, 0);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(876, 60);
-            this.label15.TabIndex = 7;
-            this.label15.Text = "Creador de tareas";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
+            //
+            // lblPanelTop
+            //
+            this.lblPanelTop.BackColor = System.Drawing.Color.Transparent;
+            this.lblPanelTop.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPanelTop.ForeColor = System.Drawing.Color.White;
+            this.lblPanelTop.Location = new System.Drawing.Point(24, 0);
+            this.lblPanelTop.Name = "lblPanelTop";
+            this.lblPanelTop.Size = new System.Drawing.Size(720, 60);
+            this.lblPanelTop.TabIndex = 7;
+            this.lblPanelTop.Text = "Creador de tareas";
+            this.lblPanelTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // pnlTop
+            //
+            this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.pnlTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlTop.Controls.Add(this.btnCerrar);
+            this.pnlTop.Controls.Add(this.lblPanelTop);
+            this.pnlTop.Location = new System.Drawing.Point(0, 0);
+            this.pnlTop.Name = "pnlTop";
+            this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
+            this.pnlTop.Size = new System.Drawing.Size(1284, 60);
+            this.pnlTop.TabIndex = 74;
+            //
+            // btnCancelar
+            //
+            this.btnCancelar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
+            this.btnCancelar.BorderWidth = 1F;
+            this.btnCancelar.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnCancelar.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.btnCancelar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCancelar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnCancelar.Location = new System.Drawing.Point(1092, 696);
+            this.btnCancelar.Name = "btnCancelar";
+            this.btnCancelar.Size = new System.Drawing.Size(168, 60);
+            this.btnCancelar.TabIndex = 85;
+            this.btnCancelar.Text = "Cancelar";
+            //
             // frmTareas
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Lavender;
-            this.ClientSize = new System.Drawing.Size(1190, 736);
+            this.ClientSize = new System.Drawing.Size(1276, 756);
+            this.Controls.Add(this.btnCancelar);
             this.Controls.Add(this.pnlTop);
             this.Controls.Add(this.btnGuardar);
-            this.Controls.Add(this.panel5);
-            this.Controls.Add(this.panel4);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.pnlLista);
+            this.Controls.Add(this.pnlTargetaTarea);
+            this.Controls.Add(this.pnlTargetaAgregar);
+            this.Controls.Add(this.pnlTargetaDescansos);
+            this.Controls.Add(this.pnlLayoutLista);
             this.Font = new System.Drawing.Font("Symbol", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "frmTareas";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = " ";
-            this.pnlLista.ResumeLayout(false);
-            this.panel2.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel3.ResumeLayout(false);
-            this.panel4.ResumeLayout(false);
-            this.pnlWebs.ResumeLayout(false);
-            this.pnlWebs.PerformLayout();
-            this.pnlApps.ResumeLayout(false);
-            this.panel5.ResumeLayout(false);
+            this.pnlLayoutLista.ResumeLayout(false);
+            this.pnlTargetaTiempoDescanso.ResumeLayout(false);
+            this.pnlTargetaDescansos.ResumeLayout(false);
+            this.pnlTargetaIntervalo.ResumeLayout(false);
+            this.pnlTargetaAgregar.ResumeLayout(false);
+            this.pnlSubTargetaAgregarWeb.ResumeLayout(false);
+            this.pnlSubTargetaAgregarWeb.PerformLayout();
+            this.pnlSubTargetaAgregaApp.ResumeLayout(false);
+            this.pnlSubTargetaAgregaApp.PerformLayout();
+            this.pnlTargetaTarea.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblTargetaNombre;
+        private System.Windows.Forms.Label lblSubTargetaTiempoDescanso;
+        private System.Windows.Forms.Label lblSubTargetaAgregarWeb;
+        private System.Windows.Forms.Label lblSubTargetaAgregarApp;
+        private System.Windows.Forms.Label lblTargetaHoraFin;
+        private System.Windows.Forms.Label lblTargetaHoraInicio;
         private System.Windows.Forms.CheckBox cbNoBloquearWebs;
         private System.Windows.Forms.CheckBox cbNoBloquearApps;
-        private System.Windows.Forms.FlowLayoutPanel flLista;
-        private AntdUI.Panel pnlLista;
-        private AntdUI.Panel panel2;
+        private BufferedFlowLayoutPanel flLista;
+        private AntdUI.Panel pnlLayoutLista;
+        private AntdUI.Panel pnlTargetaTiempoDescanso;
         private AntdUI.Input nudDescanso;
-        private AntdUI.Image3D image3D1;
+        private AntdUI.Image3D pbSubTargetaTiempoDescanso;
         private AntdUI.Button btnSumarDescanso;
         private AntdUI.Button btnRestarDescanso;
-        private AntdUI.Panel panel1;
-        private AntdUI.Panel panel3;
+        private AntdUI.Panel pnlTargetaDescansos;
+        private AntdUI.Panel pnlTargetaIntervalo;
         private AntdUI.Button btnSumarIntervalo;
         private AntdUI.Button btnRestarIntervalo;
-        private AntdUI.Image3D image3D2;
+        private AntdUI.Image3D pbTargetaIntervalo;
         private AntdUI.Input nudIntervalo;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.Label label11;
-        private AntdUI.Image3D image3D3;
-        private AntdUI.Panel panel4;
+        private System.Windows.Forms.Label lblTargetaIntervalo;
+        private System.Windows.Forms.Label lblDescripcionDescanso;
+        private System.Windows.Forms.Label lblTargetaDescanso;
+        private AntdUI.Image3D pbTargetaDescanso;
+        private AntdUI.Panel pnlTargetaAgregar;
         private AntdUI.Button btnAgregarApp;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label8;
-        private AntdUI.Image3D image3D4;
+        private System.Windows.Forms.Label lblDescripcionAgregar;
+        private System.Windows.Forms.Label lblTargetaAgregar;
+        private AntdUI.Image3D pbTargetaAgregar;
         private AntdUI.Button btnAgregarWeb;
-        private AntdUI.Panel panel5;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Label label14;
-        private AntdUI.Image3D image3D5;
+        private AntdUI.Panel pnlTargetaTarea;
+        private System.Windows.Forms.Label lblDescripcionTarea;
+        private System.Windows.Forms.Label lblTargetaTarea;
+        private AntdUI.Image3D pbTargetaTarea;
         private AntdUI.Button btnGuardar;
         private AntdUI.TimePicker dtpHoraInicio;
         private AntdUI.Input txtNombreTarea;
         private AntdUI.TimePicker dtpHoraFin;
-        private AntdUI.Panel pnlWebs;
-        private AntdUI.Panel pnlApps;
-        private System.Windows.Forms.Panel pnlTop;
-        private AntdUI.Button button1;
-        private System.Windows.Forms.Label label15;
+        private AntdUI.Panel pnlSubTargetaAgregarWeb;
+        private AntdUI.Panel pnlSubTargetaAgregaApp;
+        private System.Windows.Forms.Label lblPanelTop;
         private AntdUI.Button btnCerrar;
+        private System.Windows.Forms.Panel pnlTop;
+        private AntdUI.Button btnCancelar;
     }
 }

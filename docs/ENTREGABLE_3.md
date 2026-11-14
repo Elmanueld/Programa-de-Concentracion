@@ -1,5 +1,4 @@
-> Estado de referencia: la versión `f39cd1d` fue publicada y validada en Windows mediante [Actions 40446666067](https://github.com/Elmanueld/Programa-de-Concentracion/actions/runs/40446666067). El informe de revisión inicial se conserva debajo. Las correcciones locales de acceso, diseñador y correo necesitan su propia validación antes de publicarse.
-
+> **Archivo histórico.** El resto de esta revisión describe el estado del 26 de octubre de 2026 y conserva decisiones de aquella entrega. Para el código, la rama y las pruebas actuales consulta [README](../README.md), [estado actual](ESTADO_ACTUAL.md) y [reporte de pruebas](REPORTE_DE_PRUEBAS.md). No sigas los comandos antiguos de ramas/push que aparecen en el archivo.
 # Entregable 3 — Avance funcional
 
 ## Revisión inicial

@@ -35,6 +35,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Security" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="N_BloqueoWeb.cs" />
@@ -42,6 +44,8 @@
     <Compile Include="N_ProxyWebLocal.cs" />
     <Compile Include="N_ReinicioNavegadores.cs" />
     <Compile Include="N_Usuario.cs" />
+    <Compile Include="N_SincronizacionOffline.cs" />
+    <Compile Include="CredencialOfflineLocal.cs" />
     <Compile Include="SeguridadContrasena.cs" />
     <Compile Include="N_Tarea.cs" />
     <Compile Include="N_Descanso.cs" />

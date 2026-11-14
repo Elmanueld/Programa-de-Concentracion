@@ -141,6 +141,22 @@ namespace CapaNegocio
                 IntervaloRevisionProcesosMs);
         }
 
+        public void Detener()
+        {
+            _temporizador.Change(Timeout.Infinite, Timeout.Infinite);
+            lock (_sincronizacion)
+            {
+                if (_disposed) return;
+                _idUsuario = 0;
+                _descansoActivo = false;
+                _programacion = new Programacion();
+                _proximaRecarga = DateTime.MinValue;
+                _cierresSolicitados.Clear();
+            }
+            while (Interlocked.CompareExchange(ref _cicloEnEjecucion, 0, 0) != 0)
+                Thread.Sleep(10);
+        }
+
         private void RevisarEstado(object estado)
         {
 
@@ -307,8 +323,8 @@ namespace CapaNegocio
 
             foreach (E_Tarea tarea in tareas)
             {
-                // Una tarea completada no debe volver a bloquear.
-                if (tarea.Estado == 'C')
+                // Las tareas completadas o detenidas no deben volver a bloquear.
+                if (tarea.Estado == 'C' || tarea.Estado == 'X')
                     continue;
 
                 var regla = new ReglaTarea

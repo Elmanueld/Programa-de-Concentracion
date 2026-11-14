@@ -56,7 +56,7 @@ namespace CapaNegocio
 
         private static void ValidarId(int id)
         {
-            if (id <= 0) throw new ArgumentException("El ID de web no es válido.");
+            if (id == 0) throw new ArgumentException("El ID de web no es válido.");
         }
 
         private static void ValidarIdUsuario(int idUsuario)

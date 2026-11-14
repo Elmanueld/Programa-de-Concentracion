@@ -9,6 +9,7 @@ namespace CapaEntidades
         public string Nombre { get; set; } = string.Empty;
         public string Identificador { get; set; }
         public bool EsCritica { get; set; }
+        public string SyncId { get; set; }
         public string RutaIcono { get; set; }
         public int IndiceIcono { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -11,25 +11,34 @@ using System.Threading.Tasks;
 
 namespace CapaPresentacion
 {
-    public partial class frmSeleccionarWeb : Form
+    public partial class frmSeleccionarWeb : FormularioSuave
     {
         private readonly N_Web _negocioWeb = new N_Web();
         private readonly int _idUsuario;
         private readonly List<E_Web> _websCatalogo = new List<E_Web>();
         private readonly List<E_Web> _websSeleccionadas = new List<E_Web>();
-        private readonly System.Windows.Forms.Timer _timerBusqueda =
-            new System.Windows.Forms.Timer();
+        private Label _estadoResultado;
+        private readonly System.Windows.Forms.Timer _timerBusqueda;
 
         private int _versionBusqueda;
         private string _ultimoTerminoProcesado;
 
+        public frmSeleccionarWeb() : this(0)
+        {
+        }
+
         public frmSeleccionarWeb(int idUsuario)
         {
+            InitializeComponent();
+            if (EnModoDiseno) return;
             if (idUsuario <= 0)
                 throw new ArgumentException("El ID de usuario no es válido.");
             _idUsuario = idUsuario;
-            InitializeComponent();
-            Tipografia.Aplicar(this);
+            _timerBusqueda = new System.Windows.Forms.Timer();
+            IconosGoogle.Aplicar(btnManual, "add_link");
+            IconosGoogle.Aplicar(btnCerrar, "close");
+            ControlesPresentacion.Optimizar(flBusqueda);
+            ControlesPresentacion.Optimizar(flWebSeleccionadas);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
             btnAceptar.Click += btnAceptar_Click;
@@ -48,11 +57,9 @@ namespace CapaPresentacion
                     MostrarEstadoBusqueda("Buscando páginas en internet...");
                 await BuscarWebsAsync(termino, version);
             };
-
-            MostrarResultados(_websCatalogo);
-
-            CargarCatalogo();
-
+            Shown += async (s, e) => await CargarCatalogoAsync();
+            FormClosing += (s, e) => { _timerBusqueda.Stop(); _versionBusqueda++; };
+            MostrarEstadoBusqueda("Cargando tus páginas permitidas...");
 
         }
 
@@ -61,15 +68,21 @@ namespace CapaPresentacion
             get { return _websSeleccionadas.ToList(); }
         }
 
-        private void CargarCatalogo()
+        private async Task CargarCatalogoAsync()
         {
             try
             {
+                List<E_Web> catalogo = await Task.Run(() =>
+                    _negocioWeb.BuscarWeb(_idUsuario, ""));
+                if (IsDisposed) return;
                 _websCatalogo.Clear();
-                _websCatalogo.AddRange(_negocioWeb.BuscarWeb(_idUsuario, ""));
+                _websCatalogo.AddRange(catalogo ?? new List<E_Web>());
+                MostrarResultados(FiltrarCatalogo(txtBuscar.Text.Trim()));
             }
             catch (Exception ex)
             {
+                if (IsDisposed) return;
+                MostrarResultados(new E_Web[0]);
                 MessageBox.Show(
                     this,
                     "No se pudo cargar el catálogo de webs: " + ex.Message,
@@ -216,7 +229,7 @@ namespace CapaPresentacion
 
                 if (resultadosOnline.Count == 0)
                 {
-                    MostrarEstadoBusqueda(
+                    MostrarMensajeBusqueda(
                         "No se encontraron resultados web para «" + termino +
                         "». Solo aparecen coincidencias guardadas; puedes pegar " +
                         "una dirección en el campo de enlace para añadirla.");
@@ -230,7 +243,7 @@ namespace CapaPresentacion
                 System.Diagnostics.Trace.TraceWarning(
                     "Falló la búsqueda web externa: " + ex);
 
-                MostrarEstadoBusqueda(
+                MostrarMensajeBusqueda(
                     "No se pudo consultar el buscador web. Las tarjetas visibles " +
                     "son coincidencias guardadas en la base de datos.");
             }
@@ -264,21 +277,48 @@ namespace CapaPresentacion
 
         private void MostrarEstadoBusqueda(string mensaje)
         {
-            var estado = new Label
+            if (_estadoResultado != null)
+            {
+                flBusqueda.Controls.Remove(_estadoResultado);
+                _estadoResultado.Dispose();
+                _estadoResultado = null;
+            }
+            foreach (IndicadorCarga anterior in flBusqueda.Controls.OfType<IndicadorCarga>().ToArray())
+            {
+                flBusqueda.Controls.Remove(anterior);
+                anterior.Dispose();
+            }
+            var estado = new IndicadorCarga { Mensaje = mensaje, Width = Math.Max(400, flBusqueda.ClientSize.Width - 32) };
+            flBusqueda.Controls.Add(estado);
+            flBusqueda.Controls.SetChildIndex(estado, 0);
+        }
+
+        private void MostrarMensajeBusqueda(string mensaje)
+        {
+            foreach (IndicadorCarga indicador in flBusqueda.Controls.OfType<IndicadorCarga>().ToArray())
+            {
+                flBusqueda.Controls.Remove(indicador);
+                indicador.Dispose();
+            }
+            if (_estadoResultado != null)
+            {
+                flBusqueda.Controls.Remove(_estadoResultado);
+                _estadoResultado.Dispose();
+            }
+            _estadoResultado = new Label
             {
                 AutoSize = false,
-                Width = Math.Max(500, flBusqueda.ClientSize.Width - 32),
+                Width = Math.Max(400, flBusqueda.ClientSize.Width - 32),
                 Height = 48,
                 Margin = new Padding(8),
                 Padding = new Padding(10),
                 TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
-                ForeColor = System.Drawing.Color.FromArgb(55, 70, 95),
+                ForeColor = ForeColor,
                 BackColor = System.Drawing.Color.Transparent,
-                Font = new System.Drawing.Font("Inter", 9F),
+                Font = Font,
                 Text = mensaje
             };
-
-            flBusqueda.Controls.Add(estado);
+            flBusqueda.Controls.Add(_estadoResultado);
         }
 
         private IEnumerable<E_Web> FiltrarCatalogo(string termino)
@@ -483,13 +523,8 @@ namespace CapaPresentacion
 
         private void MostrarResultados(IEnumerable<E_Web> webs)
         {
-            flBusqueda.SuspendLayout();
-
-            try
-            {
-                flBusqueda.Controls.Clear();
-
-                foreach (E_Web web in webs
+            var controles = new List<Control>();
+            foreach (E_Web web in webs
                     .Where(item => item != null &&
                                    !String.IsNullOrWhiteSpace(item.Link))
                     .GroupBy(
@@ -499,16 +534,12 @@ namespace CapaPresentacion
                 {
                     var tarjeta = new ucWeb();
                     tarjeta.Configurar(web, false);
-                    tarjeta.SeleccionarSolicitado +=
-                        TarjetaBusqueda_SeleccionarSolicitado;
-
-                    flBusqueda.Controls.Add(tarjeta);
-                }
+                    tarjeta.EstablecerSeleccionada(YaEstaSeleccionada(web));
+                tarjeta.SeleccionarSolicitado += TarjetaBusqueda_SeleccionarSolicitado;
+                controles.Add(tarjeta);
             }
-            finally
-            {
-                flBusqueda.ResumeLayout(true);
-            }
+            _estadoResultado = null;
+            ControlesPresentacion.Reemplazar(flBusqueda, controles.ToArray());
         }
 
         private void TarjetaBusqueda_SeleccionarSolicitado(
@@ -517,8 +548,27 @@ namespace CapaPresentacion
         {
             var tarjeta = sender as ucWeb;
 
-            if (tarjeta != null)
+            if (tarjeta == null || tarjeta.Web == null) return;
+            if (YaEstaSeleccionada(tarjeta.Web))
+            {
+                _websSeleccionadas.RemoveAll(web => String.Equals(
+                    web.Link.TrimEnd('/'), tarjeta.Web.Link.TrimEnd('/'),
+                    StringComparison.OrdinalIgnoreCase));
+                tarjeta.EstablecerSeleccionada(false);
+                MostrarSeleccionadas();
+            }
+            else
+            {
                 AgregarSeleccion(tarjeta.Web);
+                tarjeta.EstablecerSeleccionada(true);
+            }
+        }
+
+        private bool YaEstaSeleccionada(E_Web web)
+        {
+            return web != null && _websSeleccionadas.Any(actual => String.Equals(
+                actual.Link.TrimEnd('/'), web.Link.TrimEnd('/'),
+                StringComparison.OrdinalIgnoreCase));
         }
 
         private void btnAgregar_Click(object sender, EventArgs e)
@@ -666,26 +716,16 @@ namespace CapaPresentacion
 
         private void MostrarSeleccionadas()
         {
-            flWebSeleccionadas.SuspendLayout();
-
-            try
+            var controles = new List<Control>();
+            foreach (E_Web web in _websSeleccionadas)
             {
-                flWebSeleccionadas.Controls.Clear();
-
-                foreach (E_Web web in _websSeleccionadas)
-                {
-                    var tarjeta = new ucWeb();
-                    tarjeta.Configurar(web, true);
-                    tarjeta.QuitarSolicitado +=
-                        TarjetaSeleccionada_QuitarSolicitado;
-
-                    flWebSeleccionadas.Controls.Add(tarjeta);
-                }
+                var tarjeta = new ucWeb();
+                tarjeta.Configurar(web, true);
+                tarjeta.EstablecerSeleccionada(true);
+                tarjeta.QuitarSolicitado += TarjetaSeleccionada_QuitarSolicitado;
+                controles.Add(tarjeta);
             }
-            finally
-            {
-                flWebSeleccionadas.ResumeLayout(true);
-            }
+            ControlesPresentacion.Reemplazar(flWebSeleccionadas, controles.ToArray());
         }
 
         private void TarjetaSeleccionada_QuitarSolicitado(
@@ -703,6 +743,8 @@ namespace CapaPresentacion
                     tarjeta.Web.Link.TrimEnd('/'),
                     StringComparison.OrdinalIgnoreCase));
 
+            foreach (ucWeb resultado in flBusqueda.Controls.OfType<ucWeb>())
+                resultado.EstablecerSeleccionada(YaEstaSeleccionada(resultado.Web));
             MostrarSeleccionadas();
         }
 
@@ -721,6 +763,16 @@ namespace CapaPresentacion
         private void BtnCerrar_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void Label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Label4_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

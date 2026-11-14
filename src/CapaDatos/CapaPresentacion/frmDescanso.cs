@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,10 +10,9 @@ using System.Windows.Forms;
 
 namespace CapaPresentacion
 {
-    public partial class frmDescanso : Form
+    public partial class frmDescanso : FormularioSuave
     {
-        private readonly System.Windows.Forms.Timer temporizador =
-            new System.Windows.Forms.Timer();
+        private readonly System.Windows.Forms.Timer temporizador;
 
         private DateTime finDescanso;
         private int descansosRestantes;
@@ -22,8 +21,10 @@ namespace CapaPresentacion
         public frmDescanso()
         {
             InitializeComponent();
-            Tipografia.Aplicar(this);
-
+            if (EnModoDiseno) return;
+            temporizador = new System.Windows.Forms.Timer();
+            IconosGoogle.Aplicar(pictureBox1, "favorite");
+            IconosGoogle.Aplicar(btnCerrar, "close");
             temporizador.Interval = 1000;
             temporizador.Tick += (s, e) => ActualizarContexto();
 

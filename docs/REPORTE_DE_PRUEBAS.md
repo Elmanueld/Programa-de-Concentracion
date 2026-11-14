@@ -1,31 +1,31 @@
 # Reporte de pruebas
 
-**Fecha:** 1 de noviembre de 2026
-**Rama:** `reporte-de-pruebas`
+**Fecha:** 14 de noviembre de 2026
+**Rama:** `main`
 **Build:** Release, .NET Framework 4.8, MSBuild de Visual Studio 2022
 
 ## Resultado
 
-| Área | Estado | Evidencia |
+| Área | Resultado | Evidencia |
 | --- | --- | --- |
-| Compilación de `tests/Pruebas.csproj` | Aprobada | [log](../tests/evidencias/compilacion.log) · [captura](../tests/evidencias/evidencia-compilacion.png) |
-| Unitarias y componentes | **22 comprobaciones aprobadas** | [log](../tests/evidencias/unitarias.log) · [captura](../tests/evidencias/evidencia-unitarias.png) |
-| Integración con LocalDB | **62 comprobaciones aprobadas** | [log](../tests/evidencias/integracion.log) · [captura](../tests/evidencias/evidencia-integracion.png) |
-| Interfaz WinForms | **6 comprobaciones de interfaz aprobadas** (28 en total con los casos base) | [log](../tests/evidencias/interfaz.log) · [captura](../tests/evidencias/evidencia-interfaz.png) |
+| Compilación de `tests/Pruebas.csproj` | Aprobada, 0 errores, 2 advertencias de código existentes | [log](../tests/evidencias/compilacion.log) · [resumen](../tests/evidencias/evidencia-compilacion.png) |
+| Unitarias/componentes | **22 aprobadas** | [log](../tests/evidencias/unitarias.log) · [resumen](../tests/evidencias/evidencia-unitarias.png) |
+| Interfaz WinForms | **34 aprobadas** (22 base + 12 de interfaz) | [log](../tests/evidencias/interfaz.log) · [resumen](../tests/evidencias/evidencia-interfaz.png) |
+| Integración LocalDB | **68 aprobadas** (22 base + 46 SQL) | [log](../tests/evidencias/integracion.log) · [resumen](../tests/evidencias/evidencia-integracion.png) |
 
-La integración se ejecutó en `(localdb)\Entregable3Pruebas`. Las pruebas generan cuentas con correos aleatorios y limpian esos registros al finalizar. El envío de códigos se comprobó con SMTP local; no se contactaron buzones reales.
+La integración corrió únicamente en `(localdb)\Entregable3Pruebas`. Las cuentas y datos temporales se limpian al terminar. La prueba SMTP utiliza un servidor TCP local y no envía correo a cuentas reales. La base SQLite de prueba usa una ruta temporal configurada por el ejecutable y se elimina al finalizar.
 
-## Capturas de los resultados
+## Correcciones verificadas
 
-Estas imágenes muestran la salida real de los logs con un formato legible. Los logs completos siguen disponibles en texto.
+- La paginación conserva el total de tarjetas y no pierde elementos al alternar de página; el contador muestra `1 / 2` cuando corresponde.
+- Las flechas AntdUI caben completas en la barra y los nombres de tarjetas quedan visibles.
+- Los scripts de instalación ya pasan los parámetros de sincronización que envía la capa de datos; se eliminó el desajuste que causaba SQL 8144 al guardar una plantilla.
+- Dos propietarios pueden tener los mismos valores de catálogo/tarea sin consultar ni modificar filas del otro.
+- Las tareas activas y completadas no se editan ni eliminan, conforme al comportamiento actual del formulario.
+- Las pruebas se ejecutan sin preferencia de proceso de 32 bits, alineadas con la aplicación y con `winsqlite3.dll`.
 
-- [Compilación](../tests/evidencias/evidencia-compilacion.png)
-- [Pruebas unitarias y de componentes](../tests/evidencias/evidencia-unitarias.png)
-- [Integración con LocalDB](../tests/evidencias/evidencia-integracion.png)
-- [Prueba de interfaz](../tests/evidencias/evidencia-interfaz.png)
+## Límites de esta revisión
 
-## Incidencia durante la ejecución
+La automatización no sustituye la comprobación visual manual de todos los formularios. El SMTP real y el destino en la nube todavía no están configurados, tal como queda planificado para una fase posterior.
 
-La primera integración encontró que la instancia de pruebas no tenía `sp_PrepararVerificacionCorreo`. Se aplicó `database/07_VerificacionCorreo.sql`, que añade o actualiza la tabla y los procedimientos de verificación sin borrar datos. La segunda integración pasó las 62 comprobaciones.
-
-El detalle de casos y comandos reproducibles está en [Plan de pruebas](PLAN_PRUEBAS.md); el registro de correcciones está en [Incidencias](INCIDENCIAS_PRUEBAS.md).
+Consulta el [plan](PLAN_PRUEBAS.md), las [incidencias](INCIDENCIAS_PRUEBAS.md) y las [evidencias completas](../tests/evidencias/README.md).

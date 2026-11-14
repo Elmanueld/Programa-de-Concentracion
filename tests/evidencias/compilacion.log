@@ -1,6 +1,9 @@
+MSBuild version 17.14.60+43b635718 for .NET Framework
 
   CapaEntidades -> C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaEntidades\bin\Release\CapaEntidades.dll
   CapaDatos -> C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaDatos\bin\Release\CapaDatos.dll
   CapaNegocio -> C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaNegocio\bin\Release\CapaNegocio.dll
+C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaPresentacion\frmSeleccionarApp.Designer.cs(214,54): warning CS0169: The field 'frmSeleccionarApp.flApp' is never used [C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaPresentacion\CapaPresentacion.csproj]
+C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaPresentacion\Tipografia.cs(29,25): warning CS0649: Field 'Tipografia.FuenteBase.Fuente' is never assigned to, and will always have its default value null [C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaPresentacion\CapaPresentacion.csproj]
   CapaPresentacion -> C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\src\CapaDatos\CapaPresentacion\bin\Release\CapaPresentacion.exe
   Pruebas -> C:\Users\hp\source\repos\Elmanueld\Programa-de-Concentracion\tests\bin\Release\Pruebas.exe

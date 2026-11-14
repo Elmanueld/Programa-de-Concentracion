@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.SqlClient;
+using System.IO;
+using System.Security.Cryptography;
 using CapaDatos;
 using CapaEntidades;
 
@@ -37,7 +40,23 @@ namespace CapaNegocio
                 throw new ArgumentException("Demasiados intentos. Espere 30 segundos.");
             correo = (correo ?? "").Trim();
             ValidarCorreo(correo);
-            var usuario = Datos.IniciarSesion(correo, ModoDemostracion);
+            E_Usuario usuario;
+            try
+            {
+                usuario = Datos.IniciarSesion(correo, ModoDemostracion);
+            }
+            catch (SqlException ex)
+            {
+                if (!EsFalloDeConexion(ex)) throw;
+                usuario = CredencialOfflineLocal.IniciarSesion(correo, contrasena);
+                if (usuario != null && D_SincronizacionOffline.TieneCopiaCompleta(usuario.IdUsuario))
+                {
+                    D_SincronizacionOffline.ActivarModoOffline(usuario.IdUsuario);
+                    return usuario;
+                }
+                throw new InvalidOperationException(
+                    "No hay conexión con la base de datos y este equipo no tiene una copia offline completa de la cuenta.", ex);
+            }
             if (usuario == null || !SeguridadContrasena.Verificar(contrasena, usuario.ContrasenaHash))
             {
                 intentosFallidos++;
@@ -50,11 +69,93 @@ namespace CapaNegocio
             }
             if (String.IsNullOrEmpty(usuario.Nombre))
             {
-                usuario.Nombre = Datos.BuscarNombreUsuario(usuario.IdUsuario);
+                try { usuario.Nombre = Datos.BuscarNombreUsuario(usuario.IdUsuario); }
+                catch (SqlException ex)
+                {
+                    if (!EsFalloDeConexion(ex)) throw;
+                    usuario.Nombre = String.Empty;
+                }
             }
             intentosFallidos = 0;
+            D_SincronizacionOffline.ActivarModoOnline();
+            try
+            {
+                new D_SincronizacionOffline().CapturarCopiaCompleta(
+                    usuario.IdUsuario, usuario.Correo, usuario.Nombre);
+            }
+            catch (SqlException) { }
+            catch (InvalidOperationException) { }
+            try { new D_ProcesadorSincronizacionOffline().Sincronizar(usuario.IdUsuario); }
+            catch (SqlException) { }
+            catch (InvalidOperationException) { }
+            try { CredencialOfflineLocal.Guardar(usuario, usuario.ContrasenaHash); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            catch (CryptographicException) { }
             usuario.ContrasenaHash = null;
             return usuario;
+        }
+
+        public E_Usuario IniciarSesionAutomatico()
+        {
+            string hashGuardado;
+            E_Usuario cuenta = CredencialOfflineLocal.ObtenerSesionRecordada(out hashGuardado);
+            if (cuenta == null || String.IsNullOrWhiteSpace(hashGuardado)) return null;
+            if (CredencialOfflineLocal.InicioAutomaticoDeshabilitado(cuenta.IdUsuario)) return null;
+
+            E_Configuracion configuracion;
+            try
+            {
+                configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+            }
+            catch (SqlException ex)
+            {
+                if (!EsFalloDeConexion(ex) || !D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
+                D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
+                configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+            }
+            if (configuracion == null || !configuracion.AutoSesion) return null;
+
+            try
+            {
+                E_Usuario remoto = Datos.IniciarSesion(cuenta.Correo, ModoDemostracion);
+                if (remoto == null || remoto.IdUsuario != cuenta.IdUsuario ||
+                    !String.Equals(remoto.ContrasenaHash, hashGuardado, StringComparison.Ordinal)) return null;
+                remoto.Nombre = String.IsNullOrEmpty(remoto.Nombre) ? cuenta.Nombre : remoto.Nombre;
+                remoto.ContrasenaHash = null;
+                D_SincronizacionOffline.ActivarModoOnline();
+                return remoto;
+            }
+            catch (SqlException ex)
+            {
+                if (!EsFalloDeConexion(ex) || !D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
+                D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
+                E_Configuracion local = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+                if (local == null || !local.AutoSesion) return null;
+                cuenta.SesionSinConexion = true;
+                return cuenta;
+            }
+        }
+
+        public void CerrarSesion(int idUsuario)
+        {
+            ValidarId(idUsuario);
+            CredencialOfflineLocal.DeshabilitarInicioAutomatico(idUsuario);
+        }
+
+        private static bool EsFalloDeConexion(SqlException excepcion)
+        {
+            foreach (SqlError error in excepcion.Errors)
+            {
+                switch (error.Number)
+                {
+                    case -2: case 2: case 53: case 64: case 121: case 233:
+                    case 258: case 10053: case 10054: case 10060: case 11001:
+                    case 4060:
+                        return true;
+                }
+            }
+            return false;
         }
 
         public void RegistrarUsuario(E_Usuario usuario)
@@ -68,12 +169,19 @@ namespace CapaNegocio
             ValidarId(usuario == null ? 0 : usuario.IdUsuario);
             ValidarDatosUsuario(usuario, false);
             Datos.ModificarUsuario(usuario);
+            try { CredencialOfflineLocal.ActualizarCuenta(usuario); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            catch (CryptographicException) { }
         }
 
         public void EliminarUsuario(int idUsuario)
         {
             ValidarId(idUsuario);
             Datos.EliminarUsuario(idUsuario);
+            try { CredencialOfflineLocal.Eliminar(idUsuario); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         public void VerificarCorreo(int idUsuario)
@@ -87,6 +195,10 @@ namespace CapaNegocio
             ValidarId(idUsuario);
             ValidarHash(contrasenaHashNueva);
             Datos.CambiarContrasena(idUsuario, contrasenaHashNueva);
+            try { CredencialOfflineLocal.ActualizarContrasena(idUsuario, contrasenaHashNueva); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            catch (CryptographicException) { }
         }
 
         public void RecuperarCuenta(int idUsuario)

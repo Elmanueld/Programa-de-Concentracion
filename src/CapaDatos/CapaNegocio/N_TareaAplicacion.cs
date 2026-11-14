@@ -11,7 +11,7 @@ namespace CapaNegocio
 
         public void Insertar(int idUsuario, int idTarea, int idAplicacion)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
             ValidarId(idAplicacion, "aplicación");
             Datos.Insertar(idUsuario, idTarea, idAplicacion);
@@ -19,14 +19,14 @@ namespace CapaNegocio
 
         public List<E_TareaAplicacion> Buscar(int idUsuario, int idTarea)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
             return Datos.Buscar(idUsuario, idTarea);
         }
 
         public void Eliminar(int idUsuario, int idTarea, int idAplicacion)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
             ValidarId(idAplicacion, "aplicación");
             Datos.Eliminar(idUsuario, idTarea, idAplicacion);
@@ -34,7 +34,12 @@ namespace CapaNegocio
 
         private static void ValidarId(int id, string tipo)
         {
-            if (id <= 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+            if (id == 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+        }
+
+        private static void ValidarUsuario(int idUsuario)
+        {
+            if (idUsuario <= 0) throw new ArgumentException("El ID de usuario no es válido.");
         }
     }
 }

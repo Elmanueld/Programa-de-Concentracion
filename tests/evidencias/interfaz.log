@@ -20,11 +20,17 @@ CORRECTO: SMTP ausente se detecta sin excepción ni conexión SQL
 CORRECTO: Falta de SMTP informa error
 CORRECTO: SMTP local recibió el código y su vigencia
 CORRECTO: Fallo de conexión SMTP no se oculta
-CORRECTO: Acceso, registro y verificación disponibles sin conexión SQL
-CORRECTO: Las contraseñas están ocultas
-CORRECTO: El botón del login abre verificación y conserva el correo
-CORRECTO: Controles dentro de los límites: Iniciar sesión
-CORRECTO: Controles dentro de los límites: Registro
-CORRECTO: Controles dentro de los límites: Verificar correo
+CORRECTO: El login expone acceso, registro y verificación
+CORRECTO: Los campos de contraseña están ocultos
+CORRECTO: El selector abre la página de crear cuenta
+CORRECTO: El selector vuelve a la página de acceso
+CORRECTO: La página de código muestra el correo preparado para verificación
+CORRECTO: Las tres páginas de acceso caben en la tarjeta del login
+CORRECTO: El layout crea la barra con flechas AntdUI
+CORRECTO: Las flechas redondeadas caben dentro de la barra sin recorte
+CORRECTO: Las dos flechas muestran su texto completo
+CORRECTO: El tamaño de página usa las dimensiones de las tarjetas, no las del encabezado (1 / 2)
+CORRECTO: El encabezado queda en la barra y las tarjetas no pierden espacio de contenido
+CORRECTO: Los nombres de tarjetas de la página se ven dentro de cada tarjeta
 PENDIENTE: integración SQL; ejecutar con --integracion en la instancia exclusiva de pruebas.
-Total correcto: 28
+Total correcto: 34

@@ -1,16 +1,18 @@
 # Registro de incidencias
 
-Incidencias corregidas en la implementación que cubre este plan. La existencia de la corrección se verificó en el código; su regresión queda cubierta por los casos indicados y los resultados de ejecución se registran en `PLAN_PRUEBAS.md`.
+Incidencias encontradas y cubiertas por una corrección o una prueba de regresión en este estado del proyecto.
 
 | ID | Incidencia | Corrección | Cobertura |
 | --- | --- | --- | --- |
-| INC-01 | La contraseña podía quedar expuesta si se almacenaba o se devolvía directamente. | Se usa PBKDF2-SHA256 con sal aleatoria; el hash se elimina del objeto de sesión. | U01–U04, I01–I02 |
-| INC-02 | El procedimiento de login de instalaciones anteriores no devolvía `Nombre`, lo que podía romper la lectura del usuario. | La lectura tolera la columna ausente y recupera el nombre después de autenticar. | U07, I03 |
-| INC-03 | Una configuración SMTP incompleta o SMTP remoto sin TLS podía fallar tarde o usar una conexión insegura. | Se valida la configuración antes del envío; TLS remoto es obligatorio y localhost queda permitido para pruebas. | U09–U10 |
-| INC-04 | El código de verificación requería control de expiración, intentos y reenvío sin almacenar el código original. | Se almacena el resumen con sal; se limita vigencia, intentos y frecuencia de envío, y el código es de un solo uso. | U08–U10, I01 |
-| INC-05 | Las operaciones de tarea podían aceptar un ID sin comprobar que perteneciera al usuario autenticado. | Las operaciones reciben el ID de usuario y SQL comprueba propietario y resultado afectado. | I04–I05 |
-| INC-06 | La edición de tarea solo admitía estado pendiente, aunque el requisito permite editar completadas. | La regla permite editar estados distintos de activo y mantiene la restricción para tareas activas. | I06 |
-| INC-07 | Un borrado de tarea inexistente podía terminar sin indicar que no hubo cambios. | El procedimiento informa el resultado fallido y la capa de negocio lo propaga. | I06 |
-| INC-08 | La primera integración encontró que `Entregable3Pruebas` no tenía `sp_PrepararVerificacionCorreo` porque su esquema era anterior. | Se aplicó `database/07_VerificacionCorreo.sql`, que crea/actualiza los objetos de verificación sin borrar datos; la repetición completó 62 comprobaciones. | I01; `tests/evidencias/integracion.log` |
+| INC-01 | La contraseña podía almacenarse o salir de la capa de negocio directamente. | Hash PBKDF2-SHA256 con sal aleatoria; el hash se retira del objeto de sesión. | Unitarias e integración de acceso. |
+| INC-02 | Instalaciones antiguas devolvían un resultado de login sin `Nombre`. | El lector admite ambos resultados y obtiene el nombre usando el mismo `IdUsuario`. | Pruebas de compatibilidad de login. |
+| INC-03 | SMTP incompleto o remoto sin TLS fallaba tarde o permitía una conexión insegura. | Validación previa, TLS obligatorio para host remoto y SMTP localhost exclusivo para pruebas. | Unitarias y servidor SMTP local. |
+| INC-04 | El código de verificación no controlaba expiración, intentos y reenvío de forma persistente. | Se guarda un hash con sal, se aplican vencimiento/límites y el código es de un uso. | Integración SQL. |
+| INC-05 | Una operación podía aceptar un ID de fila perteneciente a otra cuenta. | Las llamadas y procedimientos llevan `IdUsuario`, y las relaciones compuestas mantienen el propietario. | Dos usuarios con valores idénticos en tareas, apps y webs. |
+| INC-06 | Un procedimiento de instalación tenía una firma antigua y recibía más argumentos que los enviados por C#. | Se alinearon los scripts de instalación con los parámetros actuales y las migraciones. | Preparación desde cero e integración de tareas. |
+| INC-07 | El paginador reconstruía su lista usando solo los controles visibles y perdía las tarjetas de otras páginas. | Mantiene un conjunto completo de elementos y actualiza la página sin volver a inferir el origen desde los controles visibles. | Prueba de interfaz con contador `1 / 2`. |
+| INC-08 | La prueba LocalDB tenía una ruta MDF predeterminada que colisionaba con otra instalación. | El preparador crea la base de pruebas en una carpeta exclusiva y conserva instancias/bases existentes. | Preparación controlada de `Entregable3Pruebas`. |
+| INC-09 | El EXE de pruebas prefería 32 bits aunque la aplicación no lo hace; `winsqlite3.dll` fallaba al leer texto SQLite en el proceso x86. | El proyecto de pruebas desactiva `Prefer32Bit` y la integración usa un archivo offline temporal. | Inicialización SQLite durante integración; suite completa x64. |
+| INC-10 | El caso de regresión asumía que se pueden editar tareas completadas, contrario al comportamiento solicitado. | Se cambió el caso para verificar que las tareas completadas no permiten editar/eliminar. | Integración SQL. |
 
-Si aparece otra incidencia, añadir pasos para reproducirla, resultado esperado/obtenido, corrección y caso de regresión.
+Los comandos y resultados reproducibles están en el [plan de pruebas](PLAN_PRUEBAS.md); los resultados finales en el [reporte](REPORTE_DE_PRUEBAS.md).

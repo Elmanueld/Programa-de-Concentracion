@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,27 +14,69 @@ using CapaNegocio;
 namespace CapaPresentacion
 {
 
-    public partial class frmTareas : Form
+    public partial class frmTareas : FormularioSuave
     {
         private readonly int idUsuario;
         private readonly DateTime fechaSeleccionada;
+        private readonly bool esPlantilla;
+        private readonly E_Tarea tareaEditar;
         private readonly List<E_Aplicacion> appsSeleccionadas =
             new List<E_Aplicacion>();
         private readonly List<E_Web> websSeleccionadas =
             new List<E_Web>();
         private bool mostrarAplicaciones = true;
 
-        public frmTareas(int idUsuario, DateTime fechaSeleccionada)
+        public frmTareas() : this(0, DateTime.Today, false, null)
         {
+        }
+
+        public frmTareas(int idUsuario, DateTime fechaSeleccionada)
+            : this(idUsuario, fechaSeleccionada, false, null)
+        {
+        }
+
+        public frmTareas(int idUsuario, DateTime fechaSeleccionada, bool esPlantilla)
+            : this(idUsuario, fechaSeleccionada, esPlantilla, null)
+        {
+        }
+
+        public frmTareas(int idUsuario, E_Tarea tarea)
+            : this(idUsuario,
+                tarea == null ? DateTime.Today : tarea.FechaInicio.Date,
+                false, tarea)
+        {
+            if (tarea == null) throw new ArgumentNullException("tarea");
+        }
+
+        private frmTareas(int idUsuario, DateTime fechaSeleccionada, bool esPlantilla, E_Tarea tareaEditar)
+        {
+            InitializeComponent();
+            if (EnModoDiseno) return;
             AntdUI.Localization.Provider = new LocalizacionAntdEspanol();
             AntdUI.Localization.DefaultLanguage = "es-ES";
             AntdUI.Localization.SetLanguage("es-ES");
-            InitializeComponent();
-            Tipografia.Aplicar(this);
+            IconosGoogle.Aplicar(pbSubTargetaTiempoDescanso, "timer");
+            IconosGoogle.Aplicar(pbTargetaIntervalo, "alarm");
+            IconosGoogle.Aplicar(pbTargetaDescanso, "coffee");
+            IconosGoogle.Aplicar(pbTargetaAgregar, "dashboard_customize");
+            IconosGoogle.Aplicar(pbTargetaTarea, "assignment_add");
+            IconosGoogle.Aplicar(btnAgregarWeb, "add_link");
+            IconosGoogle.Aplicar(btnAgregarApp, "apps");
+            IconosGoogle.Aplicar(btnGuardar, "save");
+            IconosGoogle.Aplicar(btnCerrar, "close");
+            ControlesPresentacion.Optimizar(flLista);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
             this.idUsuario = idUsuario;
             this.fechaSeleccionada = fechaSeleccionada.Date;
+            this.esPlantilla = esPlantilla;
+            this.tareaEditar = tareaEditar;
+            if (esPlantilla)
+            {
+                lblTargetaTarea.Text = "Plantilla principal";
+                lblPanelTop.Text = "Crea o reemplaza la plantilla";
+                btnGuardar.Text = "Guardar plantilla";
+            }
 
             // Los controles muestran solo la hora; la fecha se tomará
             // del día seleccionado en el calendario.
@@ -44,17 +86,15 @@ namespace CapaPresentacion
             nudDescanso.Text = "5 min";
             nudIntervalo.SuffixText = String.Empty;
             nudIntervalo.Text = "5 min";
-            flLista.FlowDirection = FlowDirection.LeftToRight;
-            flLista.WrapContents = true;
 
-            pnlApps.Cursor = Cursors.Hand;
-            pnlWebs.Cursor = Cursors.Hand;
-            label3.Cursor = Cursors.Hand;
-            label4.Cursor = Cursors.Hand;
-            pnlApps.Click += (s, e) => CambiarCategoria(true);
-            label3.Click += (s, e) => CambiarCategoria(true);
-            pnlWebs.Click += (s, e) => CambiarCategoria(false);
-            label4.Click += (s, e) => CambiarCategoria(false);
+            pnlSubTargetaAgregaApp.Cursor = Cursors.Hand;
+            pnlSubTargetaAgregarWeb.Cursor = Cursors.Hand;
+            lblSubTargetaAgregarApp.Cursor = Cursors.Hand;
+            lblSubTargetaAgregarWeb.Cursor = Cursors.Hand;
+            pnlSubTargetaAgregaApp.Click += (s, e) => CambiarCategoria(true);
+            lblSubTargetaAgregarApp.Click += (s, e) => CambiarCategoria(true);
+            pnlSubTargetaAgregarWeb.Click += (s, e) => CambiarCategoria(false);
+            lblSubTargetaAgregarWeb.Click += (s, e) => CambiarCategoria(false);
             cbNoBloquearWebs.Click += (s, e) => CambiarCategoria(false);
             cbNoBloquearApps.Click += (s, e) => CambiarCategoria(true);
 
@@ -62,10 +102,54 @@ namespace CapaPresentacion
             btnRestarDescanso.Click += (s, e) => AjustarMinutos(nudDescanso, -1);
             btnSumarIntervalo.Click += (s, e) => AjustarMinutos(nudIntervalo, 5);
             btnRestarIntervalo.Click += (s, e) => AjustarMinutos(nudIntervalo, -5);
+            btnCancelar.Click += btnCancelar_Click;
+            CancelButton = btnCancelar;
+
+            if (!esPlantilla && tareaEditar == null)
+                AplicarPlantillaPredeterminada();
 
             CambiarCategoria(true);
+            if (tareaEditar != null)
+                CargarTareaParaEditar(tareaEditar);
 
         }
+
+        private void CargarTareaParaEditar(E_Tarea tarea)
+        {
+            Text = "Editar tarea";
+            lblTargetaTarea.Text = "Editar tarea";
+            lblPanelTop.Text = "Modifica los datos de la tarea";
+            btnGuardar.Text = "Guardar cambios";
+            txtNombreTarea.Text = tarea.Nombre ?? String.Empty;
+            dtpHoraInicio.Value = tarea.FechaInicio.TimeOfDay;
+            dtpHoraFin.Value = tarea.FechaFin.TimeOfDay;
+            cbNoBloquearApps.Checked = tarea.NoBloquearApps;
+            cbNoBloquearWebs.Checked = tarea.NoBloquearWebs;
+
+            E_Descanso descanso = new N_Descanso().BuscarDescanso(idUsuario, tarea.IdTarea);
+            if (descanso != null)
+            {
+                nudDescanso.Text = (descanso.DuracionDescanso ?? 0) + " min";
+                nudIntervalo.Text = (descanso.IntervaloDescanso ?? 0) + " min";
+            }
+
+            List<E_Aplicacion> catalogoApps = new N_Aplicacion().BuscarAplicacion(idUsuario, String.Empty);
+            foreach (E_TareaAplicacion relacion in new N_TareaAplicacion().Buscar(idUsuario, tarea.IdTarea))
+            {
+                E_Aplicacion app = catalogoApps.FirstOrDefault(a => a.IdAplicacion == relacion.IdAplicacion);
+                if (app != null) appsSeleccionadas.Add(app);
+            }
+
+            List<E_Web> catalogoWebs = new N_Web().BuscarWeb(idUsuario, String.Empty);
+            foreach (E_TareaWeb relacion in new N_TareaWeb().Buscar(idUsuario, tarea.IdTarea))
+            {
+                E_Web web = catalogoWebs.FirstOrDefault(w => w.IdWeb == relacion.IdWeb);
+                if (web != null) websSeleccionadas.Add(web);
+            }
+            ActualizarListaSeleccionados();
+        }
+
+
 
         private static void ConfigurarSelectorHora(
             AntdUI.TimePicker selector,
@@ -77,6 +161,46 @@ namespace CapaPresentacion
             selector.EnabledValueTextChange = false;
             selector.ValueTimeHorizontal = true;
             selector.Value = horaInicial;
+        }
+
+        private void AplicarPlantillaPredeterminada()
+        {
+            E_Tarea plantilla = new N_Tarea().ObtenerPlantilla(idUsuario);
+            if (plantilla == null) return;
+
+            txtNombreTarea.Text = plantilla.Nombre ?? String.Empty;
+            dtpHoraInicio.Value = plantilla.FechaInicio.TimeOfDay;
+            dtpHoraFin.Value = plantilla.FechaFin.TimeOfDay;
+            cbNoBloquearApps.Checked = plantilla.NoBloquearApps;
+            cbNoBloquearWebs.Checked = plantilla.NoBloquearWebs;
+
+            E_Descanso descanso = new N_Descanso().BuscarDescanso(idUsuario, plantilla.IdTarea);
+            if (descanso != null)
+            {
+                nudDescanso.Text = (descanso.DuracionDescanso ?? 0) + " min";
+                nudIntervalo.Text = (descanso.IntervaloDescanso ?? 0) + " min";
+            }
+
+            List<E_TareaAplicacion> relacionesApps =
+                new N_TareaAplicacion().Buscar(idUsuario, plantilla.IdTarea);
+            if (relacionesApps.Count > 0)
+            {
+                List<E_Aplicacion> catalogoApps =
+                    new N_Aplicacion().BuscarAplicacion(idUsuario, String.Empty);
+                appsSeleccionadas.AddRange(relacionesApps
+                    .Select(relacion => catalogoApps.FirstOrDefault(app => app.IdAplicacion == relacion.IdAplicacion))
+                    .Where(app => app != null));
+            }
+
+            List<E_TareaWeb> relacionesWebs =
+                new N_TareaWeb().Buscar(idUsuario, plantilla.IdTarea);
+            if (relacionesWebs.Count > 0)
+            {
+                List<E_Web> catalogoWebs = new N_Web().BuscarWeb(idUsuario, String.Empty);
+                websSeleccionadas.AddRange(relacionesWebs
+                    .Select(relacion => catalogoWebs.FirstOrDefault(web => web.IdWeb == relacion.IdWeb))
+                    .Where(web => web != null));
+            }
         }
 
         private sealed class LocalizacionAntdEspanol : AntdUI.ILocalization
@@ -104,17 +228,25 @@ namespace CapaPresentacion
 
                 var tarea = new E_Tarea
                 {
+                    IdTarea = tareaEditar == null ? 0 : tareaEditar.IdTarea,
                     IdUsuario = idUsuario,
                     Nombre = txtNombreTarea.Text.Trim(),
                     FechaInicio = fechaInicio,
                     FechaFin = fechaFin,
-                    EsPlantilla = false,
+                    EsPlantilla = esPlantilla,
                     NoBloquearApps = cbNoBloquearApps.Checked,
                     NoBloquearWebs = cbNoBloquearWebs.Checked
                 };
 
-                // Guarda la tarea y obtiene su nuevo IdTarea.
-                int idTarea = new N_Tarea().InsertarTarea(tarea);
+                var negocioTarea = new N_Tarea();
+                int idTarea;
+                if (tareaEditar == null)
+                    idTarea = negocioTarea.InsertarTarea(tarea);
+                else
+                {
+                    negocioTarea.ModificarTarea(tarea);
+                    idTarea = tarea.IdTarea;
+                }
 
                 // Los dos valores deben estar definidos juntos o quedar ambos vacíos.
                 int duracionMinutos = LeerMinutos(nudDescanso);
@@ -124,15 +256,33 @@ namespace CapaPresentacion
                 int? intervaloDescanso = duracionMinutos > 0 && intervaloMinutos > 0
                     ? (int?)intervaloMinutos : null;
 
-                new N_Descanso().InsertarDescanso(idUsuario, new E_Descanso
+                var negocioDescanso = new N_Descanso();
+                E_Descanso descansoActual = tareaEditar == null
+                    ? null : negocioDescanso.BuscarDescanso(idUsuario, idTarea);
+                var descansoNuevo = new E_Descanso
                 {
+                    IdDescanso = descansoActual == null ? 0 : descansoActual.IdDescanso,
                     IdTarea = idTarea,
                     DuracionDescanso = duracionDescanso,
                     IntervaloDescanso = intervaloDescanso
-                });
+                };
+                if (descansoActual == null)
+                {
+                    if (tareaEditar == null || duracionDescanso.HasValue)
+                        negocioDescanso.InsertarDescanso(idUsuario, descansoNuevo);
+                }
+                else negocioDescanso.ModificarDescanso(idUsuario, descansoNuevo);
 
                 var negocioAplicacion = new N_Aplicacion();
                 var negocioTareaAplicacion = new N_TareaAplicacion();
+                var negocioTareaWeb = new N_TareaWeb();
+                if (tareaEditar != null)
+                {
+                    foreach (E_TareaAplicacion anterior in negocioTareaAplicacion.Buscar(idUsuario, idTarea))
+                        negocioTareaAplicacion.Eliminar(idUsuario, idTarea, anterior.IdAplicacion);
+                    foreach (E_TareaWeb anterior in negocioTareaWeb.Buscar(idUsuario, idTarea))
+                        negocioTareaWeb.Eliminar(idUsuario, idTarea, anterior.IdWeb);
+                }
 
                 List<E_Aplicacion> aplicacionesRegistradas =
                     negocioAplicacion.BuscarAplicacion(idUsuario, "");
@@ -166,8 +316,6 @@ namespace CapaPresentacion
                 }
 
                 var negocioWeb = new N_Web();
-                var negocioTareaWeb = new N_TareaWeb();
-
                 foreach (E_Web web in websSeleccionadas)
                 {
                     E_Web registrada = negocioWeb.BuscarWeb(idUsuario, "")
@@ -255,25 +403,20 @@ namespace CapaPresentacion
 
         private void ActualizarListaSeleccionados()
         {
-            foreach (Control control in flLista.Controls.Cast<Control>().ToList())
+            var controles = new List<Control>
             {
-                flLista.Controls.Remove(control);
-                control.Dispose();
-            }
-
-            flLista.Controls.Add(CrearEtiquetaRedondeada(
+                CrearEtiquetaRedondeada(
                 mostrarAplicaciones ? "Mostrando aplicaciones" : "Mostrando páginas web",
-                Color.FromArgb(37, 63, 118)));
+                PaletaAplicacion.AzulTarjetaOscura)
+            };
 
             if (mostrarAplicaciones)
             {
                 if (appsSeleccionadas.Count == 0)
                 {
-                    MostrarListaVacia("Todavía no agregas aplicaciones.");
-                    return;
+                    controles.Add(CrearListaVacia("Todavía no agregas aplicaciones."));
                 }
-
-                foreach (E_Aplicacion app in appsSeleccionadas)
+                else foreach (E_Aplicacion app in appsSeleccionadas)
                 {
                     E_Aplicacion elemento = app;
                     var tarjeta = new ucAplicacion { Margin = new Padding(6) };
@@ -283,18 +426,14 @@ namespace CapaPresentacion
                         appsSeleccionadas.Remove(elemento);
                         ActualizarListaSeleccionados();
                     };
-                    flLista.Controls.Add(tarjeta);
+                    controles.Add(tarjeta);
                 }
-                return;
             }
-
-            if (websSeleccionadas.Count == 0)
+            else if (websSeleccionadas.Count == 0)
             {
-                MostrarListaVacia("Todavía no agregas páginas web.");
-                return;
+                controles.Add(CrearListaVacia("Todavía no agregas páginas web."));
             }
-
-            foreach (E_Web web in websSeleccionadas)
+            else foreach (E_Web web in websSeleccionadas)
             {
                 E_Web elemento = web;
                 var tarjeta = new ucWeb { Margin = new Padding(6) };
@@ -304,29 +443,45 @@ namespace CapaPresentacion
                     websSeleccionadas.Remove(elemento);
                     ActualizarListaSeleccionados();
                 };
-                flLista.Controls.Add(tarjeta);
+                controles.Add(tarjeta);
             }
+            ControlesPresentacion.Reemplazar(flLista, controles.ToArray());
         }
 
         private void CambiarCategoria(bool mostrarApps)
         {
             mostrarAplicaciones = mostrarApps;
-            pnlApps.Back = mostrarApps
-                ? Color.FromArgb(89, 133, 225)
-                : Color.FromArgb(75, 119, 209);
-            pnlWebs.Back = mostrarApps
-                ? Color.FromArgb(75, 119, 209)
-                : Color.FromArgb(89, 133, 225);
-            pnlApps.BorderColor = mostrarApps ? Color.White : Color.FromArgb(10, 15, 28);
-            pnlWebs.BorderColor = mostrarApps ? Color.FromArgb(10, 15, 28) : Color.White;
+            AplicarTemaCategoria();
             ActualizarListaSeleccionados();
         }
 
-        private void MostrarListaVacia(string mensaje)
+        internal void AplicarTemaCategoria()
         {
-            var etiqueta = CrearEtiquetaRedondeada(mensaje, Color.FromArgb(37, 63, 118));
+            Color normal = PaletaAplicacion.AzulPrimario;
+            Color seleccionado = PaletaAplicacion.AzulHover;
+            Color fondoApps = mostrarAplicaciones ? seleccionado : normal;
+            Color fondoWebs = mostrarAplicaciones ? normal : seleccionado;
+            pnlSubTargetaAgregaApp.Back = fondoApps;
+            pnlSubTargetaAgregarWeb.Back = fondoWebs;
+            AplicarColorBotonCategoria(btnAgregarApp, fondoApps);
+            AplicarColorBotonCategoria(btnAgregarWeb, fondoWebs);
+        }
+
+        private static void AplicarColorBotonCategoria(AntdUI.Button boton, Color fondo)
+        {
+            boton.BackColor = fondo;
+            boton.BackHover = PaletaAplicacion.AzulHover;
+            boton.BackActive = PaletaAplicacion.AzulPrimario;
+            boton.DefaultBack = fondo;
+            boton.ForeColor = PaletaAplicacion.ColorTextoContraste(fondo);
+            IconosGoogle.AplicarPaleta(boton);
+        }
+
+        private Control CrearListaVacia(string mensaje)
+        {
+            var etiqueta = CrearEtiquetaRedondeada(mensaje, PaletaAplicacion.AzulTarjetaOscura);
             etiqueta.Height = 60;
-            flLista.Controls.Add(etiqueta);
+            return etiqueta;
         }
 
         private EtiquetaRedondeada CrearEtiquetaRedondeada(string texto, Color color)
@@ -338,7 +493,7 @@ namespace CapaPresentacion
                 Height = 38,
                 Text = texto,
                 TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.White,
+                ForeColor = PaletaAplicacion.ColorTextoContraste(color),
                 BackColor = color,
                 Margin = new Padding(6),
                 Padding = new Padding(8)
@@ -388,6 +543,16 @@ namespace CapaPresentacion
         {
             Close();
         }
+
+        private void btnCancelar_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
+        }
+
+        private void PnlLayoutLista_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
-

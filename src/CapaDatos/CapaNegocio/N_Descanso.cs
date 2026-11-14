@@ -10,28 +10,28 @@ namespace CapaNegocio
 
         public void InsertarDescanso(int idUsuario, E_Descanso descanso)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarDescanso(descanso, false);
             Datos.InsertarDescanso(idUsuario, descanso);
         }
 
         public E_Descanso BuscarDescanso(int idUsuario, int idTarea)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idTarea, "tarea");
             return Datos.BuscarDescanso(idUsuario, idTarea);
         }
 
         public void ModificarDescanso(int idUsuario, E_Descanso descanso)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarDescanso(descanso, true);
             Datos.ModificarDescanso(idUsuario, descanso);
         }
 
         public void EliminarDescanso(int idUsuario, int idDescanso)
         {
-            ValidarId(idUsuario, "usuario");
+            ValidarUsuario(idUsuario);
             ValidarId(idDescanso, "descanso");
             Datos.EliminarDescanso(idUsuario, idDescanso);
         }
@@ -54,7 +54,12 @@ namespace CapaNegocio
 
         private static void ValidarId(int id, string tipo)
         {
-            if (id <= 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+            if (id == 0) throw new ArgumentException("El ID de " + tipo + " no es válido.");
+        }
+
+        private static void ValidarUsuario(int idUsuario)
+        {
+            if (idUsuario <= 0) throw new ArgumentException("El ID de usuario no es válido.");
         }
     }
 }

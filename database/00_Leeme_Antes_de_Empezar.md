@@ -1,25 +1,21 @@
-# Base de Datos - Programa de Concentración
-
-## Requisitos
-
-* SQL Server
-* SQL Server Management Studio (SSMS)
+# Base de datos del programa
 
 ## Instalación nueva
 
-Ejecuta los archivos en este orden:
+Usa `InstalarBaseDatos.ps1` o ejecuta en SSMS estos scripts en orden:
 
 1. `01_CrearBaseDeDatos.sql`
-2. `02_CrearTablas.sql`
-3. `03_CrearRelaciones.sql`
-4. `04_CrearProcedimientos.sql`
-5. `05_CrearIndices.sql`
+2. `02_CrearTablas.sql` (incluye relaciones y claves compuestas por propietario)
+3. `04_CrearProcedimientos.sql`
+4. `05_CrearIndices.sql`
+5. `06_MigracionSincronizacionOffline.sql`
+6. `07_MigracionPlantillaPredeterminada.sql`
+7. `08_MigracionTareasDetenidas.sql`
 
-`InstalarBaseDatos.ps1` ejecuta estos pasos en orden. La verificación de correo está incluida en `04_CrearProcedimientos.sql`; los scripts de instalación quedan consolidados. Si el certificado del servidor local no es de confianza, ejecuta el instalador con `-ConfiarCertificadoServidor` solo para esa instancia.
+`03_CrearRelaciones.sql` se mantiene como archivo de compatibilidad; no contiene cambios adicionales porque las relaciones ya se crean en el script 02. La verificación de correo está incluida en el script 04.
 
-## Base de prueba existente
+## Base existente
 
-La estructura anterior tenía catálogos globales. Para aplicar el nuevo esquema desde cero, elimina la base `ProgramaConcentracion` y ejecuta la instalación completa con `InstalarBaseDatos.ps1` o los archivos en el orden indicado. Esto elimina las cuentas, tareas y configuraciones guardadas. Conserva una copia si quieres mantener esos datos.
+Haz una copia de seguridad antes de actualizar. Ejecuta las migraciones 06, 07 y 08 sobre la base existente. No vuelvas a correr los scripts de creación ni elimines la base para aplicar una actualización. Revisa también [`../src/CapaDatos/database/README_SincronizacionOffline.md`](../src/CapaDatos/database/README_SincronizacionOffline.md) para el esquema offline y los contratos de sincronización.
 
-La tabla de aplicaciones y la de webs ahora pertenecen a un usuario. Las tareas, descansos y asociaciones guardan también el propietario, y las claves compuestas impiden relacionar datos de cuentas distintas.
-
+Las tablas de tareas, catálogos y relaciones mantienen `IdUsuario`; las relaciones usan claves foráneas compuestas para impedir asociaciones cruzadas entre cuentas. Los procedimientos verifican el propietario en cada lectura o escritura.

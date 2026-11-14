@@ -6,6 +6,7 @@
     <ProjectGuid>{EA178CB6-2EF0-49C5-B9DE-24DFBA5A06F1}</ProjectGuid>
     <OutputType>Exe</OutputType><AssemblyName>Pruebas</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <Prefer32Bit>false</Prefer32Bit>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -13,7 +14,7 @@
     <Reference Include="System" /><Reference Include="System.Core" />
     <Reference Include="System.Data" /><Reference Include="System.Xml" /><Reference Include="System.Configuration" />
     <Reference Include="System.Windows.Forms" /><Reference Include="System.Drawing" />
-    <Compile Include="PruebasVerificacionSql.cs" /><Compile Include="PruebasAcceso.cs" /><Compile Include="PruebasInterfaz.cs" />
+    <Compile Include="PruebasVerificacionSql.cs" /><Compile Include="PruebasCatalogo.cs" /><Compile Include="PruebasAcceso.cs" /><Compile Include="PruebasInterfaz.cs" />
     <Compile Include="Program.cs" /><None Include="App.config" />
     <ProjectReference Include="..\src\CapaDatos\CapaDatos\CapaDatos.csproj"><Project>{519E9926-0A22-4F06-9841-96F7CD7CC5CE}</Project><Name>CapaDatos</Name></ProjectReference>
     <ProjectReference Include="..\src\CapaDatos\CapaPresentacion\CapaPresentacion.csproj"><Project>{23F3E509-C374-4885-968D-4F9B5EF39F75}</Project><Name>CapaPresentacion</Name></ProjectReference>

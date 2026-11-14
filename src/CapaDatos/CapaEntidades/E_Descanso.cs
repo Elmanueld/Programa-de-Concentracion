@@ -6,5 +6,6 @@ namespace CapaEntidades
         public int IdTarea { get; set; }
         public int? IntervaloDescanso { get; set; }
         public int? DuracionDescanso { get; set; }
+        public string SyncId { get; set; }
     }
 }

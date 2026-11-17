@@ -19,3 +19,7 @@ Usa `InstalarBaseDatos.ps1` o ejecuta en SSMS estos scripts en orden:
 Haz una copia de seguridad antes de actualizar. Ejecuta las migraciones 06, 07 y 08 sobre la base existente. No vuelvas a correr los scripts de creación ni elimines la base para aplicar una actualización. Revisa también [`../src/CapaDatos/database/README_SincronizacionOffline.md`](../src/CapaDatos/database/README_SincronizacionOffline.md) para el esquema offline y los contratos de sincronización.
 
 Las tablas de tareas, catálogos y relaciones mantienen `IdUsuario`; las relaciones usan claves foráneas compuestas para impedir asociaciones cruzadas entre cuentas. Los procedimientos verifican el propietario en cada lectura o escritura.
+
+## Azure SQL Database
+
+Crea la base vacía en el portal de Azure y ejecuta `azure/InstalarAzure.ps1`. Usa los mismos scripts de esta carpeta sin modificarlos y crea un usuario con permisos limitados. Para que el programa use la nube, define la variable de entorno `PC_CONEXION` con la cadena de ese usuario (con `Encrypt=True` y `Connect Timeout=60`). Sin esa variable se usa SQL Server local como siempre.

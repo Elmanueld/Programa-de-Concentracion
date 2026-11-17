@@ -22,6 +22,14 @@ namespace CapaDatos
 
         private ConexionDB()
         {
+            // PC_CONEXION permite usar otro servidor (por ejemplo en la nube) sin tocar App.config
+            string desdeEntorno = Environment.GetEnvironmentVariable("PC_CONEXION");
+            if (!String.IsNullOrWhiteSpace(desdeEntorno))
+            {
+                cadenaConexion = desdeEntorno;
+                return;
+            }
+
             ConnectionStringSettings configuracion =
                 ConfigurationManager.ConnectionStrings["conexion"];
 

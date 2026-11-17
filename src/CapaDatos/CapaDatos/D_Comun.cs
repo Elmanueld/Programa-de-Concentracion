@@ -17,6 +17,9 @@ namespace CapaDatos
                     case -2: case 2: case 53: case 64: case 121: case 233:
                     case 258: case 10053: case 10054: case 10060: case 11001:
                     case 4060:
+                    // Azure SQL: base pausada, ocupada o con el firewall cerrado
+                    case 40613: case 40197: case 40501: case 40615:
+                    case 49918: case 49919: case 49920:
                         return true;
                 }
             }

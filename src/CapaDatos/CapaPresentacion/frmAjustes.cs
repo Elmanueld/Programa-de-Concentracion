@@ -176,6 +176,12 @@ namespace CapaPresentacion
         private void CambiarDatoCuenta(bool nombre)
         {
             if (usuario == null) return;
+            if (!nombre)
+            {
+                // Cambiar el correo también exige la contraseña actual
+                string actual = SolicitarTexto("Contraseña actual:", "", true);
+                if (actual == null || !VerificarContrasenaActual(actual, "Cambiar correo")) return;
+            }
             string valor = SolicitarTexto(nombre ? "Nuevo nombre:" : "Nuevo correo:", nombre ? usuario.Nombre : usuario.Correo);
             if (valor == null) return;
             try
@@ -190,6 +196,30 @@ namespace CapaPresentacion
             catch (Exception ex) { MessageBox.Show(this, ex.Message, "Cuenta", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
+        // Comprueba la contraseña actual con el inicio de sesión y avisa si falla
+        private bool VerificarContrasenaActual(string actual, string titulo)
+        {
+            try
+            {
+                negocioUsuario.IniciarSesion(usuario.Correo, actual);
+                return true;
+            }
+            catch (ArgumentException ex)
+            {
+                string mensaje = ex.Message.StartsWith("Credenciales incorrectas",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "La contraseña actual no es correcta."
+                    : ex.Message;
+                MessageBox.Show(this, mensaje, titulo, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "No se pudo verificar la contraseña actual: " + ex.Message,
+                    titulo, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return false;
+        }
+
         private void BtnCambiarContrasena_Click(object sender, EventArgs e)
         {
             if (usuario == null) return;
@@ -200,26 +230,7 @@ namespace CapaPresentacion
             string confirmacion = SolicitarTexto("Confirma la nueva contraseña:", "", true);
             if (confirmacion == null) return;
 
-            try
-            {
-                negocioUsuario.IniciarSesion(usuario.Correo, actual);
-            }
-            catch (ArgumentException ex)
-            {
-                string mensaje = ex.Message.StartsWith("Credenciales incorrectas",
-                    StringComparison.OrdinalIgnoreCase)
-                    ? "La contraseña actual no es correcta."
-                    : ex.Message;
-                MessageBox.Show(this, mensaje, "Cambiar contraseña",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "No se pudo verificar la contraseña actual: " + ex.Message,
-                    "Cambiar contraseña", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            if (!VerificarContrasenaActual(actual, "Cambiar contraseña")) return;
 
             try
             {

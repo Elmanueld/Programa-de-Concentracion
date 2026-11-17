@@ -82,6 +82,8 @@ internal static class PruebasAcceso
         }
         string recibido = RecibirCorreo(() => InvocarCorreo("Enviar", "buzon@example.com", "314159"));
         comprobar(recibido.Contains("314159") && recibido.Contains("10 minutos"), "SMTP local recibió el código y su vigencia");
+        comprobar(recibido.Contains("<html lang=\"es\"") && recibido.Contains("Programa de Concentración") && recibido.Contains("una vez"),
+            "El correo usa HTML en español con el nombre del programa y la vigencia");
         var puertoCerrado = new TcpListener(IPAddress.Loopback, 0);
         puertoCerrado.Start();
         int puerto = ((IPEndPoint)puertoCerrado.LocalEndpoint).Port;
@@ -93,6 +95,29 @@ internal static class PruebasAcceso
             catch (SmtpException) { fallo = true; }
             comprobar(fallo, "Fallo de conexión SMTP no se oculta");
         }
+    }
+
+    // Prueba con el SMTP real; solo se ejecuta con --correo-real
+    public static void ProbarCorreoReal(Action<bool, string> comprobar)
+    {
+        string destino = Environment.GetEnvironmentVariable("PC_SMTPDESTINO");
+        string clave = Environment.GetEnvironmentVariable("PC_SMTPCLAVE");
+        if (String.IsNullOrWhiteSpace(destino) || String.IsNullOrEmpty(clave))
+            throw new InvalidOperationException("Falta PC_SMTPDESTINO o PC_SMTPCLAVE para la prueba real.");
+        comprobar(new N_VerificacionCorreo().EstaConfigurado(), "SMTP real configurado");
+        string codigo = (string)InvocarNegocio(typeof(N_VerificacionCorreo), "CrearCodigo");
+        InvocarCorreo("Enviar", destino, codigo);
+        comprobar(true, "SMTP real autenticó y aceptó el correo de verificación");
+        // Con una contraseña incorrecta el envío debe fallar
+        bool rechazado = false;
+        try
+        {
+            Environment.SetEnvironmentVariable("PC_SMTPCLAVE", "clave-incorrecta-de-prueba");
+            InvocarCorreo("Enviar", destino, codigo);
+        }
+        catch (SmtpException) { rechazado = true; }
+        finally { Environment.SetEnvironmentVariable("PC_SMTPCLAVE", clave); }
+        comprobar(rechazado, "SMTP real rechaza credenciales incorrectas");
     }
 
     public static void ConConfiguracionSmtp(Action accion)

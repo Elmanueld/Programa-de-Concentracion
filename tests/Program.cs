@@ -47,6 +47,12 @@ internal static partial class Program
                     "PDC-Pruebas-" + Guid.NewGuid().ToString("N") + ".sqlite");
                 Environment.SetEnvironmentVariable("PC_SQLITE_LOCAL_PATH", sqlitePruebas);
             }
+            if (args.Contains("--correo-real"))
+            {
+                PruebasAcceso.ProbarCorreoReal(Comprobar);
+                Console.WriteLine("Total correcto: " + comprobaciones);
+                return 0;
+            }
             const string clave = "PruebaSegura-2026";
             string hash = SeguridadContrasena.CrearHash(clave);
             Comprobar(hash != clave && hash.Length <= 255, "Formato y longitud del hash");

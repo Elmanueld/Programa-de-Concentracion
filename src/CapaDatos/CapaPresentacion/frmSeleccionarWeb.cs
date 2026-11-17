@@ -41,8 +41,6 @@ namespace CapaPresentacion
             ControlesPresentacion.Optimizar(flWebSeleccionadas);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
-            btnAceptar.Click += btnAceptar_Click;
-            btnCancelar.Click += btnCancelar_Click;
             txtLink.KeyDown += txtLink_KeyDown;
             txtBuscar.TextChanged += txtBuscar_TextChanged;
             txtBuscar.KeyUp += txtBuscar_KeyUp;

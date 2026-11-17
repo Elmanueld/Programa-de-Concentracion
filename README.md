@@ -41,7 +41,7 @@ La conexión SQL principal se configura en `src/CapaDatos/CapaPresentacion/App.c
 
 La copia local SQLite se guarda en `%LOCALAPPDATA%\Programa-de-Concentracion\DatosOffline\ProgramaConcentracion.sqlite`. Al iniciar sesión se obtiene una copia de los datos de esa cuenta. Cuando SQL Server deja de responder, las operaciones compatibles usan SQLite y guardan cambios pendientes en la cola local; al reconectar, la aplicación intenta sincronizarlos. La base remota en la nube no está configurada todavía.
 
-El registro usa actualmente `ModoDemostracion=true` en `App.config`, así que el flujo de demostración no envía correo y no verifica automáticamente la cuenta. El transporte SMTP y la configuración de nube quedan pendientes para una fase posterior; no agregues credenciales al repositorio.
+El registro usa `ModoDemostracion=false` en `App.config`, así que se pide el código de verificación por correo. Si el SMTP no está configurado, la cuenta se guarda pero queda pendiente de verificación. Para volver al flujo de demostración (sin correo) usa `ModoDemostracion=true`. Para enviar correos reales con `ModoDemostracion=false`, configura el SMTP como se explica en [docs/CONFIGURACION_SMTP.md](docs/CONFIGURACION_SMTP.md). La configuración de nube queda pendiente para una fase posterior; no agregues credenciales al repositorio.
 
 ## Compilar
 

@@ -108,7 +108,7 @@ namespace CapaPresentacion
             this.cbAutoSesion.Name = "cbAutoSesion";
             this.cbAutoSesion.Size = new System.Drawing.Size(281, 27);
             this.cbAutoSesion.TabIndex = 7;
-            this.cbAutoSesion.Text = "Iniciar sesión automaticamente";
+            this.cbAutoSesion.Text = "Iniciar sesión automáticamente";
             this.cbAutoSesion.UseVisualStyleBackColor = false;
             //
             // pnlTop
@@ -633,7 +633,7 @@ namespace CapaPresentacion
             this.rbUltimaPantalla.Size = new System.Drawing.Size(226, 24);
             this.rbUltimaPantalla.TabIndex = 89;
             this.rbUltimaPantalla.TabStop = true;
-            this.rbUltimaPantalla.Text = "Ultima pantalla utilizada";
+            this.rbUltimaPantalla.Text = "Última pantalla utilizada";
             this.rbUltimaPantalla.UseVisualStyleBackColor = false;
             //
             // rbTarea
@@ -687,7 +687,7 @@ namespace CapaPresentacion
             this.cbIniciarApp.Name = "cbIniciarApp";
             this.cbIniciarApp.Size = new System.Drawing.Size(224, 27);
             this.cbIniciarApp.TabIndex = 84;
-            this.cbIniciarApp.Text = "Iniciar app con windows";
+            this.cbIniciarApp.Text = "Iniciar app con Windows";
             this.cbIniciarApp.UseVisualStyleBackColor = false;
             //
             // lblDescripcionInicio

@@ -64,7 +64,7 @@ namespace CapaPresentacion
             else if (ex is SmtpException)
                 mensaje = "No se pudo enviar el correo. La cuenta sigue pendiente. Revise SMTP y espere un minuto antes de reenviar.";
             else if (sql != null && sql.Number == 8144)
-                mensaje = "Los parámetros no coinciden con el procedimiento SQL instalado. Para una base de la versión anterior, respáldela y ejecute database/06_ActualizarEntregable3.sql en la misma instancia indicada en App.config. No repita los scripts 01–05.";
+                mensaje = "Los parámetros no coinciden con el procedimiento SQL instalado. Para una base de la versión anterior, respáldela y ejecute los scripts de migración de la carpeta database (del 06 en adelante) en la misma instancia indicada en App.config. No repita los scripts 01–05.";
             else if (sql != null && (sql.Number == 2601 || sql.Number == 2627))
                 mensaje = "Ya existe un registro con esos datos. Si está registrándose, use otro correo.";
             else if (sql != null && sql.Number >= 50001 && sql.Number <= 50006)

@@ -469,7 +469,7 @@ namespace CapaPresentacion
             this.lblDescripcionAgregar.Name = "lblDescripcionAgregar";
             this.lblDescripcionAgregar.Size = new System.Drawing.Size(384, 48);
             this.lblDescripcionAgregar.TabIndex = 35;
-            this.lblDescripcionAgregar.Text = "Agrega las aplicaciones y páginas webs que necesites";
+            this.lblDescripcionAgregar.Text = "Agrega las aplicaciones y páginas web que necesites";
             //
             // lblTargetaAgregar
             //
@@ -579,7 +579,7 @@ namespace CapaPresentacion
             this.lblDescripcionTarea.Name = "lblDescripcionTarea";
             this.lblDescripcionTarea.Size = new System.Drawing.Size(384, 48);
             this.lblDescripcionTarea.TabIndex = 35;
-            this.lblDescripcionTarea.Text = "Nombra tu tarea y programala";
+            this.lblDescripcionTarea.Text = "Nombra tu tarea y prográmala";
             //
             // lblTargetaTarea
             //

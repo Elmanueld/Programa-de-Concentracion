@@ -41,3 +41,31 @@ jobs:
 
       - name: Pruebas de integración SQL y SMTP local
         run: .\tests\bin\Release\Pruebas.exe --integracion
+
+  # Prueba manual con el SMTP real. Los datos salen de los secretos del repositorio.
+  correo-real:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - uses: NuGet/setup-nuget@v2
+
+      - name: Restaurar paquetes NuGet
+        run: nuget restore src/CapaDatos/CapaDatos.sln -NonInteractive
+
+      - name: Compilar pruebas
+        run: msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release /verbosity:minimal
+
+      - name: Enviar correo de prueba con el SMTP real
+        env:
+          PC_SMTPHOST: mail.privateemail.com
+          PC_SMTPPUERTO: "587"
+          PC_SMTPSSL: "true"
+          PC_SMTPUSUARIO: ${{ secrets.PC_SMTPUSUARIO }}
+          PC_SMTPREMITENTE: ${{ secrets.PC_SMTPUSUARIO }}
+          PC_SMTPDESTINO: ${{ secrets.PC_SMTPUSUARIO }}
+          PC_SMTPCLAVE: ${{ secrets.PC_SMTPCLAVE }}
+        run: .\tests\bin\Release\Pruebas.exe --correo-real

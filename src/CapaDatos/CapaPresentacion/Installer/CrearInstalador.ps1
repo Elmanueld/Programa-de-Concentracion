@@ -18,6 +18,7 @@ try {
     $archivosAplicacion = Get-ChildItem -LiteralPath $salidaRelease -File -Recurse | Where-Object {
         $_.FullName -notmatch '\\app\.publish\\' -and
         $_.Name -ne 'ProgramaConcentracion-Instalador.zip' -and
+        $_.Name -notlike '~*.DDF' -and
         $_.Extension -notin '.pdb', '.xml' -and
         $_.Name -notlike '*.vshost.*'
     }

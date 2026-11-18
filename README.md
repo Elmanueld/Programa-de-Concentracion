@@ -45,6 +45,10 @@ msbuild src/CapaDatos/ProgramaConcentracion.sln /restore /t:Rebuild /p:Configura
 msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release
 ```
 
+## Descargar e instalar
+
+El instalador compilado está en [`dist/ProgramaConcentracion-Instalador.zip`](dist/ProgramaConcentracion-Instalador.zip). Descarga y extrae el ZIP completo; ejecuta `Instalar.bat`. El instalador crea el acceso del menú Inicio y, si hace falta, descarga .NET Framework 4.8 desde Microsoft. Requiere permisos de administrador. La aplicación WinForms usa la API remota por HTTPS y mantiene SQLite local para el modo offline; el paquete no contiene credenciales de SQL ni SMTP.
+
 ## Pruebas automáticas
 
 ```powershell

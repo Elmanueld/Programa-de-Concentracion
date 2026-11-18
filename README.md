@@ -1,71 +1,62 @@
-# Programa de Concentración
+﻿# Programa de Concentración
 
-Aplicación de escritorio Windows Forms para organizar tareas, gestionar aplicaciones y webs asociadas, configurar preferencias y mantener datos utilizables sin conexión.
+Aplicación Windows Forms para planificar tareas, administrar aplicaciones y sitios asociados, y continuar trabajando sin conexión mediante SQLite. El Backend ASP.NET Core es el acceso remoto a SQL Server y gestiona autenticación, sincronización, verificación de correo y recuperación de contraseña.
 
-## Requisitos
+## Requisitos de desarrollo
 
-- Windows 10/11 de 64 bits.
+- Windows 10/11.
 - Visual Studio 2022 con desarrollo de escritorio .NET.
-- .NET Framework 4.8 Developer Pack.
-- SQL Server Express (instancia local predeterminada `SQLEXPRESS`) para el almacén principal.
-- SQL Server Express LocalDB para preparar y ejecutar las pruebas de integración.
+- .NET Framework 4.8 Developer Pack para WinForms y .NET 9 SDK para el Backend y sus pruebas.
+- Conexión a Internet para restaurar dependencias NuGet.
 
-Los proyectos usan AntdUI, Svg y sus dependencias NuGet. Restaura los paquetes desde Visual Studio o MSBuild antes de compilar.
+SQL Server Express/LocalDB no es requisito de la aplicación ni de las pruebas automáticas actuales. No se necesita instalar SQL Server en los equipos cliente.
 
-## Solución
+## Soluciones
 
-Abre `Programa-de-Concentracion.slnx` en Visual Studio o `src/CapaDatos/CapaDatos.sln` en una versión compatible. `CapaPresentacion` es el proyecto de inicio. La solución conserva las cuatro capas:
+Abre `src/CapaDatos/ProgramaConcentracion.sln` o la solución de Visual Studio `Programa-de-Concentracion.slnx` en la raíz. Ambas incluyen las capas de escritorio, el Backend .NET 9 y `Backend.Tests`. `CapaPresentacion` es el proyecto de inicio para ejecutar el programa.
 
-- `src/CapaDatos/CapaPresentacion`: formularios y controles de interfaz.
-- `src/CapaDatos/CapaNegocio`: validación y reglas.
-- `src/CapaDatos/CapaEntidades`: entidades del dominio.
-- `src/CapaDatos/CapaDatos`: acceso a SQL Server, SQLite local y sincronización.
+- `src/CapaDatos/CapaPresentacion`: formularios y controles WinForms.
+- `src/CapaDatos/CapaNegocio`: reglas y flujo offline/online.
+- `src/CapaDatos/CapaEntidades`: entidades.
+- `src/CapaDatos/CapaDatos`: SQLite local, cliente HTTP y sincronización.
+- `src/CapaDatos/Backend`: API ASP.NET Core y acceso a SQL Server remoto.
+- `src/CapaDatos/Backend.Tests`: pruebas del Backend con repositorios falsos.
+- `tests`: validaciones del cliente y pruebas de interfaz.
+
+## Datos y configuración
+
+WinForms conserva SQLite en `%LOCALAPPDATA%\Programa-de-Concentracion\DatosOffline\ProgramaConcentracion.sqlite`. La API remota usa `ConnectionStrings__DefaultConnection`, SMTP y `Verification__HashKey`, configurados en el entorno del Backend. No agregues credenciales, cadenas de conexión, contraseñas de publicación ni códigos al repositorio.
+
+La API pública configurada para WinForms es `https://concentracion-api.runasp.net/`. La conexión SQL no se distribuye a los equipos cliente.
 
 ## Base de datos
 
-Para una instalación nueva, ejecuta desde PowerShell en la raíz:
+Selecciona la base asignada por MonsterASP antes de ejecutar los scripts. Para una instalación nueva sigue el orden indicado en `database/00_Leeme_Antes_de_Empezar.md`. Para una base existente aplica únicamente las migraciones requeridas y respaldadas. Las migraciones de registro idempotente y recuperación de contraseña son `database/09_MigracionRegistroApiIdempotente.sql` y `database/10_MigracionRecuperacionContrasena.sql`.
 
-```powershell
-.\database\InstalarBaseDatos.ps1 -Servidor '.\SQLEXPRESS'
-```
-
-También puedes ejecutar en SSMS, en este orden: `01_CrearBaseDeDatos.sql`, `02_CrearTablas.sql`, `04_CrearProcedimientos.sql`, `05_CrearIndices.sql`, `06_MigracionSincronizacionOffline.sql`, `07_MigracionPlantillaPredeterminada.sql` y `08_MigracionTareasDetenidas.sql`. El archivo `03_CrearRelaciones.sql` se conserva por compatibilidad; las relaciones se crean en el script 02 actualizado.
-
-El instalador se detiene si `ProgramaConcentracion` ya existe. Para una base existente, respáldala y aplica las migraciones 06–08 según las notas en [`database/00_Leeme_Antes_de_Empezar.md`](database/00_Leeme_Antes_de_Empezar.md). No vuelvas a ejecutar scripts de creación sobre una base con datos.
-
-El esquema actual incluye identificadores estables para sincronizar, tablas de propietario y relaciones con claves compuestas por `IdUsuario`. Los procedimientos y las capas de datos validan el propietario antes de leer o cambiar registros. Las pruebas cubren que dos cuentas con valores iguales en tareas, aplicaciones y webs no se accedan mutuamente.
-
-## Conexión y funcionamiento sin conexión
-
-La conexión SQL principal se configura en `src/CapaDatos/CapaPresentacion/App.config`, en la entrada `conexion`. El valor del repositorio apunta a `Server=.\SQLEXPRESS`. Cambia la instancia si tu instalación usa otro nombre.
-
-La copia local SQLite se guarda en `%LOCALAPPDATA%\Programa-de-Concentracion\DatosOffline\ProgramaConcentracion.sqlite`. Al iniciar sesión se obtiene una copia de los datos de esa cuenta. Cuando SQL Server deja de responder, las operaciones compatibles usan SQLite y guardan cambios pendientes en la cola local; al reconectar, la aplicación intenta sincronizarlos. La base remota en la nube no está configurada todavía.
-
-El registro usa `ModoDemostracion=false` en `App.config`, así que se pide el código de verificación por correo. Si el SMTP no está configurado, la cuenta se guarda pero queda pendiente de verificación. Para volver al flujo de demostración (sin correo) usa `ModoDemostracion=true`. Para enviar correos reales con `ModoDemostracion=false`, configura el SMTP como se explica en [docs/CONFIGURACION_SMTP.md](docs/CONFIGURACION_SMTP.md). La configuración de nube queda pendiente para una fase posterior; no agregues credenciales al repositorio.
+Los procedimientos y tablas deben conservar el aislamiento por `IdUsuario`; no ejecutes scripts contra producción desde las pruebas automatizadas.
 
 ## Compilar
 
-Desde Developer PowerShell de Visual Studio:
+Desde Developer PowerShell de Visual Studio, en la raíz del repositorio:
 
 ```powershell
-msbuild src/CapaDatos/CapaDatos.sln /restore /t:Rebuild /p:Configuration=Release
+nuget restore src/CapaDatos/ProgramaConcentracion.sln -NonInteractive
+msbuild src/CapaDatos/ProgramaConcentracion.sln /restore /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU"
 msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release
 ```
 
-También puedes abrir la solución, restaurar paquetes y compilar Release desde Visual Studio.
-
-## Pruebas
-
-Consulta el [plan de pruebas](docs/PLAN_PRUEBAS.md), el [reporte](docs/REPORTE_DE_PRUEBAS.md), el [registro de incidencias](docs/INCIDENCIAS_PRUEBAS.md) y los [logs](tests/evidencias/README.md).
+## Pruebas automáticas
 
 ```powershell
+dotnet run --project src/CapaDatos/Backend.Tests/Backend.Tests.csproj --configuration Release
 .\tests\bin\Release\Pruebas.exe
 .\tests\bin\Release\Pruebas.exe --interfaz
-.\tests\bin\Release\Pruebas.exe --integracion
 ```
 
-Las pruebas de integración están limitadas a `(localdb)\Entregable3Pruebas`. Si esa instancia no existe, prepararla una vez con `tests/PrepararPruebas.ps1`. El preparador conserva una instancia existente y se niega a sobrescribir una base de pruebas existente. No apunta a `SQLEXPRESS` ni a la base del programa.
+Las pruebas del Backend usan repositorios y SMTP falsos. Las pruebas WinForms ejercitan validación y controles. No contactan MonsterASP, SQL remoto ni servidores SMTP reales; no escriben en la base del programa. El workflow de GitHub ejecuta esas mismas pruebas al abrir un pull request o al hacer push a `main`.
 
-## Estado de configuración externa
+La integración con SQL/SMTP remoto debe hacerse en un entorno de prueba aislado, con base, credenciales y buzón de prueba; no se ejecuta automáticamente para evitar modificar datos o enviar correos reales. Consulta el plan y el último reporte en `docs/PLAN_PRUEBAS.md` y `docs/REPORTE_DE_PRUEBAS.md`.
 
-El flujo de acceso y las preferencias se encuentran implementados en el proyecto. Antes de distribuirlo, configura el servidor de correo real y define el endpoint remoto futuro; estos datos no forman parte de este push. Revisa los pasos y límites conocidos en [`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md).
+## Publicación
+
+La compilación del Backend y el push a GitHub no publican automáticamente en MonsterASP. La publicación requiere ejecutar el perfil de Web Deploy de forma manual y configurar las variables del sitio. No publiques el perfil local `.pubxml.user`.

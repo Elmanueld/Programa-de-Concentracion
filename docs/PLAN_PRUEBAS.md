@@ -1,48 +1,43 @@
-# Plan de pruebas
+﻿# Plan de pruebas
 
-## Alcance
+## Alcance automático
 
-Valida acceso y contraseñas, verificación por correo, navegación WinForms, paginación de layouts, operaciones SQL y aislamiento entre cuentas. La integración solo se conecta a `(localdb)\Entregable3Pruebas` y usa cuentas aleatorias que limpia al terminar. Su copia SQLite usa un archivo temporal por ejecución.
+La suite cubre validación de contratos y reglas de registro, envío y confirmación de códigos, recuperación de contraseña y flujos de interfaz. Los servicios del Backend se prueban mediante repositorios y SMTP falsos; por tanto las pruebas son deterministas y no acceden a MonsterASP, bases remotas ni buzones reales.
 
-## Requisitos y preparación
+## Requisitos
 
-Windows x64, Visual Studio 2022, .NET Framework 4.8 Developer Pack y SQL Server Express LocalDB.
+- Windows 10/11 y Visual Studio 2022.
+- .NET Framework 4.8 Developer Pack para pruebas de WinForms.
+- .NET 9 SDK para Backend.Tests.
+- NuGet para restaurar dependencias.
 
-Desde PowerShell de Visual Studio, en la raíz del repositorio:
+No requiere SQL Server Express/LocalDB.
+
+## Ejecución
+
+Desde la raíz del repositorio:
 
 ```powershell
-msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release
+nuget restore src/CapaDatos/ProgramaConcentracion.sln -NonInteractive
+msbuild src/CapaDatos/ProgramaConcentracion.sln /restore /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU"
+msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release
 .\tests\bin\Release\Pruebas.exe
 .\tests\bin\Release\Pruebas.exe --interfaz
+dotnet run --project src/CapaDatos/Backend.Tests/Backend.Tests.csproj --configuration Release
 ```
 
-Para la primera integración, prepara la instancia dedicada una sola vez:
+## Casos Backend
 
-```powershell
-.\tests\PrepararPruebas.ps1
-.\tests\bin\Release\Pruebas.exe --integracion
-```
+- Normalización del correo y envío solo cuando el repositorio prepara una solicitud.
+- Código aleatorio de seis dígitos y persistencia del resumen, nunca del código en claro.
+- Confirmación del código y rechazo de códigos con formato inválido antes de acceder al repositorio.
+- Falta de `Verification__HashKey` y fallo SMTP no reportados como éxito.
+- Formato PBKDF2 requerido e idempotencia/conflicto del registro remoto.
+- Recuperación: cuenta no elegible no recibe correo; cambio de contraseña solo tras código válido.
+- Atributos de validación en parámetros primarios de records para email, código y hash.
 
-El preparador no borra ni sobrescribe una instancia/base existente. La suite verifica también que la conexión corresponde a `Entregable3Pruebas` antes de insertar datos. No cambies `tests/App.config` para apuntar a una base de usuario.
+## Límites y pruebas manuales pendientes
 
-## Cobertura
+Las pruebas automáticas no validan la conectividad del sitio MonsterASP, las credenciales SQL/SMTP reales, las migraciones en una base existente, ni el aislamiento entre dos usuarios en un servidor remoto. Para esas pruebas se necesita una instancia de staging y datos desechables. Nunca se debe apuntar la suite a producción.
 
-| Área | Casos cubiertos |
-| --- | --- |
-| Contraseñas y validación | PBKDF2, sal distinta, contraseña válida/inválida, hash malformado, campos y fechas inválidas. |
-| Cuenta y código | Lectura de login anterior/nuevo, registro, código aleatorio de seis dígitos, hash con sal, expiración, límite de reenvío/intentos, uso único y SMTP localhost de pruebas. |
-| Interfaz | Login, registro y verificación; campos de contraseña ocultos; navegación entre vistas; límites; barra de paginación, botones AntdUI no recortados, contador de páginas, encabezado fijado y nombres de tarjetas. |
-| Privacidad SQL | Dos usuarios con tareas, aplicaciones y webs de valores iguales; consultas aisladas; SQL rechaza modificación/eliminación cruzada. |
-| Reglas de tareas | Creación y edición propia; estados activo y completado impiden editar/borrar; tarea pendiente puede eliminarse; borrado inexistente informa error. |
-| Datos offline de prueba | SQLite temporal separado de `%LOCALAPPDATA%`; el test de integración no reemplaza la base offline real. |
-
-## Resultados ejecutados el 14 de noviembre de 2026
-
-| Ejecución | Resultado |
-| --- | --- |
-| Compilación Release de `tests/Pruebas.csproj` | Aprobada, 0 errores y 2 advertencias ya existentes en `Tipografia.cs` y `frmSeleccionarApp.Designer.cs`. |
-| Unitarias y componentes | 22 comprobaciones aprobadas. |
-| Interfaz (`--interfaz`) | 34 comprobaciones aprobadas: 22 base y 12 de interfaz. |
-| Integración LocalDB (`--integracion`) | 71 comprobaciones aprobadas: 22 base y 49 SQL. Incluye opciones de tarea y rechazo de relaciones con aplicaciones/webs de otro propietario. |
-
-Los logs completos y las imágenes resumen están en `tests/evidencias/`. Las pruebas automatizadas de interfaz no reemplazan una revisión visual manual en las pantallas del equipo destino. No se ha probado el envío a un buzón real.
+Las pruebas heredadas `--integracion` y `--correo-real` se retiraron porque dependían de SQL LocalDB y de una clase SMTP anterior a la API. Ya no son comandos soportados.

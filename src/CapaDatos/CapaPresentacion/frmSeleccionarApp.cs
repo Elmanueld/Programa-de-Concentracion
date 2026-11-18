@@ -40,6 +40,7 @@ namespace CapaPresentacion
             _timerBusqueda = new System.Windows.Forms.Timer();
             _estadoCarga = new IndicadorCarga();
             IconosGoogle.Aplicar(btnCerrar, "close");
+            btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             ControlesPresentacion.Optimizar(flApps);
             // El FlowLayoutPanel transparente no repinta bien el área que deja
             // libre al desplazarse sobre el panel redondeado de AntdUI.
@@ -117,8 +118,7 @@ namespace CapaPresentacion
                     if (!_estadoCarga.IsDisposed) _estadoCarga.Dispose();
                     if (error != null)
                     {
-                        MessageBox.Show(this, error.Message, "Error al buscar aplicaciones",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        OperacionUI.ReportarError(this, error, "No se pudieron buscar las aplicaciones");
                         return;
                     }
                     _appsInstaladas.AddRange(resultado ?? new List<E_Aplicacion>());
@@ -286,7 +286,7 @@ namespace CapaPresentacion
                 string ruta = dialogo.FileName;
                 if (ruta.Length > 255)
                 {
-                    MessageBox.Show(this, "La ruta supera los 255 caracteres permitidos para el identificador.");
+                    MessageBox.Show(this, "La ubicación de esta aplicación es demasiado larga. Elige otra aplicación o selecciona una ubicación más corta.");
                     return;
                 }
                 if (_appsManuales.Concat(_appsInstaladas).Any(a =>

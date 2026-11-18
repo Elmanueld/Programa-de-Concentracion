@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+.env*
+*.user
+*.publishSettings
+Properties/PublishProfiles/*.pubxml.user
+Properties/PublishProfiles/*.pubxml
+.dotnet-home/
+.nuget-packages/

@@ -32,7 +32,7 @@ namespace CapaPresentacion
             this.pnlPequenoLink = new AntdUI.Panel();
             this.lblPequenaLink = new System.Windows.Forms.Label();
             this.pnlLayoutSeleccionadas = new AntdUI.Panel();
-            this.flWebSeleccionadas = new BufferedFlowLayoutPanel();
+            this.flWebSeleccionadas = new CapaPresentacion.BufferedFlowLayoutPanel();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.btnCerrar = new AntdUI.Button();
             this.lblPanelTop = new System.Windows.Forms.Label();
@@ -42,18 +42,19 @@ namespace CapaPresentacion
             this.btnCancelar = new AntdUI.Button();
             this.btnAceptar = new AntdUI.Button();
             this.pnlLayoutBusqueda = new AntdUI.Panel();
-            this.flBusqueda = new BufferedFlowLayoutPanel();
+            this.flBusqueda = new CapaPresentacion.BufferedFlowLayoutPanel();
             this.pnlPequenoBuscar = new AntdUI.Panel();
             this.lblPequenaBuscar = new System.Windows.Forms.Label();
+            this.btnTopMinimizar = new AntdUI.Button();
             this.pnlPequenoLink.SuspendLayout();
             this.pnlLayoutSeleccionadas.SuspendLayout();
             this.pnlTop.SuspendLayout();
             this.pnlLayoutBusqueda.SuspendLayout();
             this.pnlPequenoBuscar.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // pnlPequenoLink
-            //
+            // 
             this.pnlPequenoLink.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlPequenoLink.BackColor = System.Drawing.Color.Transparent;
             this.pnlPequenoLink.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -64,9 +65,9 @@ namespace CapaPresentacion
             this.pnlPequenoLink.Radius = 15;
             this.pnlPequenoLink.Size = new System.Drawing.Size(170, 36);
             this.pnlPequenoLink.TabIndex = 95;
-            //
+            // 
             // lblPequenaLink
-            //
+            // 
             this.lblPequenaLink.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPequenaLink.ForeColor = System.Drawing.Color.White;
             this.lblPequenaLink.Location = new System.Drawing.Point(4, 4);
@@ -75,9 +76,9 @@ namespace CapaPresentacion
             this.lblPequenaLink.TabIndex = 2;
             this.lblPequenaLink.Text = "Insertar con link";
             this.lblPequenaLink.Click += new System.EventHandler(this.Label4_Click);
-            //
+            // 
             // pnlLayoutSeleccionadas
-            //
+            // 
             this.pnlLayoutSeleccionadas.Back = System.Drawing.Color.LightSteelBlue;
             this.pnlLayoutSeleccionadas.BackColor = System.Drawing.Color.Transparent;
             this.pnlLayoutSeleccionadas.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -89,21 +90,20 @@ namespace CapaPresentacion
             this.pnlLayoutSeleccionadas.Size = new System.Drawing.Size(552, 524);
             this.pnlLayoutSeleccionadas.TabIndex = 93;
             this.pnlLayoutSeleccionadas.Text = "panel1";
-            //
+            // 
             // flWebSeleccionadas
-            //
+            // 
             this.flWebSeleccionadas.AutoScroll = true;
             this.flWebSeleccionadas.BackColor = System.Drawing.Color.Transparent;
-            this.flWebSeleccionadas.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.flWebSeleccionadas.Location = new System.Drawing.Point(12, 12);
             this.flWebSeleccionadas.Name = "flWebSeleccionadas";
             this.flWebSeleccionadas.Size = new System.Drawing.Size(528, 504);
             this.flWebSeleccionadas.TabIndex = 4;
-            this.flWebSeleccionadas.WrapContents = true;
-            //
+            // 
             // pnlTop
-            //
+            // 
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
+            this.pnlTop.Controls.Add(this.btnTopMinimizar);
             this.pnlTop.Controls.Add(this.btnCerrar);
             this.pnlTop.Controls.Add(this.lblPanelTop);
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
@@ -111,9 +111,9 @@ namespace CapaPresentacion
             this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
             this.pnlTop.Size = new System.Drawing.Size(1380, 60);
             this.pnlTop.TabIndex = 71;
-            //
+            // 
             // btnCerrar
-            //
+            // 
             this.btnCerrar.BackActive = System.Drawing.Color.Transparent;
             this.btnCerrar.BackColor = System.Drawing.Color.Transparent;
             this.btnCerrar.BackHover = System.Drawing.Color.Transparent;
@@ -122,14 +122,14 @@ namespace CapaPresentacion
             this.btnCerrar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnCerrar.Icon = ((System.Drawing.Image)(resources.GetObject("btnCerrar.Icon")));
             this.btnCerrar.IconRatio = 2F;
-            this.btnCerrar.Location = new System.Drawing.Point(1296, 0);
+            this.btnCerrar.Location = new System.Drawing.Point(1308, 0);
             this.btnCerrar.Name = "btnCerrar";
             this.btnCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnCerrar.TabIndex = 72;
             this.btnCerrar.Click += new System.EventHandler(this.BtnCerrar_Click);
-            //
+            // 
             // lblPanelTop
-            //
+            // 
             this.lblPanelTop.BackColor = System.Drawing.Color.Transparent;
             this.lblPanelTop.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPanelTop.ForeColor = System.Drawing.Color.White;
@@ -139,27 +139,27 @@ namespace CapaPresentacion
             this.lblPanelTop.TabIndex = 7;
             this.lblPanelTop.Text = "Selector de páginas web";
             this.lblPanelTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // txtLink
-            //
+            // 
             this.txtLink.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.txtLink.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLink.Location = new System.Drawing.Point(972, 88);
             this.txtLink.Name = "txtLink";
             this.txtLink.Size = new System.Drawing.Size(324, 48);
             this.txtLink.TabIndex = 70;
-            //
+            // 
             // txtBuscar
-            //
+            // 
             this.txtBuscar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.txtBuscar.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtBuscar.Location = new System.Drawing.Point(228, 88);
             this.txtBuscar.Name = "txtBuscar";
             this.txtBuscar.Size = new System.Drawing.Size(336, 48);
             this.txtBuscar.TabIndex = 69;
-            //
+            // 
             // btnManual
-            //
+            // 
             this.btnManual.BorderWidth = 1F;
             this.btnManual.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.btnManual.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -172,9 +172,9 @@ namespace CapaPresentacion
             this.btnManual.Size = new System.Drawing.Size(48, 48);
             this.btnManual.TabIndex = 68;
             this.btnManual.Click += new System.EventHandler(this.btnAgregar_Click);
-            //
+            // 
             // btnCancelar
-            //
+            // 
             this.btnCancelar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnCancelar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnCancelar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -190,9 +190,9 @@ namespace CapaPresentacion
             this.btnCancelar.TabIndex = 67;
             this.btnCancelar.Text = "Cancelar";
             this.btnCancelar.Click += new System.EventHandler(this.btnCancelar_Click);
-            //
+            // 
             // btnAceptar
-            //
+            // 
             this.btnAceptar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnAceptar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnAceptar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -208,9 +208,9 @@ namespace CapaPresentacion
             this.btnAceptar.TabIndex = 66;
             this.btnAceptar.Text = "Aceptar";
             this.btnAceptar.Click += new System.EventHandler(this.btnAceptar_Click);
-            //
+            // 
             // pnlLayoutBusqueda
-            //
+            // 
             this.pnlLayoutBusqueda.Back = System.Drawing.Color.LightSteelBlue;
             this.pnlLayoutBusqueda.BackColor = System.Drawing.Color.Transparent;
             this.pnlLayoutBusqueda.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -222,20 +222,18 @@ namespace CapaPresentacion
             this.pnlLayoutBusqueda.Size = new System.Drawing.Size(768, 524);
             this.pnlLayoutBusqueda.TabIndex = 92;
             this.pnlLayoutBusqueda.Text = "pnlLista";
-            //
+            // 
             // flBusqueda
-            //
+            // 
             this.flBusqueda.AutoScroll = true;
             this.flBusqueda.BackColor = System.Drawing.Color.Transparent;
-            this.flBusqueda.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.flBusqueda.Location = new System.Drawing.Point(12, 12);
             this.flBusqueda.Name = "flBusqueda";
             this.flBusqueda.Size = new System.Drawing.Size(744, 504);
             this.flBusqueda.TabIndex = 5;
-            this.flBusqueda.WrapContents = true;
-            //
+            // 
             // pnlPequenoBuscar
-            //
+            // 
             this.pnlPequenoBuscar.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlPequenoBuscar.BackColor = System.Drawing.Color.Transparent;
             this.pnlPequenoBuscar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -247,9 +245,9 @@ namespace CapaPresentacion
             this.pnlPequenoBuscar.Size = new System.Drawing.Size(204, 36);
             this.pnlPequenoBuscar.TabIndex = 94;
             this.pnlPequenoBuscar.Text = "panel8";
-            //
+            // 
             // lblPequenaBuscar
-            //
+            // 
             this.lblPequenaBuscar.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPequenaBuscar.ForeColor = System.Drawing.Color.White;
             this.lblPequenaBuscar.Location = new System.Drawing.Point(4, 4);
@@ -257,9 +255,24 @@ namespace CapaPresentacion
             this.lblPequenaBuscar.Size = new System.Drawing.Size(204, 24);
             this.lblPequenaBuscar.TabIndex = 2;
             this.lblPequenaBuscar.Text = "Buscar por nombre";
-            //
+            // 
+            // btnTopMinimizar
+            // 
+            this.btnTopMinimizar.BackActive = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackColor = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackHover = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.DefaultBack = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTopMinimizar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnTopMinimizar.Icon = ((System.Drawing.Image)(resources.GetObject("btnTopMinimizar.Icon")));
+            this.btnTopMinimizar.IconRatio = 1.2F;
+            this.btnTopMinimizar.Location = new System.Drawing.Point(1236, 0);
+            this.btnTopMinimizar.Name = "btnTopMinimizar";
+            this.btnTopMinimizar.Size = new System.Drawing.Size(60, 60);
+            this.btnTopMinimizar.TabIndex = 80;
+            // 
             // frmSeleccionarWeb
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Lavender;
@@ -303,5 +316,6 @@ namespace CapaPresentacion
         private AntdUI.Panel pnlPequenoBuscar;
         private AntdUI.Panel pnlPequenoLink;
         private System.Windows.Forms.Label lblPequenaLink;
+        private AntdUI.Button btnTopMinimizar;
     }
 }

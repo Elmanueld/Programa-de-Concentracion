@@ -1,39 +1,20 @@
-# Configuración del correo (SMTP)
+# Configuración SMTP del Backend
 
-El programa envía el código de verificación con un servidor SMTP. Los datos del servidor se leen de variables de entorno (o de `App.config`), y **la contraseña solo se lee de la variable `PC_SMTPCLAVE`**. Nunca se escribe en el código ni en el repositorio.
+El correo de verificación y recuperación se envía desde `Backend` mediante `SmtpEmailSender`. Las opciones se leen con la configuración estándar de ASP.NET Core. En MonsterASP configura las variables en **Websites → sitio → Scripting → Environment variables** y reinicia el sitio.
 
-## Variables
+| Variable de entorno | Uso |
+|---|---|
+| `Smtp__Host` | Servidor SMTP. Namecheap Private Email: `mail.privateemail.com`. |
+| `Smtp__Port` | Puerto. `465` para TLS implícito; `587` para STARTTLS si el Backend se configura para ello. |
+| `Smtp__FromEmail` | Dirección remitente autorizada. |
+| `Smtp__FromName` | Nombre visible del remitente (opcional, configurado por defecto). |
+| `Smtp__Username` | Nombre de usuario del buzón. |
+| `Smtp__Password` | Contraseña del buzón. |
 
-| Variable | Ejemplo | Para qué sirve |
-|---|---|---|
-| `PC_SMTPHOST` | `mail.ejemplo.com` | Servidor SMTP |
-| `PC_SMTPPUERTO` | `587` | Puerto (STARTTLS) |
-| `PC_SMTPSSL` | `true` | Activa el cifrado |
-| `PC_SMTPUSUARIO` | `correo@ejemplo.com` | Usuario SMTP |
-| `PC_SMTPCLAVE` | *(contraseña de aplicación)* | Solo en variable de entorno |
-| `PC_SMTPREMITENTE` | `correo@ejemplo.com` | Dirección que envía el correo |
-| `PC_SMTPNOMBRE` | `Programa de Concentración` | Nombre del remitente (opcional) |
-| `PC_MODO_DEMOSTRACION` | `false` | Con `true` no se envía correo ni se verifica (por defecto es `false`) |
+Los nombres usan `__` para representar la separación de secciones de `IConfiguration`; las variables de entorno tienen prioridad sobre `appsettings.json`. El archivo versionado no contiene credenciales reales. No guardes la contraseña SMTP en el cliente WinForms, en el repositorio ni en artefactos de publicación.
 
-## Ejemplo en PowerShell (solo para la sesión actual)
+Para Private Email habilita el acceso de aplicaciones de terceros en la cuenta del buzón. Usa el puerto 465 con SSL/TLS implícito, que es la configuración actual del Backend. No cambies el puerto a 587 sin comprobar que el código/configuración SMTP usa STARTTLS.
 
-```powershell
-$env:PC_SMTPHOST = "mail.ejemplo.com"
-$env:PC_SMTPPUERTO = "587"
-$env:PC_SMTPSSL = "true"
-$env:PC_SMTPUSUARIO = "correo@ejemplo.com"
-$env:PC_SMTPREMITENTE = "correo@ejemplo.com"
-$env:PC_SMTPCLAVE = Read-Host "Contraseña SMTP"
-$env:PC_MODO_DEMOSTRACION = "false"
-```
+Las pruebas automatizadas usan un remitente falso y nunca contactan un servidor SMTP. Para probar el envío real utiliza un buzón de prueba y una cuenta no crítica; no ejecutes una prueba de correo real desde CI.
 
-Si el SMTP no está configurado, la aplicación sigue funcionando, avisa que el envío no está disponible y no verifica la cuenta automáticamente.
-
-## Prueba con el SMTP real en GitHub Actions
-
-En `Actions > Validar proyecto > Run workflow` se ejecuta el trabajo `correo-real`. Necesita dos secretos del repositorio: `PC_SMTPUSUARIO` (la cuenta que envía y recibe la prueba) y `PC_SMTPCLAVE` (la contraseña de aplicación). Envía un correo real y comprueba que una contraseña incorrecta sea rechazada. La recepción se confirma revisando el buzón.
-
-## Importante
-
-- Es una aplicación de escritorio: no distribuyas la contraseña SMTP junto con el ejecutable.
-- Para GitHub Actions, la contraseña debe guardarse como secreto del repositorio (`Settings > Secrets and variables > Actions`).
+La API registra fallos SMTP en los logs del Backend sin devolver trazas ni secretos al cliente. En MonsterASP consulta **Websites → sitio → Logs → ASP.NET Core debug**; activa temporalmente `Status: Enabled`, reproduce el problema y pulsa **Reload log**. Descarga el log si hace falta y después desactiva stdout para evitar consumo innecesario de disco. Los logs no deben contener la contraseña ni códigos de verificación.

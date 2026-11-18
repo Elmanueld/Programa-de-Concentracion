@@ -64,6 +64,7 @@ namespace CapaPresentacion
         public static Color PanelDia { get; private set; } = Color.White;
         public static Color TextoCabecera { get; private set; } = Color.White;
         public static Color BotonCerrar { get; private set; } = DefCabecera;
+        public static Color BotonMinimizar { get; private set; } = DefCabecera;
         public static Color BotonBorrar { get; private set; } = DefCabecera;
         public static Color BotonAgregarTarea { get; private set; } = Color.FromArgb(36, 116, 62);
         public static Color DiaNormal { get; private set; } = DefPrimario;
@@ -102,6 +103,7 @@ namespace CapaPresentacion
             PanelDia = Color.FromArgb(apariencia.PanelDia);
             TextoCabecera = Color.FromArgb(apariencia.TextoCabecera);
             BotonCerrar = Color.FromArgb(apariencia.BotonCerrar);
+            BotonMinimizar = Color.FromArgb(apariencia.BotonMinimizar);
             BotonBorrar = Color.FromArgb(apariencia.BotonBorrar);
             BotonAgregarTarea = Color.FromArgb(apariencia.BotonAgregarTarea);
             DiaNormal = Color.FromArgb(apariencia.DiaNormal);
@@ -137,6 +139,7 @@ namespace CapaPresentacion
                 actual.IconosTarjeta != baseDesigner.IconosTarjeta ||
                 actual.IconosPrincipal != baseDesigner.IconosPrincipal ||
                 actual.PanelDia != baseDesigner.PanelDia || actual.BotonCerrar != baseDesigner.BotonCerrar ||
+                actual.BotonMinimizar != baseDesigner.BotonMinimizar ||
                 actual.BotonBorrar != baseDesigner.BotonBorrar ||
                 actual.BotonAgregarTarea != baseDesigner.BotonAgregarTarea ||
                 actual.DiaNormal != baseDesigner.DiaNormal ||

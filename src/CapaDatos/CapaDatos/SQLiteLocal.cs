@@ -29,6 +29,11 @@ PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS UsuariosLocales(
   IdUsuario INTEGER PRIMARY KEY, Correo TEXT NOT NULL COLLATE NOCASE,
   Nombre TEXT NOT NULL, SyncUpdatedUtc TEXT NOT NULL, SyncDeleted INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS RegistrosPendientes(
+  IdUsuarioLocal INTEGER PRIMARY KEY, Correo TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  Nombre TEXT NOT NULL, HashProtegido TEXT NOT NULL, IdUsuarioRemoto INTEGER NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS IX_RegistrosPendientes_IdUsuarioRemoto
+  ON RegistrosPendientes(IdUsuarioRemoto) WHERE IdUsuarioRemoto IS NOT NULL;
 CREATE TABLE IF NOT EXISTS EstadoSincronizacion(
   IdUsuario INTEGER PRIMARY KEY, UltimaCopiaCompletaUtc TEXT, UltimaSincronizacionUtc TEXT,
   FOREIGN KEY(IdUsuario) REFERENCES UsuariosLocales(IdUsuario) ON DELETE CASCADE);
@@ -206,10 +211,15 @@ PRAGMA foreign_keys=ON;");
                     EjecutarInterno(conexion, "COMMIT;", null);
                     return resultado;
                 }
-                catch
+                catch (Exception errorOriginal)
                 {
                     try { EjecutarInterno(conexion, "ROLLBACK;", null); }
-                    catch { }
+                    catch (Exception errorReversion)
+                    {
+                        throw new AggregateException(
+                            "Falló la operación local y SQLite tampoco pudo confirmar su reversión.",
+                            errorOriginal, errorReversion);
+                    }
                     throw;
                 }
                 finally { conexionTransaccional = null; }

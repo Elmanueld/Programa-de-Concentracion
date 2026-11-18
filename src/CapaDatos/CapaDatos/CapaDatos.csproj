@@ -36,14 +36,17 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConexionDB.cs" />
+    <Compile Include="ClienteApiDatos.cs" />
     <Compile Include="SQLiteLocal.cs" />
     <Compile Include="D_Comun.cs" />
     <Compile Include="D_ExploradorAplicaciones.cs" />
     <Compile Include="D_Usuario.cs" />
+    <Compile Include="D_RegistroPendiente.cs" />
     <Compile Include="D_Tarea.cs" />
     <Compile Include="D_Descanso.cs" />
     <Compile Include="D_Configuracion.cs" />

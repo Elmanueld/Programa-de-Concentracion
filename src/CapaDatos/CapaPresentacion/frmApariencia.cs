@@ -15,7 +15,7 @@ namespace CapaPresentacion
 
         private enum RolColor
         {
-            FondoVentana, Cabecera, TextoCabecera, BotonCerrar, BotonBorrar, BotonAgregarTarea,
+            FondoVentana, Cabecera, TextoCabecera, BotonCerrar, BotonMinimizar, BotonBorrar, BotonAgregarTarea,
             TextoTarjetaEjemplo, TextoDescripcionTarjeta, IconosTarjeta, IconosPrincipal,
             Primario, FondoSubTarjeta, TarjetaOscura, SuperficieClara, PanelDia, Exito, BotonSumar, BotonRestar,
             DiaNormal, DiaSeleccionado, DiaActual, DiaFuera, SuperficieTarea,
@@ -56,7 +56,9 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(pbTargetaEjemplo, "font_download");
             IconosGoogle.Aplicar(pbSubTargetaEjemplo, "font_download");
             IconosGoogle.Aplicar(btnCerrar, "close");
+            IconosGoogle.Aplicar(btnTopMinimizar, "minimize");
             IconosGoogle.Aplicar(btnGuardar, "save");
+            btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             ArrastreFormulario.Habilitar(this, pnlTop);
             ConfigurarListasTransparentes();
             this.idUsuario = idUsuario;
@@ -81,7 +83,11 @@ namespace CapaPresentacion
         private static PreferenciasApariencia CargarApariencia(int idUsuario)
         {
             try { return AparienciaUsuarioApp.Cargar(idUsuario); }
-            catch { return new PreferenciasApariencia(); }
+            catch (Exception ex)
+            {
+                OperacionUI.ReportarError(null, ex, "No se pudo cargar la apariencia");
+                return new PreferenciasApariencia();
+            }
         }
 
 
@@ -113,6 +119,16 @@ namespace CapaPresentacion
         private void RegistrarCursorYSeleccionColor(Control control)
         {
             if (control == pnlEditor) return;
+            if (control == btnTopMinimizar)
+            {
+                control.Cursor = Cursors.Hand;
+                control.MouseDown += (s, e) =>
+                {
+                    if (e.Button == MouseButtons.Right)
+                        ControlVistaPrevia_Click(s, EventArgs.Empty);
+                };
+                return;
+            }
             control.Cursor = Cursors.Cross;
             control.Click += ControlVistaPrevia_Click;
             foreach (Control hijo in control.Controls)
@@ -204,6 +220,7 @@ namespace CapaPresentacion
             string nombre = control.Name ?? String.Empty;
             if (nombre == "pnlTop") return RolColor.Cabecera;
             if (nombre == "btnCerrar") return RolColor.BotonCerrar;
+            if (nombre == "btnTopMinimizar") return RolColor.BotonMinimizar;
             if (nombre == "btnCancelar") return RolColor.Primario;
             if (nombre == "btnBorrar" || nombre == "btnQuitar") return RolColor.BotonBorrar;
             if (nombre == "btnSumar" || nombre.StartsWith("btnSumar", StringComparison.Ordinal))
@@ -243,6 +260,7 @@ namespace CapaPresentacion
                 case RolColor.Cabecera: return Color.FromArgb(preferencias.Cabecera);
                 case RolColor.TextoCabecera: return Color.FromArgb(preferencias.TextoCabecera);
                 case RolColor.BotonCerrar: return Color.FromArgb(preferencias.BotonCerrar);
+                case RolColor.BotonMinimizar: return Color.FromArgb(preferencias.BotonMinimizar);
                 case RolColor.BotonBorrar: return Color.FromArgb(preferencias.BotonBorrar);
                 case RolColor.BotonAgregarTarea: return Color.FromArgb(preferencias.BotonAgregarTarea);
                 case RolColor.TextoTarjetaEjemplo: return Color.FromArgb(preferencias.TextoTarjetaEjemplo);
@@ -277,6 +295,7 @@ namespace CapaPresentacion
                 case RolColor.Cabecera: preferencias.Cabecera = color.ToArgb(); break;
                 case RolColor.TextoCabecera: preferencias.TextoCabecera = color.ToArgb(); break;
                 case RolColor.BotonCerrar: preferencias.BotonCerrar = color.ToArgb(); break;
+                case RolColor.BotonMinimizar: preferencias.BotonMinimizar = color.ToArgb(); break;
                 case RolColor.BotonBorrar: preferencias.BotonBorrar = color.ToArgb(); break;
                 case RolColor.BotonAgregarTarea: preferencias.BotonAgregarTarea = color.ToArgb(); break;
                 case RolColor.TextoTarjetaEjemplo: preferencias.TextoTarjetaEjemplo = color.ToArgb(); break;
@@ -342,6 +361,7 @@ namespace CapaPresentacion
             AplicarBotonPrevia(btnSumar, Color.FromArgb(preferencias.BotonSumar));
             AplicarBotonPrevia(btnRestar, Color.FromArgb(preferencias.BotonRestar));
             AplicarBotonPrevia(btnCerrar, Color.FromArgb(preferencias.BotonCerrar));
+            AplicarBotonPrevia(btnTopMinimizar, Color.FromArgb(preferencias.BotonMinimizar));
             AplicarBotonPrevia(btnAgregarTarea, Color.FromArgb(preferencias.BotonAgregarTarea));
             AplicarBotonPrevia(btnEjemplo, Color.FromArgb(preferencias.Primario));
             ActualizarListasTransparentes();
@@ -608,8 +628,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "No se pudo guardar la apariencia: " + ex.Message,
-                    "Apariencia", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo guardar la apariencia");
             }
         }
 
@@ -664,6 +683,7 @@ namespace CapaPresentacion
                 a.SuperficieClara == b.SuperficieClara && a.SuperficieTarea == b.SuperficieTarea &&
                 a.BotonSumar == b.BotonSumar && a.BotonRestar == b.BotonRestar &&
                 a.Exito == b.Exito && a.BotonCerrar == b.BotonCerrar &&
+                a.BotonMinimizar == b.BotonMinimizar &&
                 a.BotonBorrar == b.BotonBorrar && a.BotonAgregarTarea == b.BotonAgregarTarea &&
                 a.PanelDia == b.PanelDia && a.DiaNormal == b.DiaNormal &&
                 a.DiaSeleccionado == b.DiaSeleccionado && a.DiaActual == b.DiaActual &&

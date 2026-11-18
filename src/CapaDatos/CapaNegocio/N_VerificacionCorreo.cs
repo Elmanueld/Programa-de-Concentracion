@@ -1,69 +1,92 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
+using System.Net.Http;
+using System.Threading.Tasks;
 using CapaDatos;
 
 namespace CapaNegocio
 {
     public class N_VerificacionCorreo
     {
-        private readonly D_VerificacionCorreo datos = new D_VerificacionCorreo();
+        private readonly N_Usuario usuarios = new N_Usuario();
 
         public bool EstaConfigurado()
         {
-            return CorreoVerificacion.EstaConfigurado();
+            return ClienteApiVerificacion.EstaConfigurado();
         }
 
-        public void SolicitarCodigo(string correo)
+        public Exception SolicitarCodigo(string correo)
         {
-            correo = (correo ?? "").Trim();
-            N_Usuario.ValidarCorreo(correo);
-            CorreoVerificacion.ValidarConfiguracion();
-            string codigo = CrearCodigo();
-            byte[] bytes = new byte[16];
-            using (var generador = RandomNumberGenerator.Create()) generador.GetBytes(bytes);
-            string sal = Convert.ToBase64String(bytes);
-            if (datos.Preparar(correo, sal, CalcularHash(sal, codigo)))
-                CorreoVerificacion.Enviar(correo, codigo);
-        }
+            bool hayRegistroLocal = false;
+            int? idRegistroLocal = null;
 
-        public void ConfirmarCodigo(string correo, string codigo)
-        {
-            correo = (correo ?? "").Trim();
-            N_Usuario.ValidarCorreo(correo);
-            codigo = (codigo ?? "").Trim();
-            if (codigo.Length != 6)
-                throw new ArgumentException("Introduzca el código de seis dígitos.");
-            foreach (char digito in codigo)
-                if (digito < '0' || digito > '9')
-                    throw new ArgumentException("El código debe contener solo números.");
-            string sal = datos.ConsultarSal(correo);
-            if (String.IsNullOrEmpty(sal) || !datos.Confirmar(correo, CalcularHash(sal, codigo)))
-                throw new ArgumentException("Código incorrecto, vencido o bloqueado. Solicite uno nuevo.");
-        }
-
-        internal static string CrearCodigo()
-        {
-            byte[] bytes = new byte[4];
-            uint numero;
-            using (var generador = RandomNumberGenerator.Create())
+            try
             {
-                do
-                {
-                    generador.GetBytes(bytes);
-                    numero = BitConverter.ToUInt32(bytes, 0);
-                } while (numero >= UInt32.MaxValue - UInt32.MaxValue % 1000000);
+                correo = (correo ?? "").Trim();
+                N_Usuario.ValidarCorreo(correo);
+                hayRegistroLocal = usuarios.HayRegistroPendiente(correo);
+                idRegistroLocal = usuarios.PrepararRegistroRemoto(correo);
+                ClienteApiVerificacion.SolicitarCodigo(correo);
+                if (idRegistroLocal.HasValue)
+                    usuarios.CompletarRegistroRemoto(idRegistroLocal.Value);
+                return null;
             }
-            return (numero % 1000000).ToString("D6");
-        }
-
-        internal static string CalcularHash(string sal, string codigo)
-        {
-            using (var sha = SHA256.Create())
+            catch (HttpRequestException ex)
             {
-                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(sal + ":" + codigo));
-                return BitConverter.ToString(hash).Replace("-", "");
+                return ErrorConexionPendiente(hayRegistroLocal, ex);
+            }
+            catch (ApiVerificacionException ex)
+            {
+                if (hayRegistroLocal && ((int)ex.StatusCode == 429 || (int)ex.StatusCode >= 500))
+                    return new RegistroRemotoPendienteException("El registro local sigue pendiente. " + ex.Message, ex);
+                if (hayRegistroLocal)
+                    return new InvalidOperationException("El registro local sigue pendiente. " + ex.Message, ex);
+                return ex;
+            }
+            catch (TaskCanceledException ex)
+            {
+                return ErrorConexionPendiente(hayRegistroLocal, ex);
+            }
+            catch (Exception ex)
+            {
+                return ex;
             }
         }
+
+        public Exception ConfirmarCodigo(string correo, string codigo)
+        {
+            try
+            {
+                correo = (correo ?? "").Trim();
+                N_Usuario.ValidarCorreo(correo);
+                codigo = (codigo ?? "").Trim();
+                if (codigo.Length != 6)
+                    return new ArgumentException("Introduzca el código de seis dígitos.");
+                foreach (char digito in codigo)
+                    if (digito < '0' || digito > '9')
+                        return new ArgumentException("El código debe contener solo números.");
+
+                ClienteApiVerificacion.ConfirmarCodigo(correo, codigo);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        private static Exception ErrorConexionPendiente(bool hayRegistroLocal, Exception causa)
+        {
+            if (hayRegistroLocal)
+                return new RegistroRemotoPendienteException(
+                    "El registro quedó guardado en SQLite y pendiente de conexión.", causa);
+            return new InvalidOperationException(
+                "No se pudo conectar con el servicio de verificación. Comprueba Internet e inténtalo de nuevo.", causa);
+        }
+
+    }
+
+    public sealed class RegistroRemotoPendienteException : InvalidOperationException
+    {
+        public RegistroRemotoPendienteException(string mensaje, Exception causa) : base(mensaje, causa) { }
     }
 }

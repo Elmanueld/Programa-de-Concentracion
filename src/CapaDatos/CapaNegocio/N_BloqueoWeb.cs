@@ -26,7 +26,7 @@ namespace CapaNegocio
         private string _ultimaFirma;
         private string _ultimoError;
 
-        public event Action<string> ErrorAplicandoBloqueo;
+        public event Action<Exception, string> ErrorAplicandoBloqueo;
 
         private N_BloqueoWeb()
         {
@@ -120,16 +120,8 @@ namespace CapaNegocio
             catch (Exception ex)
             {
                 Trace.TraceError("Error en el bloqueo de webs WFP: " + ex);
-                if (!String.Equals(_ultimoError, ex.Message, StringComparison.Ordinal))
-                {
-                    _ultimoError = ex.Message;
-                    Action<string> manejador = ErrorAplicandoBloqueo;
-                    if (manejador != null)
-                    {
-                        try { manejador(ex.Message); }
-                        catch (Exception eventError) { Trace.TraceWarning("No se pudo avisar el error del proxy: " + eventError.Message); }
-                    }
-                }
+                Exception errorNotificado = ex;
+                string contexto = "Se intentó activar la regla de cierre seguro para evitar un acceso sin filtrar.";
                 try
                 {
                     if (_idUsuario > 0)
@@ -138,7 +130,11 @@ namespace CapaNegocio
                 catch (Exception errorFiltro)
                 {
                     Trace.TraceError("Tampoco se pudo dejar cerrado el acceso web: " + errorFiltro);
+                    errorNotificado = new AggregateException(
+                        "Falló el filtro web y tampoco se pudo activar la regla de cierre seguro.", ex, errorFiltro);
+                    contexto = "No se pudo confirmar que el bloqueo web siga activo. Evita depender de este filtro hasta corregir el error.";
                 }
+                NotificarError(errorNotificado, contexto);
             }
             finally
             {
@@ -156,12 +152,29 @@ namespace CapaNegocio
                     if (_disposed || _idUsuario != idUsuario) return;
                     _reglas = nuevas;
                     _proximaRecarga = ahora.AddSeconds(IntervaloRecargaSegundos);
+                    _ultimoError = null;
                 }
             }
             catch (Exception ex)
             {
                 Trace.TraceError("No se pudo cargar la programación web: " + ex);
+                NotificarError(ex,
+                    "Se conserva la última programación válida y el filtro volverá a intentar cargar las reglas.");
                 lock (_sync) _proximaRecarga = ahora.AddSeconds(10);
+            }
+        }
+
+        private void NotificarError(Exception error, string contexto)
+        {
+            string clave = error.GetType().FullName + "|" + error.Message;
+            if (String.Equals(_ultimoError, clave, StringComparison.Ordinal)) return;
+            _ultimoError = clave;
+            Action<Exception, string> manejador = ErrorAplicandoBloqueo;
+            if (manejador == null) return;
+            try { manejador(error, contexto); }
+            catch (Exception eventError)
+            {
+                Trace.TraceWarning("No se pudo avisar el error del filtro web: " + eventError.GetType().Name);
             }
         }
 

@@ -118,6 +118,14 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnTopMinimizar.Icon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAABGdBTUEAALGPC/xhBQAAAGxJREFUaEPt
+        0b0NgzAQgFFGoYgMTXagOPZywhZZFiooDBKIkJ/iPemTLLs4nVxVAAAAAAAAAMDHtF2ub5G7s9Ubd2Vt
+        PO/l3MuleOQmhnGvNJ/79dteKYZXOfdyRxd5p79aZPmRE31lEYCfmgA2GLFdIG2V+gAAAABJRU5ErkJg
+        gg==
+</value>
+  </data>
   <data name="btnCerrar.Icon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAABGdBTUEAALGPC/xhBQAAAY1JREFUaEPt

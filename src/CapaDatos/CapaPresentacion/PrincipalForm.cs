@@ -41,6 +41,11 @@ namespace CapaPresentacion
         private readonly System.Windows.Forms.Timer timerAvisosTarea;
         private readonly HashSet<string> avisosTareaEmitidos = new HashSet<string>(StringComparer.Ordinal);
         private int sincronizacionEnCurso;
+        private bool errorSincronizacionNotificado;
+        private bool errorCopiaLocalNotificado;
+        private bool errorPreferenciasNotificado;
+        private bool errorPreferenciaGuardadaNotificado;
+        private bool errorEstadoTareaNotificado;
         private readonly N_SincronizacionOffline sincronizacion;
 
         public PrincipalForm() : this(null)
@@ -78,17 +83,27 @@ namespace CapaPresentacion
             FormClosing += (s, e) =>
             {
                 bloqueadorWeb.ErrorAplicandoBloqueo -= BloqueadorWeb_ErrorAplicandoBloqueo;
+                bloqueador.ErrorSupervisor -= Bloqueador_ErrorSupervisor;
+                N_SincronizacionOffline.ErrorAlActualizarCopiaLocal -= Sincronizacion_ErrorAlActualizarCopiaLocal;
                 bloqueadorWeb.Detener();
                 bloqueador.Detener();
                 timerSincronizacion.Stop();
                 timerSincronizacion.Dispose();
                 timerAvisosTarea.Stop();
                 timerAvisosTarea.Dispose();
-                PreferenciasUsuario prefsAlCerrar = ObtenerPreferencias();
-                if (String.Equals(prefsAlCerrar.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase) && diaSeleccionado != null)
+                if (!Program.CierreControladoPorErrorCritico)
                 {
-                    prefsAlCerrar.UltimaFechaSeleccionada = diaSeleccionado.Fecha.Date;
-                    try { PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, prefsAlCerrar); } catch { }
+                    PreferenciasUsuario prefsAlCerrar = ObtenerPreferencias();
+                    if (String.Equals(prefsAlCerrar.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase) && diaSeleccionado != null)
+                    {
+                        prefsAlCerrar.UltimaFechaSeleccionada = diaSeleccionado.Fecha.Date;
+                        try { PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, prefsAlCerrar); }
+                        catch (Exception ex)
+                        {
+                            OperacionUI.ReportarError(null, ex, "No se pudo guardar la última pantalla",
+                                "La aplicación se cerrará; la próxima vez se abrirá la pantalla guardada anteriormente.", true);
+                        }
+                    }
                 }
                 iconoNotificacion.Visible = false;
                 iconoNotificacion.Dispose();
@@ -114,6 +129,8 @@ namespace CapaPresentacion
             TemaAplicacion.EstablecerModoOscuro(preferenciasIniciales.ModoOscuro);
             bloqueador.AplicacionBloqueada +=
                 Bloqueador_AplicacionBloqueada;
+            bloqueador.ErrorSupervisor += Bloqueador_ErrorSupervisor;
+            N_SincronizacionOffline.ErrorAlActualizarCopiaLocal += Sincronizacion_ErrorAlActualizarCopiaLocal;
             bloqueador.DescansoIniciado +=
                 Bloqueador_DescansoIniciado;
             bloqueadorWeb.ErrorAplicandoBloqueo += BloqueadorWeb_ErrorAplicandoBloqueo;
@@ -265,6 +282,7 @@ namespace CapaPresentacion
             if (tareasCache == null) return;
             DateTime ahora = DateTime.Now;
             bool huboCambios = false;
+            bool errorEnCiclo = false;
             foreach (E_Tarea tarea in tareasCache.ToArray())
             {
                 if (tarea == null || tarea.EsPlantilla || tarea.Estado == 'C' || tarea.Estado == 'X')
@@ -284,13 +302,23 @@ namespace CapaPresentacion
                         huboCambios = true;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // El ciclo siguiente reintenta si la base está temporalmente inaccesible.
+                    errorEnCiclo = true;
+                    if (!errorEstadoTareaNotificado)
+                    {
+                        OperacionUI.ReportarError(this, ex, "No se pudo actualizar el estado de una tarea",
+                            "La tarea permanece en su estado guardado. El supervisor volverá a intentarlo.", true);
+                        errorEstadoTareaNotificado = true;
+                    }
                 }
             }
 
-            if (!huboCambios) return;
+            if (!huboCambios)
+            {
+                if (!errorEnCiclo) errorEstadoTareaNotificado = false;
+                return;
+            }
             DateTime fecha = diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha;
             try
             {
@@ -299,10 +327,17 @@ namespace CapaPresentacion
                 bloqueador.ActualizarProgramacion();
                 bloqueadorWeb.ActualizarProgramacion();
             }
-            catch
+            catch (Exception ex)
             {
-                // La actualización visual se reintentará en el siguiente ciclo.
+                errorEnCiclo = true;
+                if (!errorEstadoTareaNotificado)
+                {
+                    OperacionUI.ReportarError(this, ex, "No se pudo actualizar la vista de tareas",
+                        "Los cambios ya guardados se conservan. La pantalla se actualizará en el siguiente ciclo.", true);
+                    errorEstadoTareaNotificado = true;
+                }
             }
+            if (!errorEnCiclo) errorEstadoTareaNotificado = false;
         }
 
         private void CargarCalendario()
@@ -420,12 +455,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    this,
-                    ex.Message,
-                    "No se pudo borrar la tarea",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo borrar la tarea");
             }
         }
 
@@ -453,17 +483,37 @@ namespace CapaPresentacion
                     return;
 
                 bool sincronizada = await Task.Run(() => sincronizacion.Sincronizar(usuario.IdUsuario));
-                if (!sincronizada || IsDisposed || Disposing) return;
+                if (IsDisposed || Disposing) return;
+                if (!sincronizada)
+                {
+                    if (!errorSincronizacionNotificado)
+                    {
+                        OperacionUI.ReportarError(this,
+                            new InvalidOperationException("No hay conexión con el servicio en línea."),
+                            "Cambios pendientes de enviar",
+                            "Los cambios siguen guardados en este equipo. Se enviarán automáticamente cuando vuelva la conexión.",
+                            true);
+                        errorSincronizacionNotificado = true;
+                    }
+                    return;
+                }
+                errorSincronizacionNotificado = false;
+                errorCopiaLocalNotificado = false;
                 DateTime fecha = diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha;
                 tareasCache = null;
                 ActualizarCalendarioYDia(fecha);
                 bloqueador.ActualizarProgramacion();
                 bloqueadorWeb.ActualizarProgramacion();
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallos transitorios se guardan en SyncOutbox y se reintentan
-                // en el siguiente ciclo, sin bloquear la pantalla de tareas.
+                if (!IsDisposed && !Disposing && !errorSincronizacionNotificado)
+                {
+                    OperacionUI.ReportarError(this, ex, "No se pudieron enviar los cambios",
+                        "Los cambios pendientes se conservan en este equipo y se enviarán automáticamente cuando vuelva la conexión.",
+                        true);
+                    errorSincronizacionNotificado = true;
+                }
             }
             finally { Interlocked.Exchange(ref sincronizacionEnCurso, 0); }
         }
@@ -538,8 +588,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "No se pudo detener la tarea",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo detener la tarea");
             }
         }
 
@@ -561,8 +610,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "No se pudo editar la tarea",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo editar la tarea");
             }
         }
 
@@ -578,8 +626,20 @@ namespace CapaPresentacion
             if (String.Equals(preferencias.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase))
             {
                 preferencias.UltimaFechaSeleccionada = dia.Fecha.Date;
-                try { PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, preferencias); }
-                catch { /* La selección del calendario sigue funcionando aunque falle el guardado local. */ }
+                try
+                {
+                    PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, preferencias);
+                    errorPreferenciaGuardadaNotificado = false;
+                }
+                catch (Exception ex)
+                {
+                    if (!errorPreferenciaGuardadaNotificado)
+                    {
+                        OperacionUI.ReportarError(this, ex, "No se pudo guardar la fecha de inicio",
+                            "La selección actual del calendario se mantiene, pero no se recordará al volver a abrir la aplicación.", true);
+                        errorPreferenciaGuardadaNotificado = true;
+                    }
+                }
             }
 
             CargarTareasDelDia(dia.Fecha);
@@ -699,14 +759,13 @@ namespace CapaPresentacion
             try { new N_Usuario().CerrarSesion(usuario.IdUsuario); }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "No se pudo actualizar el inicio automático: " + ex.Message,
-                    "Cerrar sesión", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                OperacionUI.ReportarError(this, ex, "No se pudo actualizar el inicio automático");
             }
             DialogResult = DialogResult.Retry;
             Close();
         }
 
-        private void BloqueadorWeb_ErrorAplicandoBloqueo(string mensaje)
+        private void BloqueadorWeb_ErrorAplicandoBloqueo(Exception error, string contexto)
         {
             if (IsDisposed || !IsHandleCreated) return;
             try
@@ -714,10 +773,51 @@ namespace CapaPresentacion
                 BeginInvoke(new Action(() =>
                 {
                     if (!IsDisposed)
-                        MessageBox.Show(this, mensaje, "No se pudo aplicar el bloqueo web", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        OperacionUI.ReportarError(this, error, "No se pudo aplicar el bloqueo web",
+                            contexto + " Revisa el filtro web y vuelve a intentarlo.", true);
                 }));
             }
-            catch (InvalidOperationException) { }
+            catch (InvalidOperationException ex)
+            {
+                ErroresAplicacion.Registrar(ex, "Notificar error del filtro web tras cerrar la ventana");
+            }
+        }
+
+        private void Bloqueador_ErrorSupervisor(Exception error)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (!IsDisposed)
+                        OperacionUI.ReportarError(this, error, "No se pudo actualizar el bloqueo de aplicaciones",
+                            "Se conserva la última programación válida y el supervisor volverá a intentarlo.", true);
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ErroresAplicacion.Registrar(ex, "Notificar error del supervisor tras cerrar la ventana");
+            }
+        }
+
+        private void Sincronizacion_ErrorAlActualizarCopiaLocal(Exception error)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (IsDisposed || errorCopiaLocalNotificado) return;
+                    OperacionUI.ReportarError(this, error, "La copia local no se actualizó",
+                        "El cambio sí se guardó en tu cuenta, pero la información de este equipo quedó desactualizada. Se actualizará de nuevo; no repitas el cambio.", true);
+                    errorCopiaLocalNotificado = true;
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ErroresAplicacion.Registrar(ex, "Notificar error al actualizar copia local tras cerrar la ventana");
+            }
         }
 
         private void Bloqueador_DescansoIniciado(
@@ -793,8 +893,22 @@ namespace CapaPresentacion
 
         private PreferenciasUsuario ObtenerPreferencias()
         {
-            try { return PreferenciasUsuarioApp.Cargar(usuario.IdUsuario); }
-            catch { return new PreferenciasUsuario(); }
+            try
+            {
+                PreferenciasUsuario resultado = PreferenciasUsuarioApp.Cargar(usuario.IdUsuario);
+                errorPreferenciasNotificado = false;
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                if (!errorPreferenciasNotificado)
+                {
+                    OperacionUI.ReportarError(this, ex, "No se pudieron cargar las preferencias",
+                        "Se usarán temporalmente las opciones predeterminadas y se conservarán los datos almacenados.", true);
+                    errorPreferenciasNotificado = true;
+                }
+                return new PreferenciasUsuario();
+            }
         }
 
         private void Label8_Click(object sender, EventArgs e)

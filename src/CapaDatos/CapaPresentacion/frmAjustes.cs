@@ -41,6 +41,7 @@ namespace CapaPresentacion
             btnGuardar.Click += BtnGuardar_Click;
             btnCancelar.Click += BtnCancelar_Click;
             btnCerrar.Click += (s, e) => Close();
+            btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             btnSumar.Click += (s, e) => AjustarMinutos(5);
             btnRestar.Click += (s, e) => AjustarMinutos(-5);
             btnPlantilla.Click += BtnPlantilla_Click;
@@ -95,8 +96,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "No se pudieron cargar los ajustes: " + ex.Message,
-                    "Ajustes", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudieron cargar los ajustes");
             }
         }
 
@@ -139,8 +139,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "No se pudieron guardar los ajustes: " + ex.Message,
-                    "Ajustes", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudieron guardar los ajustes");
             }
         }
 
@@ -169,7 +168,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Plantilla de tareas", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo abrir la plantilla de tareas");
             }
         }
 
@@ -190,10 +189,11 @@ namespace CapaPresentacion
                 negocioUsuario.ModificarUsuario(actualizado);
                 usuario.Nombre = actualizado.Nombre;
                 usuario.Correo = actualizado.Correo;
+                MostrarAdvertenciaCacheLocal("El cambio de cuenta se guardó, pero la copia de este equipo quedó desactualizada. Conéctate a Internet antes de usar esta cuenta sin conexión.");
                 MessageBox.Show(this, nombre ? "Nombre actualizado." : "Correo actualizado. Debes verificar el nuevo correo para volver a iniciar sesión.",
                     "Cuenta", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Cuenta", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { OperacionUI.ReportarError(this, ex, "No se pudo actualizar la cuenta"); }
         }
 
         // Comprueba la contraseña actual con el inicio de sesión y avisa si falla
@@ -202,20 +202,19 @@ namespace CapaPresentacion
             try
             {
                 negocioUsuario.IniciarSesion(usuario.Correo, actual);
+                MostrarAdvertenciaCacheLocal("La contraseña se comprobó correctamente, pero no se pudo actualizar la información guardada en este equipo.");
                 return true;
             }
             catch (ArgumentException ex)
             {
-                string mensaje = ex.Message.StartsWith("Credenciales incorrectas",
-                    StringComparison.OrdinalIgnoreCase)
+                string mensaje = ex.Message.StartsWith("Credenciales incorrectas", StringComparison.OrdinalIgnoreCase)
                     ? "La contraseña actual no es correcta."
                     : ex.Message;
-                MessageBox.Show(this, mensaje, titulo, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                OperacionUI.ReportarError(this, new ArgumentException(mensaje), titulo);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "No se pudo verificar la contraseña actual: " + ex.Message,
-                    titulo, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo verificar la contraseña actual");
             }
             return false;
         }
@@ -236,10 +235,11 @@ namespace CapaPresentacion
             {
                 if (nueva.Length < 8) throw new ArgumentException("La contraseña debe tener al menos 8 caracteres.");
                 if (nueva != confirmacion) throw new ArgumentException("Las contraseñas nuevas no coinciden.");
-                negocioUsuario.CambiarContrasena(usuario.IdUsuario, SeguridadContrasena.CrearHash(nueva));
+                negocioUsuario.CambiarContrasena(usuario.IdUsuario, SeguridadContrasena.CrearHash(nueva), nueva);
+                MostrarAdvertenciaCacheLocal("La contraseña nueva se guardó en tu cuenta, pero no se actualizó la copia de este equipo. Conéctate a Internet antes de intentar entrar sin conexión.");
                 MessageBox.Show(this, "Contraseña actualizada.", "Cuenta", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Cambiar contraseña", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { OperacionUI.ReportarError(this, ex, "No se pudo cambiar la contraseña"); }
         }
 
         private void BtnEliminarCuenta_Click(object sender, EventArgs e)
@@ -253,10 +253,18 @@ namespace CapaPresentacion
             {
                 negocioUsuario.IniciarSesion(usuario.Correo, contrasena);
                 negocioUsuario.EliminarUsuario(usuario.IdUsuario);
+                MostrarAdvertenciaCacheLocal("La cuenta se eliminó, pero Windows no pudo borrar los datos de acceso guardados en este equipo. Si el inicio automático falla, inicia sesión manualmente.");
                 DialogResult = DialogResult.Abort;
                 Close();
             }
-            catch (Exception ex) { MessageBox.Show(this, ex.Message, "No se pudo eliminar la cuenta", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { OperacionUI.ReportarError(this, ex, "No se pudo eliminar la cuenta"); }
+        }
+
+        private void MostrarAdvertenciaCacheLocal(string contexto)
+        {
+            if (negocioUsuario.AdvertenciaCacheLocal == null) return;
+            OperacionUI.ReportarError(this, negocioUsuario.AdvertenciaCacheLocal,
+                "Los cambios se guardaron con una advertencia", contexto, true);
         }
 
         private void BtnCambiarFoto_Click(object sender, EventArgs e)

@@ -24,6 +24,7 @@ namespace CapaNegocio
         AplicacionBloqueada;
         public event EventHandler<DescansoIniciadoEventArgs>
         DescansoIniciado;
+        public event Action<Exception> ErrorSupervisor;
 
         private const int IntervaloRevisionProcesosMs = 2000;
         private const int IntervaloRecargaProgramacionSegundos = 30;
@@ -264,6 +265,7 @@ namespace CapaNegocio
             {
                 // Un fallo del supervisor no debe cerrar la aplicación WinForms.
                 Trace.TraceError("Error en el bloqueo de aplicaciones: " + ex);
+                NotificarErrorSupervisor(ex);
             }
             finally
             {
@@ -286,18 +288,33 @@ namespace CapaNegocio
                     _programacion = nueva;
                     _proximaRecarga = ahora.AddSeconds(
                         IntervaloRecargaProgramacionSegundos);
+                    _ultimoErrorSupervisor = null;
                 }
             }
             catch (Exception ex)
             {
                 // Conserva la última programación válida y reintenta pronto.
                 Trace.TraceError("No se pudo recargar la programación: " + ex);
+                NotificarErrorSupervisor(ex);
 
                 lock (_sincronizacion)
                 {
                     _proximaRecarga = ahora.AddSeconds(10);
                 }
             }
+        }
+
+        private string _ultimoErrorSupervisor;
+
+        private void NotificarErrorSupervisor(Exception error)
+        {
+            string clave = error.GetType().FullName + "|" + error.Message;
+            if (String.Equals(_ultimoErrorSupervisor, clave, StringComparison.Ordinal)) return;
+            _ultimoErrorSupervisor = clave;
+            Action<Exception> manejador = ErrorSupervisor;
+            if (manejador == null) return;
+            try { manejador(error); }
+            catch (Exception ex) { Trace.TraceWarning("No se pudo notificar un error del supervisor: " + ex.GetType().Name); }
         }
 
         private static Programacion CargarProgramacion(int idUsuario)

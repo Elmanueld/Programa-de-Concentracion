@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using CapaDatos;
 using CapaEntidades;
 
@@ -12,8 +13,10 @@ namespace CapaNegocio
     public class N_Usuario
     {
         private readonly D_Usuario Datos = new D_Usuario();
+        private readonly D_RegistroPendiente RegistrosPendientes = new D_RegistroPendiente();
         private int intentosFallidos;
         private DateTime bloqueadoHasta = DateTime.MinValue;
+        public Exception AdvertenciaCacheLocal { get; private set; }
 
         public static bool ModoDemostracion
         {
@@ -26,16 +29,51 @@ namespace CapaNegocio
             }
         }
 
+        public static bool ConexionRemotaConfigurada
+        {
+            get { return EstadoApiRemota.EstaConfigurado; }
+        }
+
+        public E_Usuario IniciarSesionOffline(string correo, string contrasena)
+        {
+            correo = (correo ?? "").Trim();
+            ValidarCorreo(correo);
+            E_Usuario usuario = CredencialOfflineLocal.IniciarSesion(correo, contrasena);
+            if (usuario == null || !D_SincronizacionOffline.TieneCopiaCompleta(usuario.IdUsuario))
+                return null;
+
+            D_SincronizacionOffline.ActivarModoOffline(usuario.IdUsuario);
+            usuario.SesionSinConexion = true;
+            usuario.ContrasenaHash = null;
+            return usuario;
+        }
+
         public void RegistrarUsuario(string nombre, string correo, string contrasena)
         {
             var usuario = new E_Usuario { Nombre = (nombre ?? "").Trim(), Correo = (correo ?? "").Trim() };
             ValidarDatosUsuario(usuario, false);
-            usuario.ContrasenaHash = SeguridadContrasena.CrearHash(contrasena);
-            Datos.RegistrarUsuario(usuario);
+            if (ModoDemostracion)
+            {
+                usuario.ContrasenaHash = SeguridadContrasena.CrearHash(contrasena);
+                Datos.RegistrarUsuario(usuario);
+                return;
+            }
+
+            var pendiente = RegistrosPendientes.BuscarPorCorreo(usuario.Correo);
+            if (pendiente != null)
+            {
+                string hashGuardado = DesprotegerHash(pendiente.HashProtegido);
+                if (SeguridadContrasena.Verificar(contrasena, hashGuardado)) return;
+                throw new InvalidOperationException("Ya existe un registro local pendiente con ese correo.");
+            }
+
+            string hash = SeguridadContrasena.CrearHash(contrasena);
+            RegistrosPendientes.Crear(usuario.Correo, usuario.Nombre, ProtegerHash(hash));
         }
 
         public E_Usuario IniciarSesion(string correo, string contrasena)
         {
+            AdvertenciaCacheLocal = null;
             if (DateTime.UtcNow < bloqueadoHasta)
                 throw new ArgumentException("Demasiados intentos. Espere 30 segundos.");
             correo = (correo ?? "").Trim();
@@ -43,11 +81,10 @@ namespace CapaNegocio
             E_Usuario usuario;
             try
             {
-                usuario = Datos.IniciarSesion(correo, ModoDemostracion);
+                usuario = Datos.IniciarSesion(correo, contrasena);
             }
-            catch (SqlException ex)
+            catch (ApiRemotaNoDisponibleException ex)
             {
-                if (!EsFalloDeConexion(ex)) throw;
                 usuario = CredencialOfflineLocal.IniciarSesion(correo, contrasena);
                 if (usuario != null && D_SincronizacionOffline.TieneCopiaCompleta(usuario.IdUsuario))
                 {
@@ -55,9 +92,19 @@ namespace CapaNegocio
                     return usuario;
                 }
                 throw new InvalidOperationException(
-                    "No hay conexión con la base de datos y este equipo no tiene una copia offline completa de la cuenta.", ex);
+                    "No se pudo conectar con tu cuenta en línea y este equipo no tiene información suficiente para entrar sin conexión. Comprueba Internet e inténtalo de nuevo.", ex);
             }
-            if (usuario == null || !SeguridadContrasena.Verificar(contrasena, usuario.ContrasenaHash))
+            catch (ApiDatosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                intentosFallidos++;
+                if (intentosFallidos >= 5)
+                {
+                    bloqueadoHasta = DateTime.UtcNow.AddSeconds(30);
+                    intentosFallidos = 0;
+                }
+                throw new ArgumentException("Credenciales incorrectas o cuenta pendiente de verificación.");
+            }
+            if (usuario == null)
             {
                 intentosFallidos++;
                 if (intentosFallidos >= 5)
@@ -70,9 +117,8 @@ namespace CapaNegocio
             if (String.IsNullOrEmpty(usuario.Nombre))
             {
                 try { usuario.Nombre = Datos.BuscarNombreUsuario(usuario.IdUsuario); }
-                catch (SqlException ex)
+                catch (ApiRemotaNoDisponibleException)
                 {
-                    if (!EsFalloDeConexion(ex)) throw;
                     usuario.Nombre = String.Empty;
                 }
             }
@@ -83,108 +129,164 @@ namespace CapaNegocio
                 new D_SincronizacionOffline().CapturarCopiaCompleta(
                     usuario.IdUsuario, usuario.Correo, usuario.Nombre);
             }
-            catch (SqlException) { }
-            catch (InvalidOperationException) { }
+            catch (ApiRemotaNoDisponibleException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (SqlException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (InvalidOperationException ex) { AgregarAdvertenciaCacheLocal(ex); }
             try { new D_ProcesadorSincronizacionOffline().Sincronizar(usuario.IdUsuario); }
-            catch (SqlException) { }
-            catch (InvalidOperationException) { }
-            try { CredencialOfflineLocal.Guardar(usuario, usuario.ContrasenaHash); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-            catch (CryptographicException) { }
+            catch (ApiRemotaNoDisponibleException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (SqlException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (InvalidOperationException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            try { CredencialOfflineLocal.Guardar(usuario, SeguridadContrasena.CrearHash(contrasena), contrasena); }
+            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (CryptographicException ex) { AgregarAdvertenciaCacheLocal(ex); }
             usuario.ContrasenaHash = null;
             return usuario;
         }
 
         public E_Usuario IniciarSesionAutomatico()
         {
-            string hashGuardado;
-            E_Usuario cuenta = CredencialOfflineLocal.ObtenerSesionRecordada(out hashGuardado);
-            if (cuenta == null || String.IsNullOrWhiteSpace(hashGuardado)) return null;
+            string contrasena;
+            E_Usuario cuenta = CredencialOfflineLocal.ObtenerSesionRecordada(out contrasena);
+            if (cuenta == null) return null;
             if (CredencialOfflineLocal.InicioAutomaticoDeshabilitado(cuenta.IdUsuario)) return null;
-
-            E_Configuracion configuracion;
+            if (!ConexionRemotaConfigurada)
+                return ObtenerSesionAutomaticaOffline(cuenta);
+            if (String.IsNullOrEmpty(contrasena))
+                return ObtenerSesionAutomaticaOffline(cuenta);
             try
             {
-                configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
-            }
-            catch (SqlException ex)
-            {
-                if (!EsFalloDeConexion(ex) || !D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
-                D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
-                configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
-            }
-            if (configuracion == null || !configuracion.AutoSesion) return null;
-
-            try
-            {
-                E_Usuario remoto = Datos.IniciarSesion(cuenta.Correo, ModoDemostracion);
-                if (remoto == null || remoto.IdUsuario != cuenta.IdUsuario ||
-                    !String.Equals(remoto.ContrasenaHash, hashGuardado, StringComparison.Ordinal)) return null;
+                E_Usuario remoto = Datos.IniciarSesion(cuenta.Correo, contrasena);
+                if (remoto == null || remoto.IdUsuario != cuenta.IdUsuario)
+                {
+                    Datos.CerrarSesionRemota();
+                    return null;
+                }
+                E_Configuracion configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+                if (configuracion == null || !configuracion.AutoSesion)
+                {
+                    Datos.CerrarSesionRemota();
+                    return null;
+                }
                 remoto.Nombre = String.IsNullOrEmpty(remoto.Nombre) ? cuenta.Nombre : remoto.Nombre;
                 remoto.ContrasenaHash = null;
                 D_SincronizacionOffline.ActivarModoOnline();
                 return remoto;
             }
-            catch (SqlException ex)
+            catch (ApiDatosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                if (!EsFalloDeConexion(ex) || !D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
-                D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
-                E_Configuracion local = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
-                if (local == null || !local.AutoSesion) return null;
-                cuenta.SesionSinConexion = true;
-                return cuenta;
+                CredencialOfflineLocal.DeshabilitarInicioAutomatico(cuenta.IdUsuario);
+                throw new InvalidOperationException(
+                    "No se pudo iniciar sesión automáticamente. Inicia sesión con tu correo y contraseña para actualizar el acceso.", ex);
             }
+            catch (ApiRemotaNoDisponibleException)
+            {
+                return ObtenerSesionAutomaticaOffline(cuenta);
+            }
+            finally { contrasena = null; }
+        }
+
+        private static E_Usuario ObtenerSesionAutomaticaOffline(E_Usuario cuenta)
+        {
+            if (!D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
+            D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
+            E_Configuracion local = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+            if (local == null || !local.AutoSesion) return null;
+            cuenta.SesionSinConexion = true;
+            return cuenta;
         }
 
         public void CerrarSesion(int idUsuario)
         {
             ValidarId(idUsuario);
             CredencialOfflineLocal.DeshabilitarInicioAutomatico(idUsuario);
-        }
-
-        private static bool EsFalloDeConexion(SqlException excepcion)
-        {
-            foreach (SqlError error in excepcion.Errors)
-            {
-                switch (error.Number)
-                {
-                    case -2: case 2: case 53: case 64: case 121: case 233:
-                    case 258: case 10053: case 10054: case 10060: case 11001:
-                    case 4060:
-                    // Azure SQL: base pausada, ocupada o con el firewall cerrado
-                    case 40613: case 40197: case 40501: case 40615:
-                    case 49918: case 49919: case 49920:
-                        return true;
-                }
-            }
-            return false;
+            Datos.CerrarSesionRemota();
         }
 
         public void RegistrarUsuario(E_Usuario usuario)
         {
             ValidarDatosUsuario(usuario, true);
-            Datos.RegistrarUsuario(usuario);
+            var pendiente = RegistrosPendientes.BuscarPorCorreo(usuario.Correo);
+            if (pendiente != null)
+            {
+                string hashGuardado = DesprotegerHash(pendiente.HashProtegido);
+                if (String.Equals(usuario.ContrasenaHash, hashGuardado, StringComparison.Ordinal)) return;
+                throw new InvalidOperationException("Ya existe un registro local pendiente con ese correo.");
+            }
+
+            RegistrosPendientes.Crear(usuario.Correo, usuario.Nombre, ProtegerHash(usuario.ContrasenaHash));
+        }
+
+        public bool HayRegistroPendiente(string correo)
+        {
+            return RegistrosPendientes.BuscarPorCorreo((correo ?? "").Trim()) != null;
+        }
+
+        internal int? PrepararRegistroRemoto(string correo)
+        {
+            correo = (correo ?? "").Trim();
+            ValidarCorreo(correo);
+            RegistroPendiente pendiente = RegistrosPendientes.BuscarPorCorreo(correo);
+            if (pendiente == null) return null;
+
+            int idRemoto = pendiente.IdUsuarioRemoto ?? ClienteApiVerificacion.RegistrarCuenta(
+                pendiente.Nombre, pendiente.Correo, DesprotegerHash(pendiente.HashProtegido));
+            if (!pendiente.IdUsuarioRemoto.HasValue)
+                RegistrosPendientes.AsociarUsuarioRemoto(pendiente.IdUsuarioLocal, idRemoto);
+
+            return pendiente.IdUsuarioLocal;
+        }
+
+        internal void CompletarRegistroRemoto(int idUsuarioLocal)
+        {
+            RegistrosPendientes.Eliminar(idUsuarioLocal);
+        }
+
+        private static string ProtegerHash(string hash)
+        {
+            byte[] contenido = Encoding.UTF8.GetBytes(hash);
+            try
+            {
+                return Convert.ToBase64String(ProtectedData.Protect(
+                    contenido, null, DataProtectionScope.CurrentUser));
+            }
+            finally { Array.Clear(contenido, 0, contenido.Length); }
+        }
+
+        private static string DesprotegerHash(string hashProtegido)
+        {
+            if (String.IsNullOrWhiteSpace(hashProtegido))
+                throw new InvalidOperationException("El registro local protegido no está disponible en esta sesión de Windows.");
+            byte[] protegido = Convert.FromBase64String(hashProtegido);
+            byte[] contenido = ProtectedData.Unprotect(protegido, null, DataProtectionScope.CurrentUser);
+            try { return Encoding.UTF8.GetString(contenido); }
+            finally
+            {
+                Array.Clear(protegido, 0, protegido.Length);
+                Array.Clear(contenido, 0, contenido.Length);
+            }
         }
 
         public void ModificarUsuario(E_Usuario usuario)
         {
+            AdvertenciaCacheLocal = null;
             ValidarId(usuario == null ? 0 : usuario.IdUsuario);
             ValidarDatosUsuario(usuario, false);
             Datos.ModificarUsuario(usuario);
             try { CredencialOfflineLocal.ActualizarCuenta(usuario); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-            catch (CryptographicException) { }
+            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (CryptographicException ex) { AgregarAdvertenciaCacheLocal(ex); }
         }
 
         public void EliminarUsuario(int idUsuario)
         {
+            AdvertenciaCacheLocal = null;
             ValidarId(idUsuario);
             Datos.EliminarUsuario(idUsuario);
             try { CredencialOfflineLocal.Eliminar(idUsuario); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
         }
 
         public void VerificarCorreo(int idUsuario)
@@ -193,15 +295,16 @@ namespace CapaNegocio
             Datos.VerificarCorreo(idUsuario);
         }
 
-        public void CambiarContrasena(int idUsuario, string contrasenaHashNueva)
+        public void CambiarContrasena(int idUsuario, string contrasenaHashNueva, string contrasenaNueva)
         {
+            AdvertenciaCacheLocal = null;
             ValidarId(idUsuario);
             ValidarHash(contrasenaHashNueva);
             Datos.CambiarContrasena(idUsuario, contrasenaHashNueva);
-            try { CredencialOfflineLocal.ActualizarContrasena(idUsuario, contrasenaHashNueva); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-            catch (CryptographicException) { }
+            try { CredencialOfflineLocal.ActualizarContrasena(idUsuario, contrasenaHashNueva, contrasenaNueva); }
+            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (CryptographicException ex) { AgregarAdvertenciaCacheLocal(ex); }
         }
 
         public void RecuperarCuenta(int idUsuario)
@@ -246,6 +349,14 @@ namespace CapaNegocio
                 throw new ArgumentException("Debe proporcionar el hash de la contraseña.");
             if (hash.Length > 255)
                 throw new ArgumentException("El hash no puede exceder 255 caracteres.");
+        }
+
+        private void AgregarAdvertenciaCacheLocal(Exception error)
+        {
+            AdvertenciaCacheLocal = AdvertenciaCacheLocal == null
+                ? error
+                : new AggregateException("Fallaron varias actualizaciones de la copia local.",
+                    AdvertenciaCacheLocal, error);
         }
 
         private static void ValidarId(int id)

@@ -23,6 +23,7 @@ namespace CapaPresentacion
                     BotonSumar = Color.FromArgb(89, 133, 225).ToArgb(),
                     BotonRestar = Color.FromArgb(71, 104, 180).ToArgb(),
                     BotonCerrar = Color.FromArgb(89, 133, 225).ToArgb(),
+                    BotonMinimizar = Color.FromArgb(71, 104, 180).ToArgb(),
                     DiaNormal = Color.FromArgb(75, 119, 209).ToArgb(),
                     DiaActual = Color.FromArgb(22, 119, 255).ToArgb()
                 };
@@ -53,6 +54,7 @@ namespace CapaPresentacion
         public int BotonRestar { get; set; } = Color.FromArgb(71, 104, 180).ToArgb();
         public int Exito { get; set; } = Color.FromArgb(36, 116, 62).ToArgb();
         public int BotonCerrar { get; set; } = Color.FromArgb(71, 104, 180).ToArgb();
+        public int BotonMinimizar { get; set; } = Color.FromArgb(71, 104, 180).ToArgb();
         public int BotonBorrar { get; set; } = Color.FromArgb(71, 104, 180).ToArgb();
         public int BotonAgregarTarea { get; set; } = Color.FromArgb(36, 116, 62).ToArgb();
         public int PanelDia { get; set; } = Color.White.ToArgb();
@@ -91,6 +93,7 @@ namespace CapaPresentacion
                 BotonRestar = BotonRestar,
                 Exito = Exito,
                 BotonCerrar = BotonCerrar,
+                BotonMinimizar = BotonMinimizar,
                 BotonBorrar = BotonBorrar,
                 BotonAgregarTarea = BotonAgregarTarea,
                 PanelDia = PanelDia,

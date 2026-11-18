@@ -28,48 +28,41 @@ namespace CapaDatos
 
         public static void Ejecutar(string procedimiento, Action<SqlCommand> agregarParametros)
         {
-            using (SqlConnection conexion = ConexionDB.Instancia.CrearConexion())
-            using (SqlCommand comando = CrearComando(conexion, procedimiento))
+            using (SqlCommand comando = CrearComando(procedimiento))
             {
                 if (agregarParametros != null) agregarParametros(comando);
-                conexion.Open();
-                comando.ExecuteNonQuery();
+                ClienteApiDatos.Ejecutar(procedimiento, comando);
             }
         }
 
         public static object Escalar(string procedimiento, Action<SqlCommand> agregarParametros)
         {
-            using (SqlConnection conexion = ConexionDB.Instancia.CrearConexion())
-            using (SqlCommand comando = CrearComando(conexion, procedimiento))
+            using (SqlCommand comando = CrearComando(procedimiento))
             {
                 if (agregarParametros != null) agregarParametros(comando);
-                conexion.Open();
-                return comando.ExecuteScalar();
+                return ClienteApiDatos.Escalar(procedimiento, comando);
             }
         }
 
         public static List<T> Consultar<T>(
             string procedimiento,
             Action<SqlCommand> agregarParametros,
-            Func<SqlDataReader, T> mapear)
+            Func<IDataRecord, T> mapear)
         {
-            List<T> resultados = new List<T>();
-            using (SqlConnection conexion = ConexionDB.Instancia.CrearConexion())
-            using (SqlCommand comando = CrearComando(conexion, procedimiento))
+            using (SqlCommand comando = CrearComando(procedimiento))
             {
                 if (agregarParametros != null) agregarParametros(comando);
-                conexion.Open();
-                using (SqlDataReader lector = comando.ExecuteReader())
-                {
+                var tabla = ClienteApiDatos.Consultar(procedimiento, comando);
+                var resultados = new List<T>();
+                using (var lector = tabla.CreateDataReader())
                     while (lector.Read()) resultados.Add(mapear(lector));
-                }
+                return resultados;
             }
-            return resultados;
         }
 
-        private static SqlCommand CrearComando(SqlConnection conexion, string procedimiento)
+        private static SqlCommand CrearComando(string procedimiento)
         {
-            SqlCommand comando = conexion.CreateCommand();
+            SqlCommand comando = new SqlCommand();
             comando.CommandText = procedimiento;
             comando.CommandType = CommandType.StoredProcedure;
             return comando;
@@ -107,29 +100,29 @@ namespace CapaDatos
             comando.Parameters.Add(nombre, SqlDbType.Char, 1).Value = valor;
         }
 
-        public static int LeerEntero(SqlDataReader lector, string columna)
+        public static int LeerEntero(IDataRecord lector, string columna)
         {
             return Convert.ToInt32(lector[columna]);
         }
 
-        public static bool LeerBooleano(SqlDataReader lector, string columna)
+        public static bool LeerBooleano(IDataRecord lector, string columna)
         {
             return Convert.ToBoolean(lector[columna]);
         }
 
-        public static DateTime LeerFecha(SqlDataReader lector, string columna)
+        public static DateTime LeerFecha(IDataRecord lector, string columna)
         {
             return Convert.ToDateTime(lector[columna]);
         }
 
-        public static string LeerTexto(SqlDataReader lector, string columna)
+        public static string LeerTexto(IDataRecord lector, string columna)
         {
             return lector.IsDBNull(lector.GetOrdinal(columna))
                 ? null
                 : Convert.ToString(lector[columna]);
         }
 
-        public static char LeerCaracter(SqlDataReader lector, string columna)
+        public static char LeerCaracter(IDataRecord lector, string columna)
         {
             string valor = Convert.ToString(lector[columna]);
             return String.IsNullOrEmpty(valor) ? '\0' : valor[0];

@@ -379,6 +379,7 @@ namespace CapaPresentacion
             string nombre = control.Name ?? String.Empty;
             if (nombre == "btnEliminarCuenta") return null;
             if (nombre == "btnCerrar") return PaletaAplicacion.BotonCerrar;
+            if (nombre == "btnTopMinimizar") return PaletaAplicacion.BotonMinimizar;
             if (nombre == "btnCancelar") return PaletaAplicacion.AzulPrimario;
             if (nombre == "btnBorrar" || nombre == "btnQuitar")
                 return PaletaAplicacion.BotonBorrar;

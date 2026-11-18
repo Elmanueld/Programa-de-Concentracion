@@ -13,7 +13,7 @@ namespace CapaNegocio
     /// </summary>
     internal static class CredencialOfflineLocal
     {
-        private const int VersionFormato = 1;
+        private const int VersionFormato = 2;
         private static readonly object Sincronizador = new object();
 
         private sealed class Registro
@@ -22,6 +22,7 @@ namespace CapaNegocio
             public string Nombre;
             public string Correo;
             public string HashContrasena;
+            public string ContrasenaProtegida;
         }
 
         private static string RutaArchivo
@@ -44,11 +45,11 @@ namespace CapaNegocio
             return Path.Combine(carpeta, "sin-auto-inicio-" + idUsuario + ".flag");
         }
 
-        public static void Guardar(E_Usuario usuario, string hashContrasena)
+        public static void Guardar(E_Usuario usuario, string hashContrasena, string contrasena)
         {
             if (usuario == null) throw new ArgumentNullException("usuario");
             if (usuario.IdUsuario <= 0 || String.IsNullOrWhiteSpace(usuario.Correo) ||
-                String.IsNullOrWhiteSpace(hashContrasena))
+                String.IsNullOrWhiteSpace(hashContrasena) || String.IsNullOrEmpty(contrasena))
                 throw new ArgumentException("No se puede guardar una credencial local incompleta.");
 
             lock (Sincronizador)
@@ -60,7 +61,8 @@ namespace CapaNegocio
                     IdUsuario = usuario.IdUsuario,
                     Nombre = usuario.Nombre ?? String.Empty,
                     Correo = usuario.Correo.Trim(),
-                    HashContrasena = hashContrasena
+                    HashContrasena = hashContrasena,
+                    ContrasenaProtegida = ProtegerContrasena(contrasena)
                 };
 
                 byte[] claro = Serializar(registro);
@@ -103,14 +105,14 @@ namespace CapaNegocio
             }
         }
 
-        public static E_Usuario ObtenerSesionRecordada(out string hashContrasena)
+        public static E_Usuario ObtenerSesionRecordada(out string contrasena)
         {
-            hashContrasena = null;
+            contrasena = null;
             lock (Sincronizador)
             {
                 Registro registro = Cargar();
                 if (registro == null) return null;
-                hashContrasena = registro.HashContrasena;
+                contrasena = DesprotegerContrasena(registro.ContrasenaProtegida);
                 return new E_Usuario
                 {
                     IdUsuario = registro.IdUsuario,
@@ -155,14 +157,15 @@ namespace CapaNegocio
             }
         }
 
-        public static void ActualizarContrasena(int idUsuario, string hashContrasena)
+        public static void ActualizarContrasena(int idUsuario, string hashContrasena, string contrasena)
         {
-            if (idUsuario <= 0 || String.IsNullOrWhiteSpace(hashContrasena)) return;
+            if (idUsuario <= 0 || String.IsNullOrWhiteSpace(hashContrasena) || String.IsNullOrEmpty(contrasena)) return;
             lock (Sincronizador)
             {
                 Registro registro = Cargar();
                 if (registro == null || registro.IdUsuario != idUsuario) return;
                 registro.HashContrasena = hashContrasena;
+                registro.ContrasenaProtegida = ProtegerContrasena(contrasena);
                 GuardarRegistro(registro);
             }
         }
@@ -243,6 +246,7 @@ namespace CapaNegocio
                 escritor.Write(registro.Nombre ?? String.Empty);
                 escritor.Write(registro.Correo ?? String.Empty);
                 escritor.Write(registro.HashContrasena ?? String.Empty);
+                escritor.Write(registro.ContrasenaProtegida ?? String.Empty);
                 escritor.Flush();
                 return memoria.ToArray();
             }
@@ -253,19 +257,57 @@ namespace CapaNegocio
             using (var memoria = new MemoryStream(datos, false))
             using (var lector = new BinaryReader(memoria, Encoding.UTF8, true))
             {
-                if (lector.ReadInt32() != VersionFormato) throw new InvalidDataException();
+                int version = lector.ReadInt32();
+                if (version != 1 && version != VersionFormato) throw new InvalidDataException();
                 var registro = new Registro
                 {
                     IdUsuario = lector.ReadInt32(),
                     Nombre = lector.ReadString(),
                     Correo = lector.ReadString(),
-                    HashContrasena = lector.ReadString()
+                    HashContrasena = lector.ReadString(),
+                    ContrasenaProtegida = version >= 2 ? lector.ReadString() : null
                 };
                 if (memoria.Position != memoria.Length || registro.IdUsuario <= 0 ||
                     String.IsNullOrWhiteSpace(registro.Correo) ||
                     String.IsNullOrWhiteSpace(registro.HashContrasena))
                     throw new InvalidDataException();
                 return registro;
+            }
+        }
+
+        private static string ProtegerContrasena(string contrasena)
+        {
+            byte[] clara = Encoding.UTF8.GetBytes(contrasena);
+            byte[] protegida = null;
+            try
+            {
+                protegida = ProtectedData.Protect(clara, null, DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(protegida);
+            }
+            finally
+            {
+                Array.Clear(clara, 0, clara.Length);
+                if (protegida != null) Array.Clear(protegida, 0, protegida.Length);
+            }
+        }
+
+        private static string DesprotegerContrasena(string contrasenaProtegida)
+        {
+            if (String.IsNullOrWhiteSpace(contrasenaProtegida)) return null;
+            byte[] protegida = null;
+            byte[] clara = null;
+            try
+            {
+                protegida = Convert.FromBase64String(contrasenaProtegida);
+                clara = ProtectedData.Unprotect(protegida, null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(clara);
+            }
+            catch (FormatException) { return null; }
+            catch (CryptographicException) { return null; }
+            finally
+            {
+                if (protegida != null) Array.Clear(protegida, 0, protegida.Length);
+                if (clara != null) Array.Clear(clara, 0, clara.Length);
             }
         }
     }

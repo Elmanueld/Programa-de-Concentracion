@@ -37,6 +37,7 @@ namespace CapaPresentacion
             _timerBusqueda = new System.Windows.Forms.Timer();
             IconosGoogle.Aplicar(btnManual, "add_link");
             IconosGoogle.Aplicar(btnCerrar, "close");
+            btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             ControlesPresentacion.Optimizar(flBusqueda);
             ControlesPresentacion.Optimizar(flWebSeleccionadas);
             ArrastreFormulario.Habilitar(this, pnlTop);
@@ -81,12 +82,7 @@ namespace CapaPresentacion
             {
                 if (IsDisposed) return;
                 MostrarResultados(new E_Web[0]);
-                MessageBox.Show(
-                    this,
-                    "No se pudo cargar el catálogo de webs: " + ex.Message,
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                OperacionUI.ReportarError(this, ex, "No se pudo cargar el catálogo de webs");
             }
         }
         private void txtBuscar_TextChanged(object sender, EventArgs e)
@@ -239,11 +235,13 @@ namespace CapaPresentacion
                     return;
 
                 System.Diagnostics.Trace.TraceWarning(
-                    "Falló la búsqueda web externa: " + ex);
+                    "Falló la búsqueda en Internet: " + ex);
+
+                OperacionUI.ReportarError(this, ex, "No se pudo consultar el buscador web");
 
                 MostrarMensajeBusqueda(
-                    "No se pudo consultar el buscador web. Las tarjetas visibles " +
-                    "son coincidencias guardadas en la base de datos.");
+                    "No se pudo buscar en Internet. Las páginas visibles " +
+                    "son coincidencias guardadas en tu cuenta.");
             }
         }
 

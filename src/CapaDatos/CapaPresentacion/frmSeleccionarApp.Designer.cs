@@ -38,24 +38,26 @@ namespace CapaPresentacion
             this.btnManual = new AntdUI.Button();
             this.chkAppsAbiertas = new System.Windows.Forms.CheckBox();
             this.pnlLayoutApp = new AntdUI.Panel();
-            this.flApps = new BufferedFlowLayoutPanel();
+            this.flApps = new CapaPresentacion.BufferedFlowLayoutPanel();
+            this.btnTopMinimizar = new AntdUI.Button();
             this.pnlTop.SuspendLayout();
             this.pnlLayoutApp.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // txtBuscar
-            //
+            // 
             this.txtBuscar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.txtBuscar.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtBuscar.Location = new System.Drawing.Point(732, 72);
             this.txtBuscar.Name = "txtBuscar";
             this.txtBuscar.Size = new System.Drawing.Size(372, 48);
             this.txtBuscar.TabIndex = 73;
-            //
+            // 
             // pnlTop
-            //
+            // 
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlTop.Controls.Add(this.btnTopMinimizar);
             this.pnlTop.Controls.Add(this.btnCerrar);
             this.pnlTop.Controls.Add(this.lblPanelTop);
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
@@ -63,9 +65,9 @@ namespace CapaPresentacion
             this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
             this.pnlTop.Size = new System.Drawing.Size(1200, 60);
             this.pnlTop.TabIndex = 72;
-            //
+            // 
             // btnCerrar
-            //
+            // 
             this.btnCerrar.BackActive = System.Drawing.Color.Transparent;
             this.btnCerrar.BackColor = System.Drawing.Color.Transparent;
             this.btnCerrar.BackHover = System.Drawing.Color.Transparent;
@@ -79,9 +81,9 @@ namespace CapaPresentacion
             this.btnCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnCerrar.TabIndex = 72;
             this.btnCerrar.Click += new System.EventHandler(this.BtnCerrar_Click);
-            //
+            // 
             // lblPanelTop
-            //
+            // 
             this.lblPanelTop.BackColor = System.Drawing.Color.Transparent;
             this.lblPanelTop.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPanelTop.ForeColor = System.Drawing.Color.White;
@@ -91,9 +93,9 @@ namespace CapaPresentacion
             this.lblPanelTop.TabIndex = 7;
             this.lblPanelTop.Text = "Selector de aplicaciones";
             this.lblPanelTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // btnCancelar
-            //
+            // 
             this.btnCancelar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnCancelar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnCancelar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -108,9 +110,9 @@ namespace CapaPresentacion
             this.btnCancelar.Size = new System.Drawing.Size(156, 48);
             this.btnCancelar.TabIndex = 65;
             this.btnCancelar.Text = "Cancelar";
-            //
+            // 
             // btnAceptar
-            //
+            // 
             this.btnAceptar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnAceptar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnAceptar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -125,9 +127,9 @@ namespace CapaPresentacion
             this.btnAceptar.Size = new System.Drawing.Size(156, 48);
             this.btnAceptar.TabIndex = 64;
             this.btnAceptar.Text = "Aceptar";
-            //
+            // 
             // btnManual
-            //
+            // 
             this.btnManual.BorderWidth = 1F;
             this.btnManual.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.btnManual.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -139,9 +141,9 @@ namespace CapaPresentacion
             this.btnManual.TabIndex = 34;
             this.btnManual.Text = "Agregar Manualmente";
             this.btnManual.Click += new System.EventHandler(this.btnManual_Click);
-            //
+            // 
             // chkAppsAbiertas
-            //
+            // 
             this.chkAppsAbiertas.AutoSize = true;
             this.chkAppsAbiertas.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkAppsAbiertas.Location = new System.Drawing.Point(492, 84);
@@ -150,9 +152,9 @@ namespace CapaPresentacion
             this.chkAppsAbiertas.TabIndex = 6;
             this.chkAppsAbiertas.Text = "Mostrar solo apps abiertas";
             this.chkAppsAbiertas.UseVisualStyleBackColor = true;
-            //
+            // 
             // pnlLayoutApp
-            //
+            // 
             this.pnlLayoutApp.Back = System.Drawing.Color.LightSteelBlue;
             this.pnlLayoutApp.BackColor = System.Drawing.Color.Transparent;
             this.pnlLayoutApp.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -164,20 +166,33 @@ namespace CapaPresentacion
             this.pnlLayoutApp.Size = new System.Drawing.Size(1164, 600);
             this.pnlLayoutApp.TabIndex = 93;
             this.pnlLayoutApp.Text = "pnlLista";
-            //
+            // 
             // flApps
-            //
+            // 
             this.flApps.AutoScroll = true;
             this.flApps.BackColor = System.Drawing.Color.Transparent;
-            this.flApps.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.flApps.Location = new System.Drawing.Point(12, 12);
             this.flApps.Name = "flApps";
             this.flApps.Size = new System.Drawing.Size(1140, 576);
             this.flApps.TabIndex = 0;
-            this.flApps.WrapContents = true;
-            //
+            // 
+            // btnTopMinimizar
+            // 
+            this.btnTopMinimizar.BackActive = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackColor = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackHover = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.DefaultBack = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTopMinimizar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnTopMinimizar.Icon = ((System.Drawing.Image)(resources.GetObject("btnTopMinimizar.Icon")));
+            this.btnTopMinimizar.IconRatio = 1.2F;
+            this.btnTopMinimizar.Location = new System.Drawing.Point(1056, 0);
+            this.btnTopMinimizar.Name = "btnTopMinimizar";
+            this.btnTopMinimizar.Size = new System.Drawing.Size(60, 60);
+            this.btnTopMinimizar.TabIndex = 79;
+            // 
             // frmSeleccionarApp
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Lavender;
@@ -213,5 +228,6 @@ namespace CapaPresentacion
         private AntdUI.Panel pnlLayoutApp;
         private System.Windows.Forms.FlowLayoutPanel flApp;
         private BufferedFlowLayoutPanel flApps;
+        private AntdUI.Button btnTopMinimizar;
     }
 }

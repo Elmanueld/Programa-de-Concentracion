@@ -1,24 +1,27 @@
 # Estado actual del proyecto
 
-## Lo que queda incluido en este push
+El estado validado en esta revisión está descrito en [README](../README.md) y en el [reporte de pruebas](REPORTE_DE_PRUEBAS.md). La aplicación conserva SQLite local como copia offline; el Backend ASP.NET Core usa SQL Server remoto para el servicio online.
 
-- Inicio de sesión, creación de cuenta y vista de código de verificación.
-- Ajustes, apariencia, tareas y pantallas de selección de aplicaciones/webs implementadas en los formularios actuales.
-- Catálogos y tareas con acceso filtrado por `IdUsuario` en las capas de datos/negocio y en los procedimientos.
-- Copia SQLite offline con cola de cambios y sincronización al recuperar la conexión SQL Server.
-- Scripts de instalación y migraciones sincronizados con las firmas de procedimientos usadas por el código.
-- Paginación con controles AntdUI y cobertura de regresión para no perder tarjetas entre páginas.
+## Componentes incluidos
 
-## Pruebas
+- WinForms con registro, inicio de sesión, tareas, preferencias y pantallas de aplicaciones/webs.
+- Capa de datos con SQLite local, cliente HTTP y sincronización offline/online.
+- Backend .NET 9 para API remota, verificación y recuperación de contraseña.
+- Scripts SQL de instalación/migración y pruebas automatizadas del Backend y cliente.
 
-Compilación Release: 0 errores. Pruebas ejecutadas el 14/11/2026: 22 unitarias, 34 de interfaz y 71 de integración. Ver [reporte](REPORTE_DE_PRUEBAS.md) y [logs](../tests/evidencias/README.md).
+## Validación de esta revisión
 
-La integración se limitó a `(localdb)\Entregable3Pruebas`. No se ejecutó contra la base del usuario.
+- Compilación Release de `ProgramaConcentracion.sln`: completada sin errores.
+- Suite WinForms: 13 comprobaciones generales aprobadas.
+- Suite WinForms con interfaz: 25 comprobaciones aprobadas.
+- `Backend.Tests`: 26 comprobaciones aprobadas.
+- SQL remoto y SMTP real: no probados; requieren entorno de staging y datos desechables.
 
-## Pendiente para otra fase
+La compilación reportó dos advertencias C# ya existentes en `Tipografia.cs` y `frmSeleccionarApp.Designer.cs`. NuGet también mostró `NU1900` porque el entorno no pudo consultar su servicio de vulnerabilidades; la restauración, compilación y pruebas terminaron correctamente.
 
-- Configurar y validar el SMTP real con una cuenta remitente del grupo.
-- Configurar el servidor/base de datos en nube y las credenciales seguras para ese destino.
-- Hacer una revisión visual manual de todas las pantallas en los tamaños de pantalla del equipo de entrega.
+## Pendiente
 
-El proyecto puede compilar y ejecutar localmente con la configuración disponible; estos puntos son tareas de despliegue y validación final, no bloquean la publicación del código actual.
+- Ejecutar una validación manual de SQL, migraciones y aislamiento entre dos usuarios en staging.
+- Probar SMTP con un buzón de prueba.
+- Revisar visualmente los formularios en los equipos y resoluciones objetivo.
+- Confirmar el workflow de GitHub Actions tras subir la rama.

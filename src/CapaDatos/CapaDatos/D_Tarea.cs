@@ -117,52 +117,11 @@ namespace CapaDatos
 
         private void EjecutarCambio(string procedimiento, int idUsuario, int idTarea, Action<SqlCommand> parametros)
         {
-            using (var cn = ConexionDB.Instancia.CrearConexion())
+            D_Comun.Ejecutar(procedimiento, comando =>
             {
-                cn.Open();
-                using (var transaccion = cn.BeginTransaction())
-                {
-                    // Conservamos el propietario bloqueado hasta terminar la operación.
-                    using (var consulta = new SqlCommand(@"SELECT Estado FROM Tareas WITH (UPDLOCK, HOLDLOCK)
-                        WHERE IdTarea=@IdTarea AND IdUsuario=@IdUsuario AND EsPlantilla=0
-                        AND EXISTS (SELECT 1 FROM Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0)", cn, transaccion))
-                    {
-                        D_Comun.Entero(consulta, "@IdTarea", idTarea);
-                        D_Comun.Entero(consulta, "@IdUsuario", idUsuario);
-                        object estado = consulta.ExecuteScalar();
-                        if (estado == null || estado == DBNull.Value)
-                            throw new ArgumentException("La tarea no existe o no pertenece al usuario.");
-                        if (procedimiento != "sp_CambiarEstadoTarea" &&
-                            (Convert.ToString(estado) == "A" || Convert.ToString(estado) == "X" || Convert.ToString(estado) == "C"))
-                            throw new ArgumentException("Una tarea activa, completada o detenida no se puede editar ni eliminar.");
-                        bool recibeUsuario;
-                        using (var revision = new SqlCommand(@"SELECT COUNT(*) FROM sys.parameters
-                            WHERE object_id=OBJECT_ID(@Procedimiento) AND name='@IdUsuario'", cn, transaccion))
-                        {
-                            D_Comun.Texto(revision, "@Procedimiento", 128, "dbo." + procedimiento);
-                            recibeUsuario = Convert.ToInt32(revision.ExecuteScalar()) > 0;
-                        }
-                        if (!recibeUsuario && procedimiento == "sp_ModificarTarea" && Convert.ToString(estado) != "P")
-                            throw new ArgumentException("El procedimiento original solo permite editar tareas programadas.");
-                        using (var cmd = new SqlCommand(procedimiento, cn, transaccion))
-                        {
-                            cmd.CommandType = CommandType.StoredProcedure;
-                            parametros(cmd);
-                            if (procedimiento == "sp_CambiarEstadoTarea")
-                            {
-                                string siguiente = Convert.ToString(cmd.Parameters["@Estado"].Value);
-                                string actual = Convert.ToString(estado);
-                                if (!((actual == "P" && (siguiente == "A" || siguiente == "X")) ||
-                                      (actual == "A" && (siguiente == "C" || siguiente == "X"))))
-                                    throw new ArgumentException("La transición de estado no es válida.");
-                            }
-                            if (recibeUsuario) D_Comun.Entero(cmd, "@IdUsuario", idUsuario);
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                    transaccion.Commit();
-                }
-            }
+                parametros(comando);
+                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
+            });
         }
 
     }

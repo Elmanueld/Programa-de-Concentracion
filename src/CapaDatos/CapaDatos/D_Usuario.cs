@@ -19,41 +19,29 @@ namespace CapaDatos
         {
             if (idUsuario <= 0)
                 throw new System.ArgumentException("El ID de usuario no es válido.");
-
-            using (var conexion = ConexionDB.Instancia.CrearConexion())
-            using (var comando = new System.Data.SqlClient.SqlCommand(
-                "SELECT Nombre FROM Usuarios WHERE IdUsuario=@IdUsuario AND Eliminado=0",
-                conexion))
-            {
-                D_Comun.Entero(comando, "@IdUsuario", idUsuario);
-                conexion.Open();
-                object nombre = comando.ExecuteScalar();
-                return nombre == null || nombre == System.DBNull.Value
-                    ? null
-                    : System.Convert.ToString(nombre);
-            }
+            return ClienteApiDatos.BuscarNombreUsuario(idUsuario);
         }
 
-        public E_Usuario IniciarSesion(string correo, bool demostracion = false)
+        public E_Usuario IniciarSesion(string correo, string contrasena)
         {
-            if (demostracion)
+            var respuesta = ClienteApiDatos.IniciarSesion(correo, contrasena);
+            return new E_Usuario
             {
-                using (var cn = ConexionDB.Instancia.CrearConexion())
-                using (var cmd = new System.Data.SqlClient.SqlCommand(
-                    "SELECT IdUsuario, Nombre, Correo, ContrasenaHash FROM Usuarios WHERE Correo=@Correo AND Eliminado=0", cn))
-                {
-                    D_Comun.Texto(cmd, "@Correo", 254, correo);
-                    cn.Open();
-                    using (var lector = cmd.ExecuteReader())
-                        return lector.Read() ? LeerSesion(lector) : null;
-                }
-            }
-            List<E_Usuario> resultados = D_Comun.Consultar("sp_IniciarSesion", comando =>
-            {
-                D_Comun.Texto(comando, "@Correo", 254, correo);
-            }, LeerSesion);
+                IdUsuario = respuesta.IdUsuario,
+                Nombre = respuesta.Nombre,
+                Correo = respuesta.Correo
+            };
+        }
 
-            return resultados.Count == 0 ? null : resultados[0];
+        public E_Usuario IniciarSesionConHash(string correo, string hashGuardado)
+        {
+            var respuesta = ClienteApiDatos.IniciarSesion(correo, null, hashGuardado);
+            return new E_Usuario
+            {
+                IdUsuario = respuesta.IdUsuario,
+                Nombre = respuesta.Nombre,
+                Correo = respuesta.Correo
+            };
         }
 
         internal static E_Usuario LeerSesion(System.Data.IDataRecord lector)
@@ -108,6 +96,11 @@ namespace CapaDatos
         {
             D_Comun.Ejecutar("sp_RecuperarCuenta", comando =>
                 D_Comun.Entero(comando, "@IdUsuario", idUsuario));
+        }
+
+        public void CerrarSesionRemota()
+        {
+            ClienteApiDatos.CerrarSesion();
         }
     }
 }

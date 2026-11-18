@@ -1,4 +1,4 @@
-name: Validar proyecto
+﻿name: Validar proyecto
 
 on:
   push:
@@ -11,61 +11,30 @@ permissions:
   contents: read
 
 jobs:
-  validar:
+  build-and-test:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
       - uses: microsoft/setup-msbuild@v2
-
       - uses: NuGet/setup-nuget@v2
 
-      - name: Restaurar paquetes NuGet
-        run: nuget restore src/CapaDatos/CapaDatos.sln -NonInteractive
+      - name: Restaurar paquetes del proyecto de escritorio
+        run: nuget restore src/CapaDatos/ProgramaConcentracion.sln -NonInteractive
 
-      - name: Compilar aplicación
-        run: msbuild src/CapaDatos/CapaDatos.sln /t:Rebuild /p:Configuration=Release /verbosity:minimal
+      - name: Compilar solución Release
+        run: msbuild src/CapaDatos/ProgramaConcentracion.sln /restore /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /verbosity:minimal
 
-      - name: Compilar pruebas
-        run: msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release /verbosity:minimal
+      - name: Ejecutar pruebas del Backend (repositorios falsos; sin SMTP ni SQL remoto)
+        run: dotnet run --project src/CapaDatos/Backend.Tests/Backend.Tests.csproj --configuration Release --no-build
 
-      - name: Pruebas unitarias
+      - name: Compilar pruebas WinForms
+        run: msbuild tests/Pruebas.csproj /restore /t:Rebuild /p:Configuration=Release /verbosity:minimal
+
+      - name: Ejecutar pruebas de reglas y validación del cliente
         run: .\tests\bin\Release\Pruebas.exe
 
-      - name: Pruebas de interfaz
+      - name: Ejecutar pruebas de interfaz WinForms
         run: .\tests\bin\Release\Pruebas.exe --interfaz
-
-      - name: Preparar instancia LocalDB aislada
-        shell: powershell
-        run: .\tests\PrepararPruebas.ps1
-
-      - name: Pruebas de integración SQL y SMTP local
-        run: .\tests\bin\Release\Pruebas.exe --integracion
-
-  # Prueba manual con el SMTP real. Los datos salen de los secretos del repositorio.
-  correo-real:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: microsoft/setup-msbuild@v2
-
-      - uses: NuGet/setup-nuget@v2
-
-      - name: Restaurar paquetes NuGet
-        run: nuget restore src/CapaDatos/CapaDatos.sln -NonInteractive
-
-      - name: Compilar pruebas
-        run: msbuild tests/Pruebas.csproj /t:Rebuild /p:Configuration=Release /verbosity:minimal
-
-      - name: Enviar correo de prueba con el SMTP real
-        env:
-          PC_SMTPHOST: mail.privateemail.com
-          PC_SMTPPUERTO: "587"
-          PC_SMTPSSL: "true"
-          PC_SMTPUSUARIO: ${{ secrets.PC_SMTPUSUARIO }}
-          PC_SMTPREMITENTE: ${{ secrets.PC_SMTPUSUARIO }}
-          PC_SMTPDESTINO: ${{ secrets.PC_SMTPUSUARIO }}
-          PC_SMTPCLAVE: ${{ secrets.PC_SMTPCLAVE }}
-        run: .\tests\bin\Release\Pruebas.exe --correo-real

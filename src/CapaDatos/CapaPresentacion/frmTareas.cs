@@ -64,6 +64,7 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(btnAgregarApp, "apps");
             IconosGoogle.Aplicar(btnGuardar, "save");
             IconosGoogle.Aplicar(btnCerrar, "close");
+            btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             ControlesPresentacion.Optimizar(flLista);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
@@ -334,7 +335,7 @@ namespace CapaPresentacion
                     if (registrada == null || registrada.IdWeb <= 0)
                     {
                         throw new InvalidOperationException(
-                            "No se pudo obtener el registro de la web: " + web.Nombre);
+                            "No se pudo agregar la página «" + web.Nombre + "». Comprueba la dirección e inténtalo de nuevo.");
                     }
 
                     negocioTareaWeb.Insertar(idUsuario, idTarea, registrada.IdWeb);
@@ -345,12 +346,7 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    ex.Message,
-                    "Error al guardar la tarea",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                OperacionUI.ReportarError(this, ex, "No se pudo guardar la tarea");
             }
         }
 
@@ -491,6 +487,7 @@ namespace CapaPresentacion
                 AutoSize = false,
                 Width = Math.Max(100, flLista.ClientSize.Width - 24),
                 Height = 38,
+                Font = flLista.Font,
                 Text = texto,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = PaletaAplicacion.ColorTextoContraste(color),

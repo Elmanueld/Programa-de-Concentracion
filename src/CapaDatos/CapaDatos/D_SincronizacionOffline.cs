@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Text;
@@ -12,6 +13,7 @@ namespace CapaDatos
     /// </summary>
     public sealed class D_SincronizacionOffline
     {
+        public static event Action<Exception> ErrorAlActualizarCopiaLocal;
         private static volatile bool modoOffline;
 
         public static bool ModoOffline { get { return modoOffline; } }
@@ -30,6 +32,11 @@ namespace CapaDatos
         {
             if (modoOffline) return local();
             try { return principal(); }
+            catch (ApiRemotaNoDisponibleException)
+            {
+                ActivarModoOffline(idUsuario);
+                return local();
+            }
             catch (SqlException ex)
             {
                 if (!D_Comun.EsFalloDeConexion(ex)) throw;
@@ -50,9 +57,14 @@ namespace CapaDatos
             {
                 T resultado = principal();
                 try { CapturarDesdeCache(idUsuario); }
-                catch (SqlException) { }
-                catch (InvalidOperationException) { }
+                catch (SqlException ex) { NotificarErrorCopiaLocal(ex); }
+                catch (InvalidOperationException ex) { NotificarErrorCopiaLocal(ex); }
                 return resultado;
+            }
+            catch (ApiRemotaNoDisponibleException)
+            {
+                ActivarModoOffline(idUsuario);
+                return SQLiteLocal.EnTransaccion(local);
             }
             catch (SqlException ex)
             {
@@ -73,6 +85,18 @@ namespace CapaDatos
                 f => new { Correo = f.Texto("Correo"), Nombre = f.Texto("Nombre") }, idUsuario);
             if (usuarios.Count == 0) return;
             new D_SincronizacionOffline().CapturarCopiaCompleta(idUsuario, usuarios[0].Correo, usuarios[0].Nombre);
+        }
+
+        private static void NotificarErrorCopiaLocal(Exception error)
+        {
+            Action<Exception> manejador = ErrorAlActualizarCopiaLocal;
+            if (manejador == null) return;
+            try { manejador(error); }
+            catch (Exception errorEvento)
+            {
+                System.Diagnostics.Trace.TraceError(
+                    "No se pudo notificar el fallo de la copia offline: " + errorEvento.GetType().Name);
+            }
         }
 
         public static int InsertarTarea(CapaEntidades.E_Tarea tarea)
@@ -522,36 +546,60 @@ namespace CapaDatos
         public void CapturarCopiaCompleta(int idUsuario, string correo, string nombre)
         {
             if (idUsuario <= 0) throw new ArgumentException("El usuario no es válido.");
-
-            using (var conexion = ConexionDB.Instancia.CrearConexion())
+            var copia = ClienteApiDatos.ObtenerCopiaCompleta();
+            SQLiteLocal.EnTransaccion(() =>
             {
-                conexion.Open();
-                using (var transaccion = conexion.BeginTransaction())
-                {
-                    // Check the outbox under the same write lock used to replace the snapshot.
-                    // Otherwise a concurrent offline write could be cascaded away by REPLACE.
-                    bool omitirCopia = SQLiteLocal.EnTransaccion(() =>
-                    {
-                        object pendientes = SQLiteLocal.Escalar("SELECT COUNT(*) FROM SyncOutbox WHERE IdUsuario=?", idUsuario);
-                        if (Convert.ToInt32(pendientes ?? 0) != 0) return true;
+                // Do not replace a snapshot if an offline write arrived during the HTTP request.
+                object pendientes = SQLiteLocal.Escalar("SELECT COUNT(*) FROM SyncOutbox WHERE IdUsuario=?", idUsuario);
+                if (Convert.ToInt32(pendientes ?? 0) != 0) return;
 
-                        GuardarUsuario(idUsuario, correo, nombre);
-                        LimpiarDatosUsuario(idUsuario);
-                        CopiarConfiguracion(conexion, transaccion, idUsuario);
-                        CopiarTareas(conexion, transaccion, idUsuario);
-                        CopiarAplicaciones(conexion, transaccion, idUsuario);
-                        CopiarWebs(conexion, transaccion, idUsuario);
-                        CopiarDescansos(conexion, transaccion, idUsuario);
-                        CopiarRelaciones(conexion, transaccion, idUsuario, "Tarea_Aplicacion", "IdAplicacion");
-                        CopiarRelaciones(conexion, transaccion, idUsuario, "Tarea_Web", "IdWeb");
-                        MarcarCopiaCompleta(idUsuario);
-                        return false;
-                    });
-                    if (omitirCopia) return;
-                    transaccion.Commit();
-                }
-            }
+                GuardarUsuario(idUsuario, correo, nombre);
+                LimpiarDatosUsuario(idUsuario);
+                CopiarTabla(copia.Tables["configuraciones"], row => SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Configuraciones
+                    (IdConfiguracion,IdServidor,IdUsuario,AutoSesion,SyncId,SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,?,?,0)",
+                    ValorInt(row, "IdConfiguracion"), ValorInt(row, "IdConfiguracion"), idUsuario,
+                    ValorBool(row, "AutoSesion"), ValorTexto(row, "SyncId"), ValorFecha(row, "SyncUpdatedUtc")));
+                CopiarTabla(copia.Tables["tareas"], row => SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Tareas
+                    (IdTarea,IdServidor,IdUsuario,Nombre,FechaInicio,FechaFin,Estado,EsPlantilla,NoBloquearApps,NoBloquearWebs,SyncId,SyncUpdatedUtc,SyncDeleted)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0)", ValorInt(row, "IdTarea"), ValorInt(row, "IdTarea"), idUsuario,
+                    ValorTexto(row, "Nombre"), ValorFecha(row, "FechaInicio"), ValorFecha(row, "FechaFin"), ValorTexto(row, "Estado"),
+                    ValorBool(row, "EsPlantilla"), ValorBool(row, "NoBloquearApps"), ValorBool(row, "NoBloquearWebs"),
+                    ValorTexto(row, "SyncId"), ValorFecha(row, "SyncUpdatedUtc")));
+                CopiarTabla(copia.Tables["aplicaciones"], row => SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Aplicaciones
+                    (IdAplicacion,IdServidor,IdUsuario,Nombre,Identificador,EsCritica,SyncId,SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,?,?,?,?,0)",
+                    ValorInt(row, "IdAplicacion"), ValorInt(row, "IdAplicacion"), idUsuario, ValorTexto(row, "Nombre"),
+                    ValorTexto(row, "Identificador"), ValorBool(row, "EsCritica"), ValorTexto(row, "SyncId"), ValorFecha(row, "SyncUpdatedUtc")));
+                CopiarTabla(copia.Tables["webs"], row => SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Webs
+                    (IdWeb,IdServidor,IdUsuario,Nombre,Link,SyncId,SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,?,?,?,0)",
+                    ValorInt(row, "IdWeb"), ValorInt(row, "IdWeb"), idUsuario, ValorTexto(row, "Nombre"), ValorTexto(row, "Link"),
+                    ValorTexto(row, "SyncId"), ValorFecha(row, "SyncUpdatedUtc")));
+                CopiarTabla(copia.Tables["descansos"], row => SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Descansos
+                    (IdDescanso,IdServidor,IdTarea,IdUsuario,IntervaloDescanso,DuracionDescanso,SyncId,SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,?,?,?,?,0)",
+                    ValorInt(row, "IdDescanso"), ValorInt(row, "IdDescanso"), ValorInt(row, "IdTarea"), idUsuario,
+                    ValorNullableInt(row, "IntervaloDescanso"), ValorNullableInt(row, "DuracionDescanso"), ValorTexto(row, "SyncId"), ValorFecha(row, "SyncUpdatedUtc")));
+                CopiarRelaciones(copia.Tables["tareaAplicacion"], "Tarea_Aplicacion", "IdAplicacion", idUsuario);
+                CopiarRelaciones(copia.Tables["tareaWeb"], "Tarea_Web", "IdWeb", idUsuario);
+                MarcarCopiaCompleta(idUsuario);
+            });
         }
+
+        private static void CopiarTabla(DataTable tabla, Action<DataRow> copiar)
+        {
+            foreach (DataRow row in tabla.Rows) copiar(row);
+        }
+
+        private static void CopiarRelaciones(DataTable tabla, string destino, string idRelacion, int idUsuario)
+        {
+            CopiarTabla(tabla, row => SQLiteLocal.Ejecutar("INSERT OR REPLACE INTO " + destino +
+                "(IdTarea,IdUsuario," + idRelacion + ",SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,0)",
+                ValorInt(row, "IdTarea"), idUsuario, ValorInt(row, idRelacion), ValorFecha(row, "SyncUpdatedUtc")));
+        }
+
+        private static int ValorInt(DataRow row, string columna) => Convert.ToInt32(row[columna], CultureInfo.InvariantCulture);
+        private static int? ValorNullableInt(DataRow row, string columna) => row.IsNull(columna) ? (int?)null : ValorInt(row, columna);
+        private static bool ValorBool(DataRow row, string columna) => Convert.ToBoolean(row[columna], CultureInfo.InvariantCulture);
+        private static string ValorTexto(DataRow row, string columna) => row.IsNull(columna) ? null : Convert.ToString(row[columna], CultureInfo.InvariantCulture);
+        private static DateTime ValorFecha(DataRow row, string columna) => Convert.ToDateTime(row[columna], CultureInfo.InvariantCulture);
 
         private static void GuardarUsuario(int idUsuario, string correo, string nombre)
         {
@@ -571,97 +619,6 @@ namespace CapaDatos
             SQLiteLocal.Ejecutar("DELETE FROM Aplicaciones WHERE IdUsuario=?", idUsuario);
             SQLiteLocal.Ejecutar("DELETE FROM Webs WHERE IdUsuario=?", idUsuario);
             SQLiteLocal.Ejecutar("DELETE FROM Configuraciones WHERE IdUsuario=?", idUsuario);
-        }
-
-        private static void CopiarConfiguracion(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            using (var cmd = new SqlCommand("SELECT IdConfiguracion,AutoSesion,CONVERT(varchar(36),SyncId),SyncUpdatedUtc FROM dbo.Configuraciones WHERE IdUsuario=@IdUsuario", cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                    while (rd.Read()) SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Configuraciones
-                        (IdConfiguracion,IdServidor,IdUsuario,AutoSesion,SyncId,SyncUpdatedUtc,SyncDeleted)
-                        VALUES(?,?,?,?,?,?,0)", rd.GetInt32(0), rd.GetInt32(0), idUsuario,
-                        rd.GetBoolean(1), rd.GetString(2), rd.GetDateTime(3));
-            }
-        }
-
-        private static void CopiarTareas(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            using (var cmd = new SqlCommand(@"SELECT IdTarea,Nombre,FechaInicio,FechaFin,Estado,EsPlantilla,
-                    NoBloquearApps,NoBloquearWebs,CONVERT(varchar(36),SyncId),SyncUpdatedUtc
-                FROM dbo.Tareas WHERE IdUsuario=@IdUsuario", cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                    while (rd.Read()) SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Tareas
-                        (IdTarea,IdServidor,IdUsuario,Nombre,FechaInicio,FechaFin,Estado,EsPlantilla,
-                         NoBloquearApps,NoBloquearWebs,SyncId,SyncUpdatedUtc,SyncDeleted)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0)", rd.GetInt32(0), rd.GetInt32(0), idUsuario,
-                        rd.GetString(1), rd.GetDateTime(2), rd.GetDateTime(3), rd.GetString(4),
-                        rd.GetBoolean(5), rd.GetBoolean(6), rd.GetBoolean(7), rd.GetString(8), rd.GetDateTime(9));
-            }
-        }
-
-        private static void CopiarAplicaciones(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            using (var cmd = new SqlCommand("SELECT IdAplicacion,Nombre,Identificador,EsCritica,CONVERT(varchar(36),SyncId),SyncUpdatedUtc FROM dbo.Aplicaciones WHERE IdUsuario=@IdUsuario", cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                    while (rd.Read()) SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Aplicaciones
-                        (IdAplicacion,IdServidor,IdUsuario,Nombre,Identificador,EsCritica,SyncId,SyncUpdatedUtc,SyncDeleted)
-                        VALUES(?,?,?,?,?,?,?,?,0)", rd.GetInt32(0), rd.GetInt32(0), idUsuario,
-                        rd.GetString(1), rd.GetString(2), rd.GetBoolean(3), rd.GetString(4), rd.GetDateTime(5));
-            }
-        }
-
-        private static void CopiarWebs(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            using (var cmd = new SqlCommand("SELECT IdWeb,Nombre,Link,CONVERT(varchar(36),SyncId),SyncUpdatedUtc FROM dbo.Webs WHERE IdUsuario=@IdUsuario", cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                    while (rd.Read()) SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Webs
-                        (IdWeb,IdServidor,IdUsuario,Nombre,Link,SyncId,SyncUpdatedUtc,SyncDeleted)
-                        VALUES(?,?,?,?,?,?,?,0)", rd.GetInt32(0), rd.GetInt32(0), idUsuario,
-                        rd.GetString(1), rd.GetString(2), rd.GetString(3), rd.GetDateTime(4));
-            }
-        }
-
-        private static void CopiarDescansos(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            using (var cmd = new SqlCommand(@"SELECT IdDescanso,IdTarea,IntervaloDescanso,DuracionDescanso,
-                    CONVERT(varchar(36),SyncId),SyncUpdatedUtc FROM dbo.Descansos WHERE IdUsuario=@IdUsuario", cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                    while (rd.Read()) SQLiteLocal.Ejecutar(@"INSERT OR REPLACE INTO Descansos
-                        (IdDescanso,IdServidor,IdTarea,IdUsuario,IntervaloDescanso,DuracionDescanso,SyncId,SyncUpdatedUtc,SyncDeleted)
-                        VALUES(?,?,?,?,?,?,?,?,0)", rd.GetInt32(0), rd.GetInt32(0), rd.GetInt32(1), idUsuario,
-                        rd.IsDBNull(2) ? null : (object)rd.GetInt32(2), rd.IsDBNull(3) ? null : (object)rd.GetInt32(3),
-                        rd.GetString(4), rd.GetDateTime(5));
-            }
-        }
-
-        private static void CopiarRelaciones(SqlConnection cn, SqlTransaction tx, int idUsuario, string tabla, string idRelacion)
-        {
-            string sql = "SELECT IdTarea," + idRelacion + ",SyncUpdatedUtc FROM dbo." + tabla + " WHERE IdUsuario=@IdUsuario";
-            using (var cmd = new SqlCommand(sql, cn, tx))
-            {
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                using (var rd = cmd.ExecuteReader())
-                {
-                    while (rd.Read())
-                    {
-                        string destino = tabla == "Tarea_Aplicacion" ? "Tarea_Aplicacion" : "Tarea_Web";
-                        string idCampo = tabla == "Tarea_Aplicacion" ? "IdAplicacion" : "IdWeb";
-                        SQLiteLocal.Ejecutar("INSERT OR REPLACE INTO " + destino +
-                            "(IdTarea,IdUsuario," + idCampo + ",SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,0)",
-                            rd.GetInt32(0), idUsuario, rd.GetInt32(1), rd.GetDateTime(2));
-                    }
-                }
-            }
         }
 
         private static void MarcarCopiaCompleta(int idUsuario)

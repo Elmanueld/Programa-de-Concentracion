@@ -74,6 +74,7 @@ namespace CapaPresentacion
             this.lblPanelTop = new System.Windows.Forms.Label();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.btnCancelar = new AntdUI.Button();
+            this.btnTopMinimizar = new AntdUI.Button();
             this.pnlLayoutLista.SuspendLayout();
             this.pnlTargetaTiempoDescanso.SuspendLayout();
             this.pnlTargetaDescansos.SuspendLayout();
@@ -84,9 +85,9 @@ namespace CapaPresentacion
             this.pnlTargetaTarea.SuspendLayout();
             this.pnlTop.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // lblTargetaNombre
-            //
+            // 
             this.lblTargetaNombre.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaNombre.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaNombre.ForeColor = System.Drawing.Color.White;
@@ -96,9 +97,9 @@ namespace CapaPresentacion
             this.lblTargetaNombre.TabIndex = 39;
             this.lblTargetaNombre.Text = "Nombre";
             this.lblTargetaNombre.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // lblSubTargetaTiempoDescanso
-            //
+            // 
             this.lblSubTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
             this.lblSubTargetaTiempoDescanso.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSubTargetaTiempoDescanso.ForeColor = System.Drawing.Color.White;
@@ -108,9 +109,9 @@ namespace CapaPresentacion
             this.lblSubTargetaTiempoDescanso.TabIndex = 30;
             this.lblSubTargetaTiempoDescanso.Text = "Tiempo de descanso";
             this.lblSubTargetaTiempoDescanso.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // lblSubTargetaAgregarWeb
-            //
+            // 
             this.lblSubTargetaAgregarWeb.BackColor = System.Drawing.Color.Transparent;
             this.lblSubTargetaAgregarWeb.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSubTargetaAgregarWeb.ForeColor = System.Drawing.Color.White;
@@ -120,9 +121,9 @@ namespace CapaPresentacion
             this.lblSubTargetaAgregarWeb.TabIndex = 29;
             this.lblSubTargetaAgregarWeb.Text = "Agregar Web";
             this.lblSubTargetaAgregarWeb.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
+            // 
             // lblSubTargetaAgregarApp
-            //
+            // 
             this.lblSubTargetaAgregarApp.BackColor = System.Drawing.Color.Transparent;
             this.lblSubTargetaAgregarApp.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSubTargetaAgregarApp.ForeColor = System.Drawing.Color.White;
@@ -132,9 +133,9 @@ namespace CapaPresentacion
             this.lblSubTargetaAgregarApp.TabIndex = 28;
             this.lblSubTargetaAgregarApp.Text = "Agregar aplicación";
             this.lblSubTargetaAgregarApp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
+            // 
             // lblTargetaHoraFin
-            //
+            // 
             this.lblTargetaHoraFin.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaHoraFin.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaHoraFin.ForeColor = System.Drawing.Color.White;
@@ -144,9 +145,9 @@ namespace CapaPresentacion
             this.lblTargetaHoraFin.TabIndex = 26;
             this.lblTargetaHoraFin.Text = "Hora de fin";
             this.lblTargetaHoraFin.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // lblTargetaHoraInicio
-            //
+            // 
             this.lblTargetaHoraInicio.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaHoraInicio.Font = new System.Drawing.Font("Inter", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaHoraInicio.ForeColor = System.Drawing.Color.White;
@@ -156,9 +157,9 @@ namespace CapaPresentacion
             this.lblTargetaHoraInicio.TabIndex = 25;
             this.lblTargetaHoraInicio.Text = "Hora de inicio";
             this.lblTargetaHoraInicio.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // cbNoBloquearWebs
-            //
+            // 
             this.cbNoBloquearWebs.AutoSize = true;
             this.cbNoBloquearWebs.BackColor = System.Drawing.Color.Transparent;
             this.cbNoBloquearWebs.Font = new System.Drawing.Font("Inter", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -169,9 +170,9 @@ namespace CapaPresentacion
             this.cbNoBloquearWebs.TabIndex = 46;
             this.cbNoBloquearWebs.Text = "No bloquear páginas web";
             this.cbNoBloquearWebs.UseVisualStyleBackColor = false;
-            //
+            // 
             // cbNoBloquearApps
-            //
+            // 
             this.cbNoBloquearApps.AutoSize = true;
             this.cbNoBloquearApps.BackColor = System.Drawing.Color.Transparent;
             this.cbNoBloquearApps.Font = new System.Drawing.Font("Inter", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -182,9 +183,9 @@ namespace CapaPresentacion
             this.cbNoBloquearApps.TabIndex = 47;
             this.cbNoBloquearApps.Text = "No bloquear aplicaciones";
             this.cbNoBloquearApps.UseVisualStyleBackColor = false;
-            //
+            // 
             // flLista
-            //
+            // 
             this.flLista.AutoScroll = true;
             this.flLista.BackColor = System.Drawing.Color.Transparent;
             this.flLista.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -192,9 +193,9 @@ namespace CapaPresentacion
             this.flLista.Name = "flLista";
             this.flLista.Size = new System.Drawing.Size(684, 288);
             this.flLista.TabIndex = 47;
-            //
+            // 
             // pnlLayoutLista
-            //
+            // 
             this.pnlLayoutLista.Back = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(205)))), ((int)(((byte)(232)))));
             this.pnlLayoutLista.BackColor = System.Drawing.Color.Transparent;
             this.pnlLayoutLista.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -207,9 +208,9 @@ namespace CapaPresentacion
             this.pnlLayoutLista.TabIndex = 55;
             this.pnlLayoutLista.Text = "pnlLista";
             this.pnlLayoutLista.Click += new System.EventHandler(this.PnlLayoutLista_Click);
-            //
+            // 
             // pnlTargetaTiempoDescanso
-            //
+            // 
             this.pnlTargetaTiempoDescanso.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
             this.pnlTargetaTiempoDescanso.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -224,9 +225,9 @@ namespace CapaPresentacion
             this.pnlTargetaTiempoDescanso.Size = new System.Drawing.Size(324, 142);
             this.pnlTargetaTiempoDescanso.TabIndex = 49;
             this.pnlTargetaTiempoDescanso.Text = "panel2";
-            //
+            // 
             // btnSumarDescanso
-            //
+            // 
             this.btnSumarDescanso.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarDescanso.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarDescanso.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -240,9 +241,9 @@ namespace CapaPresentacion
             this.btnSumarDescanso.Size = new System.Drawing.Size(84, 48);
             this.btnSumarDescanso.TabIndex = 34;
             this.btnSumarDescanso.Text = "+";
-            //
+            // 
             // btnRestarDescanso
-            //
+            // 
             this.btnRestarDescanso.BorderWidth = 1F;
             this.btnRestarDescanso.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.btnRestarDescanso.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
@@ -253,9 +254,9 @@ namespace CapaPresentacion
             this.btnRestarDescanso.Size = new System.Drawing.Size(84, 48);
             this.btnRestarDescanso.TabIndex = 33;
             this.btnRestarDescanso.Text = "-";
-            //
+            // 
             // pbSubTargetaTiempoDescanso
-            //
+            // 
             this.pbSubTargetaTiempoDescanso.BackColor = System.Drawing.Color.Transparent;
             this.pbSubTargetaTiempoDescanso.Image = ((System.Drawing.Image)(resources.GetObject("pbSubTargetaTiempoDescanso.Image")));
             this.pbSubTargetaTiempoDescanso.Location = new System.Drawing.Point(12, 12);
@@ -263,9 +264,9 @@ namespace CapaPresentacion
             this.pbSubTargetaTiempoDescanso.Size = new System.Drawing.Size(40, 38);
             this.pbSubTargetaTiempoDescanso.TabIndex = 32;
             this.pbSubTargetaTiempoDescanso.Text = "image3D1";
-            //
+            // 
             // nudDescanso
-            //
+            // 
             this.nudDescanso.BackColor = System.Drawing.Color.Transparent;
             this.nudDescanso.BorderActive = System.Drawing.Color.Transparent;
             this.nudDescanso.BorderColor = System.Drawing.Color.Transparent;
@@ -279,9 +280,9 @@ namespace CapaPresentacion
             this.nudDescanso.TabIndex = 31;
             this.nudDescanso.Text = "0 min";
             this.nudDescanso.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            //
+            // 
             // pnlTargetaDescansos
-            //
+            // 
             this.pnlTargetaDescansos.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
             this.pnlTargetaDescansos.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.pnlTargetaDescansos.BorderWidth = 1F;
@@ -296,9 +297,9 @@ namespace CapaPresentacion
             this.pnlTargetaDescansos.Size = new System.Drawing.Size(708, 276);
             this.pnlTargetaDescansos.TabIndex = 50;
             this.pnlTargetaDescansos.Text = "panel1";
-            //
+            // 
             // lblDescripcionDescanso
-            //
+            // 
             this.lblDescripcionDescanso.BackColor = System.Drawing.Color.Transparent;
             this.lblDescripcionDescanso.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDescripcionDescanso.ForeColor = System.Drawing.Color.LightSteelBlue;
@@ -307,9 +308,9 @@ namespace CapaPresentacion
             this.lblDescripcionDescanso.Size = new System.Drawing.Size(372, 36);
             this.lblDescripcionDescanso.TabIndex = 35;
             this.lblDescripcionDescanso.Text = "Configura cuánto tiempo descansas y cuándo";
-            //
+            // 
             // lblTargetaDescanso
-            //
+            // 
             this.lblTargetaDescanso.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaDescanso.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaDescanso.ForeColor = System.Drawing.Color.White;
@@ -318,9 +319,9 @@ namespace CapaPresentacion
             this.lblTargetaDescanso.Size = new System.Drawing.Size(384, 36);
             this.lblTargetaDescanso.TabIndex = 35;
             this.lblTargetaDescanso.Text = "Descansos";
-            //
+            // 
             // pbTargetaDescanso
-            //
+            // 
             this.pbTargetaDescanso.BackColor = System.Drawing.Color.Transparent;
             this.pbTargetaDescanso.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaDescanso.Image")));
             this.pbTargetaDescanso.Location = new System.Drawing.Point(24, 24);
@@ -328,9 +329,9 @@ namespace CapaPresentacion
             this.pbTargetaDescanso.Size = new System.Drawing.Size(72, 72);
             this.pbTargetaDescanso.TabIndex = 35;
             this.pbTargetaDescanso.Text = "image3D3";
-            //
+            // 
             // pnlTargetaIntervalo
-            //
+            // 
             this.pnlTargetaIntervalo.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
             this.pnlTargetaIntervalo.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -345,9 +346,9 @@ namespace CapaPresentacion
             this.pnlTargetaIntervalo.Size = new System.Drawing.Size(324, 142);
             this.pnlTargetaIntervalo.TabIndex = 50;
             this.pnlTargetaIntervalo.Text = "panel3";
-            //
+            // 
             // btnSumarIntervalo
-            //
+            // 
             this.btnSumarIntervalo.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarIntervalo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnSumarIntervalo.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -361,9 +362,9 @@ namespace CapaPresentacion
             this.btnSumarIntervalo.Size = new System.Drawing.Size(84, 48);
             this.btnSumarIntervalo.TabIndex = 34;
             this.btnSumarIntervalo.Text = "+";
-            //
+            // 
             // btnRestarIntervalo
-            //
+            // 
             this.btnRestarIntervalo.BorderWidth = 1F;
             this.btnRestarIntervalo.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.btnRestarIntervalo.DefaultBorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(66)))), ((int)(((byte)(120)))));
@@ -374,9 +375,9 @@ namespace CapaPresentacion
             this.btnRestarIntervalo.Size = new System.Drawing.Size(84, 48);
             this.btnRestarIntervalo.TabIndex = 33;
             this.btnRestarIntervalo.Text = "-";
-            //
+            // 
             // pbTargetaIntervalo
-            //
+            // 
             this.pbTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
             this.pbTargetaIntervalo.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaIntervalo.Image")));
             this.pbTargetaIntervalo.Location = new System.Drawing.Point(12, 12);
@@ -384,9 +385,9 @@ namespace CapaPresentacion
             this.pbTargetaIntervalo.Size = new System.Drawing.Size(40, 38);
             this.pbTargetaIntervalo.TabIndex = 32;
             this.pbTargetaIntervalo.Text = "image3D2";
-            //
+            // 
             // nudIntervalo
-            //
+            // 
             this.nudIntervalo.BackColor = System.Drawing.Color.Transparent;
             this.nudIntervalo.BorderActive = System.Drawing.Color.Transparent;
             this.nudIntervalo.BorderColor = System.Drawing.Color.Transparent;
@@ -400,9 +401,9 @@ namespace CapaPresentacion
             this.nudIntervalo.TabIndex = 31;
             this.nudIntervalo.Text = "0 min";
             this.nudIntervalo.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            //
+            // 
             // lblTargetaIntervalo
-            //
+            // 
             this.lblTargetaIntervalo.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaIntervalo.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaIntervalo.ForeColor = System.Drawing.Color.White;
@@ -412,9 +413,9 @@ namespace CapaPresentacion
             this.lblTargetaIntervalo.TabIndex = 30;
             this.lblTargetaIntervalo.Text = "Cada cuánto descansar";
             this.lblTargetaIntervalo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // pnlTargetaAgregar
-            //
+            // 
             this.pnlTargetaAgregar.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
             this.pnlTargetaAgregar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.pnlTargetaAgregar.BorderWidth = 1F;
@@ -429,9 +430,9 @@ namespace CapaPresentacion
             this.pnlTargetaAgregar.Size = new System.Drawing.Size(528, 312);
             this.pnlTargetaAgregar.TabIndex = 51;
             this.pnlTargetaAgregar.Text = "panel4";
-            //
+            // 
             // pnlSubTargetaAgregarWeb
-            //
+            // 
             this.pnlSubTargetaAgregarWeb.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlSubTargetaAgregarWeb.BackColor = System.Drawing.Color.Transparent;
             this.pnlSubTargetaAgregarWeb.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -444,9 +445,9 @@ namespace CapaPresentacion
             this.pnlSubTargetaAgregarWeb.Size = new System.Drawing.Size(236, 142);
             this.pnlSubTargetaAgregarWeb.TabIndex = 51;
             this.pnlSubTargetaAgregarWeb.Text = "panel7";
-            //
+            // 
             // btnAgregarWeb
-            //
+            // 
             this.btnAgregarWeb.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
             this.btnAgregarWeb.BorderWidth = 1F;
             this.btnAgregarWeb.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
@@ -459,9 +460,9 @@ namespace CapaPresentacion
             this.btnAgregarWeb.Size = new System.Drawing.Size(60, 60);
             this.btnAgregarWeb.TabIndex = 36;
             this.btnAgregarWeb.Click += new System.EventHandler(this.btnAgregarWeb_Click);
-            //
+            // 
             // lblDescripcionAgregar
-            //
+            // 
             this.lblDescripcionAgregar.BackColor = System.Drawing.Color.Transparent;
             this.lblDescripcionAgregar.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDescripcionAgregar.ForeColor = System.Drawing.Color.LightSteelBlue;
@@ -470,9 +471,9 @@ namespace CapaPresentacion
             this.lblDescripcionAgregar.Size = new System.Drawing.Size(384, 48);
             this.lblDescripcionAgregar.TabIndex = 35;
             this.lblDescripcionAgregar.Text = "Agrega las aplicaciones y páginas web que necesites";
-            //
+            // 
             // lblTargetaAgregar
-            //
+            // 
             this.lblTargetaAgregar.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaAgregar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaAgregar.ForeColor = System.Drawing.Color.White;
@@ -481,9 +482,9 @@ namespace CapaPresentacion
             this.lblTargetaAgregar.Size = new System.Drawing.Size(348, 36);
             this.lblTargetaAgregar.TabIndex = 35;
             this.lblTargetaAgregar.Text = "Agregar";
-            //
+            // 
             // pbTargetaAgregar
-            //
+            // 
             this.pbTargetaAgregar.BackColor = System.Drawing.Color.Transparent;
             this.pbTargetaAgregar.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaAgregar.Image")));
             this.pbTargetaAgregar.Location = new System.Drawing.Point(24, 24);
@@ -491,9 +492,9 @@ namespace CapaPresentacion
             this.pbTargetaAgregar.Size = new System.Drawing.Size(72, 72);
             this.pbTargetaAgregar.TabIndex = 35;
             this.pbTargetaAgregar.Text = "image3D4";
-            //
+            // 
             // pnlSubTargetaAgregaApp
-            //
+            // 
             this.pnlSubTargetaAgregaApp.Back = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.pnlSubTargetaAgregaApp.BackColor = System.Drawing.Color.Transparent;
             this.pnlSubTargetaAgregaApp.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -506,9 +507,9 @@ namespace CapaPresentacion
             this.pnlSubTargetaAgregaApp.Size = new System.Drawing.Size(236, 142);
             this.pnlSubTargetaAgregaApp.TabIndex = 50;
             this.pnlSubTargetaAgregaApp.Text = "panel6";
-            //
+            // 
             // btnAgregarApp
-            //
+            // 
             this.btnAgregarApp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
             this.btnAgregarApp.BorderWidth = 1F;
             this.btnAgregarApp.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
@@ -521,9 +522,9 @@ namespace CapaPresentacion
             this.btnAgregarApp.Size = new System.Drawing.Size(60, 60);
             this.btnAgregarApp.TabIndex = 35;
             this.btnAgregarApp.Click += new System.EventHandler(this.btnAgregarApp_Click);
-            //
+            // 
             // pnlTargetaTarea
-            //
+            // 
             this.pnlTargetaTarea.Back = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(63)))), ((int)(((byte)(118)))));
             this.pnlTargetaTarea.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.pnlTargetaTarea.BorderWidth = 1F;
@@ -542,36 +543,36 @@ namespace CapaPresentacion
             this.pnlTargetaTarea.Size = new System.Drawing.Size(528, 276);
             this.pnlTargetaTarea.TabIndex = 52;
             this.pnlTargetaTarea.Text = "panel5";
-            //
+            // 
             // txtNombreTarea
-            //
+            // 
             this.txtNombreTarea.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.txtNombreTarea.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtNombreTarea.Location = new System.Drawing.Point(180, 96);
             this.txtNombreTarea.Name = "txtNombreTarea";
             this.txtNombreTarea.Size = new System.Drawing.Size(324, 48);
             this.txtNombreTarea.TabIndex = 53;
-            //
+            // 
             // dtpHoraFin
-            //
+            // 
             this.dtpHoraFin.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.dtpHoraFin.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpHoraFin.Location = new System.Drawing.Point(180, 192);
             this.dtpHoraFin.Name = "dtpHoraFin";
             this.dtpHoraFin.Size = new System.Drawing.Size(324, 48);
             this.dtpHoraFin.TabIndex = 54;
-            //
+            // 
             // dtpHoraInicio
-            //
+            // 
             this.dtpHoraInicio.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.dtpHoraInicio.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpHoraInicio.Location = new System.Drawing.Point(180, 144);
             this.dtpHoraInicio.Name = "dtpHoraInicio";
             this.dtpHoraInicio.Size = new System.Drawing.Size(324, 48);
             this.dtpHoraInicio.TabIndex = 53;
-            //
+            // 
             // lblDescripcionTarea
-            //
+            // 
             this.lblDescripcionTarea.BackColor = System.Drawing.Color.Transparent;
             this.lblDescripcionTarea.Font = new System.Drawing.Font("Inter", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDescripcionTarea.ForeColor = System.Drawing.Color.LightSteelBlue;
@@ -580,9 +581,9 @@ namespace CapaPresentacion
             this.lblDescripcionTarea.Size = new System.Drawing.Size(384, 48);
             this.lblDescripcionTarea.TabIndex = 35;
             this.lblDescripcionTarea.Text = "Nombra tu tarea y prográmala";
-            //
+            // 
             // lblTargetaTarea
-            //
+            // 
             this.lblTargetaTarea.BackColor = System.Drawing.Color.Transparent;
             this.lblTargetaTarea.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTargetaTarea.ForeColor = System.Drawing.Color.White;
@@ -591,9 +592,9 @@ namespace CapaPresentacion
             this.lblTargetaTarea.Size = new System.Drawing.Size(348, 36);
             this.lblTargetaTarea.TabIndex = 35;
             this.lblTargetaTarea.Text = "Crear tarea";
-            //
+            // 
             // pbTargetaTarea
-            //
+            // 
             this.pbTargetaTarea.BackColor = System.Drawing.Color.Transparent;
             this.pbTargetaTarea.Image = ((System.Drawing.Image)(resources.GetObject("pbTargetaTarea.Image")));
             this.pbTargetaTarea.Location = new System.Drawing.Point(24, 24);
@@ -601,9 +602,9 @@ namespace CapaPresentacion
             this.pbTargetaTarea.Size = new System.Drawing.Size(72, 72);
             this.pbTargetaTarea.TabIndex = 35;
             this.pbTargetaTarea.Text = "image3D5";
-            //
+            // 
             // btnGuardar
-            //
+            // 
             this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
             this.btnGuardar.BorderWidth = 1F;
             this.btnGuardar.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
@@ -617,9 +618,9 @@ namespace CapaPresentacion
             this.btnGuardar.TabIndex = 47;
             this.btnGuardar.Text = "Guardar";
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
-            //
+            // 
             // btnCerrar
-            //
+            // 
             this.btnCerrar.BackActive = System.Drawing.Color.Transparent;
             this.btnCerrar.BackColor = System.Drawing.Color.Transparent;
             this.btnCerrar.BackHover = System.Drawing.Color.Transparent;
@@ -628,14 +629,14 @@ namespace CapaPresentacion
             this.btnCerrar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnCerrar.Icon = ((System.Drawing.Image)(resources.GetObject("btnCerrar.Icon")));
             this.btnCerrar.IconRatio = 2F;
-            this.btnCerrar.Location = new System.Drawing.Point(1188, 0);
+            this.btnCerrar.Location = new System.Drawing.Point(1212, 0);
             this.btnCerrar.Name = "btnCerrar";
             this.btnCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnCerrar.TabIndex = 73;
             this.btnCerrar.Click += new System.EventHandler(this.BtnCerrar_Click);
-            //
+            // 
             // lblPanelTop
-            //
+            // 
             this.lblPanelTop.BackColor = System.Drawing.Color.Transparent;
             this.lblPanelTop.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPanelTop.ForeColor = System.Drawing.Color.White;
@@ -645,11 +646,12 @@ namespace CapaPresentacion
             this.lblPanelTop.TabIndex = 7;
             this.lblPanelTop.Text = "Creador de tareas";
             this.lblPanelTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // pnlTop
-            //
+            // 
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlTop.Controls.Add(this.btnTopMinimizar);
             this.pnlTop.Controls.Add(this.btnCerrar);
             this.pnlTop.Controls.Add(this.lblPanelTop);
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
@@ -657,9 +659,9 @@ namespace CapaPresentacion
             this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
             this.pnlTop.Size = new System.Drawing.Size(1284, 60);
             this.pnlTop.TabIndex = 74;
-            //
+            // 
             // btnCancelar
-            //
+            // 
             this.btnCancelar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(119)))), ((int)(((byte)(255)))));
             this.btnCancelar.BorderWidth = 1F;
             this.btnCancelar.DefaultBack = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
@@ -671,9 +673,24 @@ namespace CapaPresentacion
             this.btnCancelar.Size = new System.Drawing.Size(168, 60);
             this.btnCancelar.TabIndex = 85;
             this.btnCancelar.Text = "Cancelar";
-            //
+            // 
+            // btnTopMinimizar
+            // 
+            this.btnTopMinimizar.BackActive = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackColor = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackHover = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.DefaultBack = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTopMinimizar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnTopMinimizar.Icon = ((System.Drawing.Image)(resources.GetObject("btnTopMinimizar.Icon")));
+            this.btnTopMinimizar.IconRatio = 1.2F;
+            this.btnTopMinimizar.Location = new System.Drawing.Point(1140, 0);
+            this.btnTopMinimizar.Name = "btnTopMinimizar";
+            this.btnTopMinimizar.Size = new System.Drawing.Size(60, 60);
+            this.btnTopMinimizar.TabIndex = 80;
+            // 
             // frmTareas
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Lavender;
@@ -751,5 +768,6 @@ namespace CapaPresentacion
         private AntdUI.Button btnCerrar;
         private System.Windows.Forms.Panel pnlTop;
         private AntdUI.Button btnCancelar;
+        private AntdUI.Button btnTopMinimizar;
     }
 }

@@ -63,9 +63,9 @@ namespace CapaPresentacion
             this.pnlPaginaAcceso.SuspendLayout();
             this.pnlPaginaRegistro.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // pnlMarca
-            //
+            // 
             this.pnlMarca.Back = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlMarca.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.pnlMarca.BorderWidth = 1F;
@@ -81,9 +81,9 @@ namespace CapaPresentacion
             this.pnlMarca.Radius = 0;
             this.pnlMarca.Size = new System.Drawing.Size(390, 700);
             this.pnlMarca.TabIndex = 0;
-            //
+            // 
             // btnTopCerrar
-            //
+            // 
             this.btnTopCerrar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnTopCerrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnTopCerrar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -97,9 +97,9 @@ namespace CapaPresentacion
             this.btnTopCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnTopCerrar.TabIndex = 83;
             this.btnTopCerrar.Click += new System.EventHandler(this.BtnTopCerrar_Click);
-            //
+            // 
             // btnTopMinimizar
-            //
+            // 
             this.btnTopMinimizar.BackActive = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnTopMinimizar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnTopMinimizar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
@@ -113,9 +113,9 @@ namespace CapaPresentacion
             this.btnTopMinimizar.Size = new System.Drawing.Size(60, 60);
             this.btnTopMinimizar.TabIndex = 82;
             this.btnTopMinimizar.Click += new System.EventHandler(this.BtnTopMinimizar_Click);
-            //
+            // 
             // lblMarcaIcono
-            //
+            // 
             this.lblMarcaIcono.BackColor = System.Drawing.Color.Transparent;
             this.lblMarcaIcono.Font = new System.Drawing.Font("Segoe UI Symbol", 30F, System.Drawing.FontStyle.Bold);
             this.lblMarcaIcono.ForeColor = System.Drawing.Color.White;
@@ -125,9 +125,9 @@ namespace CapaPresentacion
             this.lblMarcaIcono.TabIndex = 0;
             this.lblMarcaIcono.Text = "◎";
             this.lblMarcaIcono.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
+            // 
             // lblMarcaTitulo
-            //
+            // 
             this.lblMarcaTitulo.BackColor = System.Drawing.Color.Transparent;
             this.lblMarcaTitulo.Font = new System.Drawing.Font("Inter", 25F, System.Drawing.FontStyle.Bold);
             this.lblMarcaTitulo.ForeColor = System.Drawing.Color.White;
@@ -137,9 +137,9 @@ namespace CapaPresentacion
             this.lblMarcaTitulo.TabIndex = 1;
             this.lblMarcaTitulo.Text = "Enfócate en\nlo importante";
             this.lblMarcaTitulo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // lblMarcaSubtitulo
-            //
+            // 
             this.lblMarcaSubtitulo.BackColor = System.Drawing.Color.Transparent;
             this.lblMarcaSubtitulo.Font = new System.Drawing.Font("Inter", 11F);
             this.lblMarcaSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(233)))), ((int)(((byte)(250)))));
@@ -148,9 +148,9 @@ namespace CapaPresentacion
             this.lblMarcaSubtitulo.Size = new System.Drawing.Size(320, 96);
             this.lblMarcaSubtitulo.TabIndex = 2;
             this.lblMarcaSubtitulo.Text = "Organiza tus tareas y dedica tu tiempo a lo que realmente importa.";
-            //
+            // 
             // lblMarcaPie
-            //
+            // 
             this.lblMarcaPie.BackColor = System.Drawing.Color.Transparent;
             this.lblMarcaPie.Font = new System.Drawing.Font("Inter", 9F);
             this.lblMarcaPie.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(207)))), ((int)(((byte)(220)))), ((int)(((byte)(247)))));
@@ -159,11 +159,11 @@ namespace CapaPresentacion
             this.lblMarcaPie.Size = new System.Drawing.Size(308, 24);
             this.lblMarcaPie.TabIndex = 3;
             this.lblMarcaPie.Text = "PROGRAMA DE CONCENTRACIÓN";
-            //
+            // 
             // pnlTarjeta
-            //
-            this.pnlTarjeta.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.pnlTarjeta.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlTarjeta.Back = System.Drawing.Color.White;
             this.pnlTarjeta.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -181,9 +181,9 @@ namespace CapaPresentacion
             this.pnlTarjeta.Radius = 18;
             this.pnlTarjeta.Size = new System.Drawing.Size(590, 644);
             this.pnlTarjeta.TabIndex = 1;
-            //
+            // 
             // lblBienvenida
-            //
+            // 
             this.lblBienvenida.BackColor = System.Drawing.Color.Transparent;
             this.lblBienvenida.Font = new System.Drawing.Font("Inter", 20F, System.Drawing.FontStyle.Bold);
             this.lblBienvenida.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(45)))), ((int)(((byte)(63)))));
@@ -192,9 +192,9 @@ namespace CapaPresentacion
             this.lblBienvenida.Size = new System.Drawing.Size(520, 56);
             this.lblBienvenida.TabIndex = 0;
             this.lblBienvenida.Text = "Bienvenido";
-            //
+            // 
             // lblDescripcion
-            //
+            // 
             this.lblDescripcion.BackColor = System.Drawing.Color.Transparent;
             this.lblDescripcion.Font = new System.Drawing.Font("Inter", 9.5F);
             this.lblDescripcion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(104)))), ((int)(((byte)(114)))), ((int)(((byte)(133)))));
@@ -203,11 +203,11 @@ namespace CapaPresentacion
             this.lblDescripcion.Size = new System.Drawing.Size(510, 30);
             this.lblDescripcion.TabIndex = 1;
             this.lblDescripcion.Text = "Inicia sesión para continuar con tus tareas.";
-            //
+            // 
             // pnlPaginaVerificacion
-            //
-            this.pnlPaginaVerificacion.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.pnlPaginaVerificacion.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlPaginaVerificacion.BackColor = System.Drawing.Color.White;
             this.pnlPaginaVerificacion.Controls.Add(this.lblCorreoVerificacion);
@@ -223,9 +223,9 @@ namespace CapaPresentacion
             this.pnlPaginaVerificacion.Size = new System.Drawing.Size(534, 460);
             this.pnlPaginaVerificacion.TabIndex = 4;
             this.pnlPaginaVerificacion.Visible = false;
-            //
+            // 
             // lblCorreoVerificacion
-            //
+            // 
             this.lblCorreoVerificacion.BackColor = System.Drawing.Color.Transparent;
             this.lblCorreoVerificacion.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblCorreoVerificacion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -235,9 +235,9 @@ namespace CapaPresentacion
             this.lblCorreoVerificacion.TabIndex = 0;
             this.lblCorreoVerificacion.Text = "Correo electrónico";
             this.lblCorreoVerificacion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // correoVerificacion
-            //
+            // 
             this.correoVerificacion.BackColor = System.Drawing.Color.White;
             this.correoVerificacion.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.correoVerificacion.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -251,9 +251,9 @@ namespace CapaPresentacion
             this.correoVerificacion.Radius = 9;
             this.correoVerificacion.Size = new System.Drawing.Size(460, 44);
             this.correoVerificacion.TabIndex = 1;
-            //
+            // 
             // lblCodigo
-            //
+            // 
             this.lblCodigo.BackColor = System.Drawing.Color.Transparent;
             this.lblCodigo.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblCodigo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -263,9 +263,9 @@ namespace CapaPresentacion
             this.lblCodigo.TabIndex = 2;
             this.lblCodigo.Text = "Código recibido por correo";
             this.lblCodigo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // codigoVerificacion
-            //
+            // 
             this.codigoVerificacion.BackColor = System.Drawing.Color.White;
             this.codigoVerificacion.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.codigoVerificacion.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -279,9 +279,9 @@ namespace CapaPresentacion
             this.codigoVerificacion.Radius = 9;
             this.codigoVerificacion.Size = new System.Drawing.Size(460, 48);
             this.codigoVerificacion.TabIndex = 3;
-            //
+            // 
             // btnEnviarCodigo
-            //
+            // 
             this.btnEnviarCodigo.BackColor = System.Drawing.Color.White;
             this.btnEnviarCodigo.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(242)))), ((int)(((byte)(246)))), ((int)(((byte)(253)))));
             this.btnEnviarCodigo.BorderWidth = 1F;
@@ -296,9 +296,9 @@ namespace CapaPresentacion
             this.btnEnviarCodigo.TabIndex = 4;
             this.btnEnviarCodigo.Text = "Reenviar código al correo";
             this.btnEnviarCodigo.Click += new System.EventHandler(this.btnEnviarCodigo_Click);
-            //
+            // 
             // btnConfirmarCodigo
-            //
+            // 
             this.btnConfirmarCodigo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.btnConfirmarCodigo.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnConfirmarCodigo.BorderWidth = 1F;
@@ -314,9 +314,9 @@ namespace CapaPresentacion
             this.btnConfirmarCodigo.Text = "Confirmar correo";
             this.btnConfirmarCodigo.Type = AntdUI.TTypeMini.Primary;
             this.btnConfirmarCodigo.Click += new System.EventHandler(this.btnConfirmarCodigo_Click);
-            //
+            // 
             // lblVigencia
-            //
+            // 
             this.lblVigencia.BackColor = System.Drawing.Color.Transparent;
             this.lblVigencia.Font = new System.Drawing.Font("Inter", 9F);
             this.lblVigencia.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(117)))), ((int)(((byte)(137)))));
@@ -327,9 +327,9 @@ namespace CapaPresentacion
             this.lblVigencia.Text = "El código vence en 10 minutos. Puedes solicitar otro después de un minuto y tiene" +
     "s hasta cinco intentos por código.";
             this.lblVigencia.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // estadoVerificacion
-            //
+            // 
             this.estadoVerificacion.BackColor = System.Drawing.Color.Transparent;
             this.estadoVerificacion.Font = new System.Drawing.Font("Inter", 9F);
             this.estadoVerificacion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(117)))), ((int)(((byte)(137)))));
@@ -339,9 +339,9 @@ namespace CapaPresentacion
             this.estadoVerificacion.TabIndex = 7;
             this.estadoVerificacion.Text = "Escribe el correo de tu cuenta para solicitar un código.";
             this.estadoVerificacion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // btnNavAcceso
-            //
+            // 
             this.btnNavAcceso.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.btnNavAcceso.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnNavAcceso.BorderWidth = 1F;
@@ -360,9 +360,9 @@ namespace CapaPresentacion
             this.btnNavAcceso.Text = "Iniciar sesión";
             this.btnNavAcceso.Type = AntdUI.TTypeMini.Primary;
             this.btnNavAcceso.Click += new System.EventHandler(this.btnNavAcceso_Click);
-            //
+            // 
             // btnNavRegistro
-            //
+            // 
             this.btnNavRegistro.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(242)))), ((int)(((byte)(245)))), ((int)(((byte)(251)))));
             this.btnNavRegistro.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(238)))), ((int)(((byte)(249)))));
             this.btnNavRegistro.BorderWidth = 1F;
@@ -380,9 +380,9 @@ namespace CapaPresentacion
             this.btnNavRegistro.TabIndex = 6;
             this.btnNavRegistro.Text = "Crear cuenta";
             this.btnNavRegistro.Click += new System.EventHandler(this.btnNavRegistro_Click);
-            //
+            // 
             // pestanas
-            //
+            // 
             this.pestanas.Controls.Add(this.tabAcceso);
             this.pestanas.Controls.Add(this.tabRegistro);
             this.pestanas.Controls.Add(this.tabVerificacion);
@@ -393,35 +393,35 @@ namespace CapaPresentacion
             this.pestanas.TabIndex = 0;
             this.pestanas.Visible = false;
             this.pestanas.SelectedIndexChanged += new System.EventHandler(this.pestanas_SelectedIndexChanged);
-            //
+            // 
             // tabAcceso
-            //
+            // 
             this.tabAcceso.Location = new System.Drawing.Point(4, 35);
             this.tabAcceso.Name = "tabAcceso";
             this.tabAcceso.Size = new System.Drawing.Size(112, 51);
             this.tabAcceso.TabIndex = 0;
             this.tabAcceso.Text = "Iniciar sesión";
-            //
+            // 
             // tabRegistro
-            //
+            // 
             this.tabRegistro.Location = new System.Drawing.Point(4, 35);
             this.tabRegistro.Name = "tabRegistro";
             this.tabRegistro.Size = new System.Drawing.Size(112, 51);
             this.tabRegistro.TabIndex = 1;
             this.tabRegistro.Text = "Crear cuenta";
-            //
+            // 
             // tabVerificacion
-            //
+            // 
             this.tabVerificacion.Location = new System.Drawing.Point(4, 35);
             this.tabVerificacion.Name = "tabVerificacion";
             this.tabVerificacion.Size = new System.Drawing.Size(112, 51);
             this.tabVerificacion.TabIndex = 2;
             this.tabVerificacion.Text = "Código de correo";
-            //
+            // 
             // pnlPaginaAcceso
-            //
-            this.pnlPaginaAcceso.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.pnlPaginaAcceso.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlPaginaAcceso.BackColor = System.Drawing.Color.White;
             this.pnlPaginaAcceso.Controls.Add(this.lblCorreo);
@@ -434,9 +434,9 @@ namespace CapaPresentacion
             this.pnlPaginaAcceso.Name = "pnlPaginaAcceso";
             this.pnlPaginaAcceso.Size = new System.Drawing.Size(534, 460);
             this.pnlPaginaAcceso.TabIndex = 2;
-            //
+            // 
             // lblCorreo
-            //
+            // 
             this.lblCorreo.BackColor = System.Drawing.Color.Transparent;
             this.lblCorreo.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblCorreo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -446,9 +446,9 @@ namespace CapaPresentacion
             this.lblCorreo.TabIndex = 0;
             this.lblCorreo.Text = "Correo electrónico";
             this.lblCorreo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // correo
-            //
+            // 
             this.correo.BackColor = System.Drawing.Color.White;
             this.correo.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.correo.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -462,9 +462,9 @@ namespace CapaPresentacion
             this.correo.Radius = 9;
             this.correo.Size = new System.Drawing.Size(460, 44);
             this.correo.TabIndex = 1;
-            //
+            // 
             // lblClave
-            //
+            // 
             this.lblClave.BackColor = System.Drawing.Color.Transparent;
             this.lblClave.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblClave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -474,9 +474,9 @@ namespace CapaPresentacion
             this.lblClave.TabIndex = 2;
             this.lblClave.Text = "Contraseña";
             this.lblClave.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // clave
-            //
+            // 
             this.clave.BackColor = System.Drawing.Color.White;
             this.clave.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.clave.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -491,9 +491,9 @@ namespace CapaPresentacion
             this.clave.Size = new System.Drawing.Size(460, 44);
             this.clave.TabIndex = 3;
             this.clave.UseSystemPasswordChar = true;
-            //
+            // 
             // btnEntrar
-            //
+            // 
             this.btnEntrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.btnEntrar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnEntrar.BorderWidth = 1F;
@@ -509,9 +509,9 @@ namespace CapaPresentacion
             this.btnEntrar.Text = "Iniciar sesión";
             this.btnEntrar.Type = AntdUI.TTypeMini.Primary;
             this.btnEntrar.Click += new System.EventHandler(this.btnEntrar_Click);
-            //
+            // 
             // lblAcceso
-            //
+            // 
             this.lblAcceso.BackColor = System.Drawing.Color.Transparent;
             this.lblAcceso.Font = new System.Drawing.Font("Inter", 9F);
             this.lblAcceso.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(117)))), ((int)(((byte)(137)))));
@@ -521,11 +521,11 @@ namespace CapaPresentacion
             this.lblAcceso.TabIndex = 5;
             this.lblAcceso.Text = "Las cuentas nuevas deben verificar su correo antes de iniciar sesión.";
             this.lblAcceso.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // pnlPaginaRegistro
-            //
-            this.pnlPaginaRegistro.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.pnlPaginaRegistro.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlPaginaRegistro.BackColor = System.Drawing.Color.White;
             this.pnlPaginaRegistro.Controls.Add(this.lblNombre);
@@ -543,9 +543,9 @@ namespace CapaPresentacion
             this.pnlPaginaRegistro.Size = new System.Drawing.Size(534, 460);
             this.pnlPaginaRegistro.TabIndex = 3;
             this.pnlPaginaRegistro.Visible = false;
-            //
+            // 
             // lblNombre
-            //
+            // 
             this.lblNombre.BackColor = System.Drawing.Color.Transparent;
             this.lblNombre.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblNombre.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -555,9 +555,9 @@ namespace CapaPresentacion
             this.lblNombre.TabIndex = 0;
             this.lblNombre.Text = "Nombre";
             this.lblNombre.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // nombre
-            //
+            // 
             this.nombre.BackColor = System.Drawing.Color.White;
             this.nombre.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.nombre.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -571,9 +571,9 @@ namespace CapaPresentacion
             this.nombre.Radius = 9;
             this.nombre.Size = new System.Drawing.Size(460, 40);
             this.nombre.TabIndex = 1;
-            //
+            // 
             // lblCorreoRegistro
-            //
+            // 
             this.lblCorreoRegistro.BackColor = System.Drawing.Color.Transparent;
             this.lblCorreoRegistro.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblCorreoRegistro.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -583,9 +583,9 @@ namespace CapaPresentacion
             this.lblCorreoRegistro.TabIndex = 2;
             this.lblCorreoRegistro.Text = "Correo electrónico";
             this.lblCorreoRegistro.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // correoRegistro
-            //
+            // 
             this.correoRegistro.BackColor = System.Drawing.Color.White;
             this.correoRegistro.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.correoRegistro.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -599,9 +599,9 @@ namespace CapaPresentacion
             this.correoRegistro.Radius = 9;
             this.correoRegistro.Size = new System.Drawing.Size(460, 40);
             this.correoRegistro.TabIndex = 3;
-            //
+            // 
             // lblClaveRegistro
-            //
+            // 
             this.lblClaveRegistro.BackColor = System.Drawing.Color.Transparent;
             this.lblClaveRegistro.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblClaveRegistro.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -611,9 +611,9 @@ namespace CapaPresentacion
             this.lblClaveRegistro.TabIndex = 4;
             this.lblClaveRegistro.Text = "Contraseña (8–128 caracteres)";
             this.lblClaveRegistro.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // contrasenaRegistro
-            //
+            // 
             this.contrasenaRegistro.BackColor = System.Drawing.Color.White;
             this.contrasenaRegistro.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.contrasenaRegistro.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -628,9 +628,9 @@ namespace CapaPresentacion
             this.contrasenaRegistro.Size = new System.Drawing.Size(460, 40);
             this.contrasenaRegistro.TabIndex = 5;
             this.contrasenaRegistro.UseSystemPasswordChar = true;
-            //
+            // 
             // lblConfirmar
-            //
+            // 
             this.lblConfirmar.BackColor = System.Drawing.Color.Transparent;
             this.lblConfirmar.Font = new System.Drawing.Font("Inter", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblConfirmar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(53)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
@@ -640,9 +640,9 @@ namespace CapaPresentacion
             this.lblConfirmar.TabIndex = 6;
             this.lblConfirmar.Text = "Confirmar contraseña";
             this.lblConfirmar.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // confirmar
-            //
+            // 
             this.confirmar.BackColor = System.Drawing.Color.White;
             this.confirmar.BorderActive = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.confirmar.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(220)))), ((int)(((byte)(232)))));
@@ -657,9 +657,9 @@ namespace CapaPresentacion
             this.confirmar.Size = new System.Drawing.Size(460, 40);
             this.confirmar.TabIndex = 7;
             this.confirmar.UseSystemPasswordChar = true;
-            //
+            // 
             // btnRegistrar
-            //
+            // 
             this.btnRegistrar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(119)))), ((int)(((byte)(209)))));
             this.btnRegistrar.BackHover = System.Drawing.Color.FromArgb(((int)(((byte)(89)))), ((int)(((byte)(133)))), ((int)(((byte)(225)))));
             this.btnRegistrar.BorderWidth = 1F;
@@ -675,9 +675,9 @@ namespace CapaPresentacion
             this.btnRegistrar.Text = "Crear cuenta";
             this.btnRegistrar.Type = AntdUI.TTypeMini.Primary;
             this.btnRegistrar.Click += new System.EventHandler(this.btnRegistrar_Click);
-            //
+            // 
             // lblRegistro
-            //
+            // 
             this.lblRegistro.BackColor = System.Drawing.Color.Transparent;
             this.lblRegistro.Font = new System.Drawing.Font("Inter", 9F);
             this.lblRegistro.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(117)))), ((int)(((byte)(137)))));
@@ -687,9 +687,9 @@ namespace CapaPresentacion
             this.lblRegistro.TabIndex = 9;
             this.lblRegistro.Text = "Se enviará un código para comprobar tu correo electrónico.";
             this.lblRegistro.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // frmLogin
-            //
+            // 
             this.AcceptButton = this.btnEntrar;
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 26F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

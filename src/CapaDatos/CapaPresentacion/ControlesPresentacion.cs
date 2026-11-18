@@ -418,8 +418,11 @@ namespace CapaPresentacion
             int anchoBarra = barra.ClientSize.Width;
             if (encabezado != null && !encabezado.IsDisposed)
             {
-                int anchoEncabezado = Math.Min(220, Math.Max(0, anchoBarra - 200));
-                encabezado.SetBounds(4, 15, anchoEncabezado, 26);
+                // Reserve the controls on the right while allowing the category
+                // label to use the remaining width. The old fixed 220x26 box
+                // clipped both the rounded label and its text on frmTareas.
+                int anchoEncabezado = Math.Max(0, anchoBarra - 200);
+                encabezado.SetBounds(4, 9, anchoEncabezado, 38);
                 anterior.SetBounds(Math.Max(anchoEncabezado + 8, anchoBarra - 106), 7, 48, 42);
                 siguiente.SetBounds(Math.Max(anterior.Right + 4, anchoBarra - 54), 7, 48, 42);
                 pagina.SetBounds(anterior.Left - 68, 0, 64, AltoBarra);

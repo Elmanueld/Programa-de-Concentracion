@@ -31,6 +31,7 @@ namespace CapaPresentacion
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmApariencia));
             this.pnlTop = new System.Windows.Forms.Panel();
             this.lblIconoTop = new AntdUI.Image3D();
+            this.btnTopMinimizar = new AntdUI.Button();
             this.btnCerrar = new AntdUI.Button();
             this.lblTextoTop = new System.Windows.Forms.Label();
             this.pnlTarjeta = new AntdUI.Panel();
@@ -115,6 +116,7 @@ namespace CapaPresentacion
             //
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlTop.Controls.Add(this.lblIconoTop);
+            this.pnlTop.Controls.Add(this.btnTopMinimizar);
             this.pnlTop.Controls.Add(this.btnCerrar);
             this.pnlTop.Controls.Add(this.lblTextoTop);
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
@@ -132,6 +134,20 @@ namespace CapaPresentacion
             this.lblIconoTop.Size = new System.Drawing.Size(60, 60);
             this.lblIconoTop.TabIndex = 88;
             this.lblIconoTop.Text = "image3D3";
+            //
+            // btnTopMinimizar
+            //
+            this.btnTopMinimizar.BackActive = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackColor = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.BackHover = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.DefaultBack = System.Drawing.Color.Transparent;
+            this.btnTopMinimizar.Font = new System.Drawing.Font("Inter", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTopMinimizar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnTopMinimizar.IconRatio = 1.2F;
+            this.btnTopMinimizar.Location = new System.Drawing.Point(864, 0);
+            this.btnTopMinimizar.Name = "btnTopMinimizar";
+            this.btnTopMinimizar.Size = new System.Drawing.Size(60, 60);
+            this.btnTopMinimizar.TabIndex = 73;
             //
             // btnCerrar
             //
@@ -901,6 +917,7 @@ namespace CapaPresentacion
         private System.Windows.Forms.Panel pnlTop;
         private AntdUI.Image3D lblIconoTop;
         private AntdUI.Button btnCerrar;
+        private AntdUI.Button btnTopMinimizar;
         private System.Windows.Forms.Label lblTextoTop;
         private AntdUI.Panel pnlTarjeta;
         private AntdUI.Button btnEjemplo;

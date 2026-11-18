@@ -1,31 +1,34 @@
 # Reporte de pruebas
 
-**Fecha:** 14 de noviembre de 2026
-**Rama:** `main`
-**Build:** Release, .NET Framework 4.8, MSBuild de Visual Studio 2022
+## Resultado de la revisión
 
-## Resultado
+| Comprobación | Resultado |
+|---|---|
+| Recompilación Release de `src/CapaDatos/ProgramaConcentracion.sln` | Aprobada; 0 errores. |
+| Build Release de la solución raíz `Programa-de-Concentracion.slnx` | Aprobada; 0 errores. |
+| WinForms, suite general | Aprobada; 13 comprobaciones. |
+| WinForms, suite con interfaz (`--interfaz`) | Aprobada; 25 comprobaciones. |
+| Backend.Tests | Aprobada; 26 comprobaciones, 0 fallos. |
+| SQL remoto y procedimientos en MonsterASP | Pendiente; no se conectó ni modificó la base remota. |
+| SMTP real | Pendiente; las pruebas usan remitente falso y no enviaron correos. |
+| CI en GitHub | Pendiente de ejecutar después de publicar la rama. |
 
-| Área | Resultado | Evidencia |
-| --- | --- | --- |
-| Compilación de `tests/Pruebas.csproj` | Aprobada, 0 errores, 2 advertencias de código existentes | [log](../tests/evidencias/compilacion.log) · [resumen](../tests/evidencias/evidencia-compilacion.png) |
-| Unitarias/componentes | **22 aprobadas** | [log](../tests/evidencias/unitarias.log) · [resumen](../tests/evidencias/evidencia-unitarias.png) |
-| Interfaz WinForms | **34 aprobadas** (22 base + 12 de interfaz) | [log](../tests/evidencias/interfaz.log) · [resumen](../tests/evidencias/evidencia-interfaz.png) |
-| Integración LocalDB | **71 aprobadas** (22 base + 49 SQL) | [log](../tests/evidencias/integracion.log) · [resumen](../tests/evidencias/evidencia-integracion.png) |
+La compilación tuvo 0 errores y dos advertencias C# preexistentes: `CS0649` en `Tipografia.FuenteBase.Fuente` y `CS0169` en `frmSeleccionarApp.flApp`. También apareció `NU1900` al no poder consultar `https://api.nuget.org/v3/index.json` para información de vulnerabilidades. No impidió compilar ni ejecutar las pruebas.
 
-La integración corrió únicamente en `(localdb)\Entregable3Pruebas`. Las cuentas y datos temporales se limpian al terminar. La prueba SMTP utiliza un servidor TCP local y no envía correo a cuentas reales. La base SQLite de prueba usa una ruta temporal configurada por el ejecutable y se elimina al finalizar.
+## Cobertura automatizada
 
-## Correcciones verificadas
+`Backend.Tests` utiliza repositorios y remitente de correo falsos. Comprueba envío y confirmación de verificación, hash del código, configuración obligatoria, fallos SMTP, registro idempotente, validación del hash de contraseña, recuperación y metadatos de validación de los records.
 
-- La paginación conserva el total de tarjetas y no pierde elementos al alternar de página; el contador muestra `1 / 2` cuando corresponde.
-- Las flechas AntdUI caben completas en la barra y los nombres de tarjetas quedan visibles.
-- Los scripts de instalación ya pasan los parámetros de sincronización que envía la capa de datos; se eliminó el desajuste que causaba SQL 8144 al guardar una plantilla.
-- Dos propietarios pueden tener los mismos valores de catálogo/tarea sin consultar ni modificar filas del otro.
-- Las tareas activas y completadas no se editan ni eliminan, conforme al comportamiento actual del formulario.
-- Las pruebas se ejecutan sin preferencia de proceso de 32 bits, alineadas con la aplicación y con `winsqlite3.dll`.
+La suite WinForms comprueba hashing de contraseñas, validaciones, compatibilidad con sesión, rechazo de entradas inválidas antes de llamar a la API, navegación y controles de interfaz. Las pruebas no contactan MonsterASP ni SQL/SMTP reales y no modifican datos de producción.
 
-## Límites de esta revisión
+## Pruebas manuales pendientes
 
-La automatización no sustituye la comprobación visual manual de todos los formularios. El SMTP real y el destino en la nube todavía no están configurados, tal como queda planificado para una fase posterior.
+En un entorno de staging aislado y con cuentas desechables, validar:
 
-Consulta el [plan](PLAN_PRUEBAS.md), las [incidencias](INCIDENCIAS_PRUEBAS.md) y las [evidencias completas](../tests/evidencias/README.md).
+1. Aplicar y verificar las migraciones frente al esquema instalado.
+2. Alta remota y reintento idempotente con el mismo usuario.
+3. Inicio de sesión, aislamiento de consultas y sincronización con dos usuarios.
+4. Envío y confirmación de correo, recuperación de contraseña y expiración/límites.
+5. Funcionamiento offline, reinicio con operaciones pendientes y resincronización.
+
+No apuntar estas pruebas a la base de producción. La revisión no ejecutó scripts SQL, publicó el Backend ni envió correo real.

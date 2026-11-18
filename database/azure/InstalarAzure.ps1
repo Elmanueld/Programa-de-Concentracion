@@ -15,10 +15,18 @@ $ErrorActionPreference = 'Stop'
 
 $claveAdmin = Read-Host 'Contraseña del administrador' -AsSecureString
 $claveApp = Read-Host "Contraseña nueva para el usuario $UsuarioApp" -AsSecureString
-$claveAdminTexto = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($claveAdmin))
 $claveAppTexto = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($claveApp))
 
-$cadena = "Server=tcp:$Servidor,1433;Database=$BaseDatos;User ID=$UsuarioAdmin;Password=$claveAdminTexto;Encrypt=True;TrustServerCertificate=False;Connect Timeout=60;"
+# La cadena se arma con SqlConnectionStringBuilder para que símbolos como ; o = en los datos no la rompan.
+# La contraseña del administrador viaja en un SqlCredential y nunca se escribe en la cadena.
+$constructor = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
+$constructor['Data Source'] = "tcp:$Servidor,1433"
+$constructor['Initial Catalog'] = $BaseDatos
+$constructor['Encrypt'] = $true
+$constructor['TrustServerCertificate'] = $false
+$constructor['Connect Timeout'] = 60
+$claveAdmin.MakeReadOnly()
+$credencial = New-Object System.Data.SqlClient.SqlCredential($UsuarioAdmin, $claveAdmin)
 $archivos = @('02_CrearTablas.sql', '04_CrearProcedimientos.sql', '05_CrearIndices.sql',
     '06_MigracionSincronizacionOffline.sql', '07_MigracionPlantillaPredeterminada.sql', '08_MigracionTareasDetenidas.sql')
 
@@ -31,12 +39,14 @@ function Ejecutar($conexion, $texto) {
     }
 }
 
-$conexion = New-Object System.Data.SqlClient.SqlConnection $cadena
+$conexion = New-Object System.Data.SqlClient.SqlConnection -ArgumentList @($constructor.ConnectionString, $credencial)
 try {
     $conexion.Open()
     $existe = $conexion.CreateCommand()
     $existe.CommandText = "SELECT OBJECT_ID('dbo.Usuarios', 'U')"
-    if ($existe.ExecuteScalar() -isnot [DBNull]) {
+    $resultado = $existe.ExecuteScalar()
+    $existe.Dispose()
+    if ($resultado -isnot [DBNull]) {
         throw 'La base ya tiene las tablas del programa. No se ejecutó nada.'
     }
     foreach ($archivo in $archivos) {

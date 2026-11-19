@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="ClienteApiDatos.cs" />
     <Compile Include="SQLiteLocal.cs" />
     <Compile Include="D_Comun.cs" />

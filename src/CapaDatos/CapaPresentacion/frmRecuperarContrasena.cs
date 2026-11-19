@@ -111,55 +111,63 @@ namespace CapaPresentacion
 
         private async void EnviarCodigo_Click(object sender, EventArgs e)
         {
-            string destino = correo.Text.Trim();
-            if (!recuperacion.EstaConfigurado())
+            await OperacionUI.EjecutarEventoAsync(this, async () =>
             {
-                estado.Text = "El restablecimiento de contraseña no está disponible ahora. Inténtalo más tarde.";
-                return;
-            }
+                string destino = correo.Text.Trim();
+                if (!recuperacion.EstaConfigurado())
+                {
+                    estado.Text = "El restablecimiento de contraseña no está disponible ahora. Inténtalo más tarde.";
+                    return;
+                }
 
-            Exception errorSolicitud = null;
-            bool completado = await OperacionUI.EjecutarAsync(this,
-                () => Task.Run(() => errorSolicitud = recuperacion.SolicitarCodigo(destino)));
-            if (!completado) return;
-            if (errorSolicitud != null)
-            {
-                estado.Text = OperacionUI.DescribirError(errorSolicitud);
-                OperacionUI.ReportarError(this, errorSolicitud, "No se pudo enviar el código");
-                return;
-            }
-            estado.Text = "Si la cuenta está registrada y verificada, recibirás un código. Revisa también el correo no deseado.";
+                Exception errorSolicitud = null;
+                bool completado = await OperacionUI.EjecutarAsync(this,
+                    () => Task.Run(() => errorSolicitud = recuperacion.SolicitarCodigo(destino)));
+                if (!completado) return;
+                if (errorSolicitud != null)
+                {
+                    estado.Text = OperacionUI.DescribirError(errorSolicitud);
+                    OperacionUI.ReportarError(this, errorSolicitud, "No se pudo enviar el código");
+                    return;
+                }
+                estado.Text = "Si la cuenta está registrada y verificada, recibirás un código. Revisa también el correo no deseado.";
+            }, "No se pudo enviar el código");
         }
 
         private async void Restablecer_Click(object sender, EventArgs e)
         {
-            if (!String.Equals(nuevaContrasena.Text, confirmarContrasena.Text, StringComparison.Ordinal))
+            await OperacionUI.EjecutarEventoAsync(this, async () =>
             {
-                MessageBox.Show(this, "Las contraseñas no coinciden.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+                if (!String.Equals(nuevaContrasena.Text, confirmarContrasena.Text, StringComparison.Ordinal))
+                {
+                    MessageBox.Show(this, "Las contraseñas no coinciden.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    confirmarContrasena.Focus();
+                    confirmarContrasena.SelectAll();
+                    return;
+                }
 
-            string destino = correo.Text.Trim();
-            string codigoIngresado = codigo.Text;
-            string contrasenaIngresada = nuevaContrasena.Text;
-            Exception errorRestablecimiento = null;
-            bool completado = await OperacionUI.EjecutarAsync(this, () => Task.Run(() =>
-                errorRestablecimiento = recuperacion.RestablecerContrasena(destino, codigoIngresado, contrasenaIngresada)));
+                string destino = correo.Text.Trim();
+                string codigoIngresado = codigo.Text;
+                string contrasenaIngresada = nuevaContrasena.Text;
+                Exception errorRestablecimiento = null;
+                bool completado = await OperacionUI.EjecutarAsync(this, () => Task.Run(() =>
+                    errorRestablecimiento = recuperacion.RestablecerContrasena(destino, codigoIngresado, contrasenaIngresada)));
 
-            if (!completado) return;
-            if (errorRestablecimiento != null)
-            {
-                estado.Text = OperacionUI.DescribirError(errorRestablecimiento);
-                OperacionUI.ReportarError(this, errorRestablecimiento, "No se pudo restablecer la contraseña");
-                return;
-            }
-            nuevaContrasena.Clear();
-            confirmarContrasena.Clear();
-            codigo.Clear();
-            MessageBox.Show(this, "La contraseña se restableció. Ya puedes iniciar sesión.",
-                Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            DialogResult = DialogResult.OK;
-            Close();
+                if (!completado) return;
+                if (errorRestablecimiento != null)
+                {
+                    estado.Text = OperacionUI.DescribirError(errorRestablecimiento);
+                    OperacionUI.ReportarError(this, errorRestablecimiento, "No se pudo restablecer la contraseña");
+                    return;
+                }
+                nuevaContrasena.Clear();
+                confirmarContrasena.Clear();
+                codigo.Clear();
+                MessageBox.Show(this, "La contraseña se restableció. Ya puedes iniciar sesión.",
+                    Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DialogResult = DialogResult.OK;
+                Close();
+            }, "No se pudo restablecer la contraseña");
         }
     }
 }

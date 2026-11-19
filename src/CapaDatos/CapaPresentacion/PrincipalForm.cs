@@ -181,7 +181,7 @@ namespace CapaPresentacion
 
         private void ActualizarPerfil(PreferenciasUsuario preferencias)
         {
-            lblBienvenida.Text = "Bienvenido, " + (usuario.Nombre ?? String.Empty);
+            lblBienvenida.Text = "Bienvenido, " + (usuario.Nombre ?? String.Empty).Normalize(System.Text.NormalizationForm.FormC);
             ActualizarFotoPerfil(preferencias == null ? null : preferencias.RutaFoto);
         }
 
@@ -226,6 +226,9 @@ namespace CapaPresentacion
         private void PrincipalForm_Shown(object sender, EventArgs e)
         {
             PreferenciasUsuario preferencias = ObtenerPreferencias();
+            if (Program.InicioDesdeWindows && preferencias.IniciarConWindows && preferencias.IniciarMinimizado)
+                WindowState = FormWindowState.Minimized;
+
             if (String.Equals((preferencias.PantallaInicio ?? String.Empty).Trim(),
                 "Tarea", StringComparison.OrdinalIgnoreCase))
             {
@@ -234,10 +237,6 @@ namespace CapaPresentacion
                     using (var formulario = new frmTareas(usuario.IdUsuario, DateTime.Today))
                         NavegacionFormularios.MostrarModal(this, formulario);
                 }));
-            }
-            else if (Program.InicioDesdeWindows && preferencias.IniciarConWindows && preferencias.IniciarMinimizado)
-            {
-                WindowState = FormWindowState.Minimized;
             }
         }
 

@@ -210,6 +210,12 @@ namespace CapaPresentacion
             catch (WebException) { }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }
+            catch (Exception ex)
+            {
+                // Website icons are optional. A download or image decoder error
+                // must not escape this async-void control callback into WinForms.
+                ErroresAplicacion.Registrar(ex, "No se pudo cargar el icono del sitio");
+            }
         }
 
         private static async Task<byte[]> DescargarIconoAsync(Uri icono)

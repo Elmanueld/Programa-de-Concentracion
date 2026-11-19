@@ -301,4 +301,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <Target Name="CopySQLiteInterop" AfterTargets="Build">
+    <Copy SourceFiles="..\CapaDatos\bin\$(Configuration)\x64\SQLite.Interop.dll"
+          DestinationFolder="$(TargetDir)x64" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\CapaDatos\bin\$(Configuration)\x86\SQLite.Interop.dll"
+          DestinationFolder="$(TargetDir)x86" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

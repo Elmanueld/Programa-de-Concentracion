@@ -140,34 +140,51 @@ namespace CapaPresentacion
 
         private async void btnRegistrar_Click(object sender, EventArgs e)
         {
-            if (!OperacionUI.Ejecutar(this, () =>
+            try
             {
-                if (contrasenaRegistro.Text != confirmar.Text)
-                    throw new ArgumentException("Las contraseñas no coinciden.");
-                usuarios.RegistrarUsuario(nombre.Text, correoRegistro.Text, contrasenaRegistro.Text);
-            }))
-                return;
-            correo.Text = correoRegistro.Text.Trim();
-            correoVerificacion.Text = correo.Text;
-            contrasenaRegistro.Clear();
-            confirmar.Clear();
-            clave.Clear();
-            codigoVerificacion.Clear();
-            if (N_Usuario.ModoDemostracion)
-            {
-                ActualizarVista(tabAcceso, true);
-                lblAcceso.Text = "Cuenta creada. Ya puede iniciar sesión con su contraseña (modo demostración).";
-                clave.Focus();
-                return;
+                if (!String.Equals(contrasenaRegistro.Text, confirmar.Text, StringComparison.Ordinal))
+                {
+                    MessageBox.Show(this, "Las contraseñas no coinciden. Escríbelas igual en ambos campos.",
+                        "Revisa la contraseña", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    confirmar.Focus();
+                    confirmar.SelectAll();
+                    return;
+                }
+
+                if (!OperacionUI.Ejecutar(this, () =>
+                {
+                    usuarios.RegistrarUsuario(nombre.Text, correoRegistro.Text, contrasenaRegistro.Text);
+                }))
+                    return;
+                correo.Text = correoRegistro.Text.Trim();
+                correoVerificacion.Text = correo.Text;
+                contrasenaRegistro.Clear();
+                confirmar.Clear();
+                clave.Clear();
+                codigoVerificacion.Clear();
+                if (N_Usuario.ModoDemostracion)
+                {
+                    ActualizarVista(tabAcceso, true);
+                    lblAcceso.Text = "Cuenta creada. Ya puede iniciar sesión con su contraseña (modo demostración).";
+                    clave.Focus();
+                    return;
+                }
+                ActualizarVista(tabVerificacion, true);
+                estadoVerificacion.Text = "Cuenta creada. Enviando el código al correo indicado...";
+                await SolicitarCodigo();
             }
-            ActualizarVista(tabVerificacion, true);
-            estadoVerificacion.Text = "Cuenta creada. Enviando el código al correo indicado...";
-            await SolicitarCodigo();
+            catch (Exception ex)
+            {
+                if (!IsDisposed)
+                    OperacionUI.ReportarError(this, ex, "No se pudo completar el registro");
+                else
+                    ErroresAplicacion.Registrar(ex, "Registro con formulario cerrado");
+            }
         }
 
         private async void btnEnviarCodigo_Click(object sender, EventArgs e)
         {
-            await SolicitarCodigo();
+            await OperacionUI.EjecutarEventoAsync(this, SolicitarCodigo, "No se pudo enviar el código");
         }
 
         private async Task SolicitarCodigo()
@@ -256,25 +273,28 @@ namespace CapaPresentacion
 
         private async void btnConfirmarCodigo_Click(object sender, EventArgs e)
         {
-            string emailVerificacion = correoVerificacion.Text;
-            string codigo = codigoVerificacion.Text;
-            Exception errorConfirmacion = null;
-            if (!await OperacionUI.EjecutarAsync(this,
-                () => Task.Run(() => errorConfirmacion = verificacion.ConfirmarCodigo(emailVerificacion, codigo))))
-                return;
-            if (errorConfirmacion != null)
+            await OperacionUI.EjecutarEventoAsync(this, async () =>
             {
-                estadoVerificacion.Text = OperacionUI.DescribirError(errorConfirmacion);
-                OperacionUI.ReportarError(this, errorConfirmacion, "No se pudo verificar el correo");
-                return;
-            }
-            correo.Text = emailVerificacion.Trim();
-            codigoVerificacion.Clear();
-            clave.Clear();
-            estadoVerificacion.Text = "Correo verificado.";
-            ActualizarVista(tabAcceso, true);
-            MessageBox.Show(this, "Correo verificado. Ya puede iniciar sesión.", "Verificación");
-            clave.Focus();
+                string emailVerificacion = correoVerificacion.Text;
+                string codigo = codigoVerificacion.Text;
+                Exception errorConfirmacion = null;
+                if (!await OperacionUI.EjecutarAsync(this,
+                    () => Task.Run(() => errorConfirmacion = verificacion.ConfirmarCodigo(emailVerificacion, codigo))))
+                    return;
+                if (errorConfirmacion != null)
+                {
+                    estadoVerificacion.Text = OperacionUI.DescribirError(errorConfirmacion);
+                    OperacionUI.ReportarError(this, errorConfirmacion, "No se pudo verificar el correo");
+                    return;
+                }
+                correo.Text = emailVerificacion.Trim();
+                codigoVerificacion.Clear();
+                clave.Clear();
+                estadoVerificacion.Text = "Correo verificado.";
+                ActualizarVista(tabAcceso, true);
+                MessageBox.Show(this, "Correo verificado. Ya puede iniciar sesión.", "Verificación");
+                clave.Focus();
+            }, "No se pudo verificar el correo");
         }
 
         private void btnNavAcceso_Click(object sender, EventArgs e)

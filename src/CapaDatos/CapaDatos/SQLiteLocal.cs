@@ -1,22 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CapaDatos
 {
     /// <summary>
-    /// Small SQLite adapter over the Windows SQLite API (winsqlite3.dll), so
-    /// the offline store does not depend on a separately installed SQL server.
+    /// Small adapter over the bundled System.Data.SQLite provider. The local
+    /// store does not depend on a separately installed SQL server.
     /// </summary>
     internal static class SQLiteLocal
     {
-        private const int SqliteOk = 0;
         private const int SqliteRow = 100;
         private const int SqliteDone = 101;
-        private const int TipoNulo = 5;
         private static readonly object Inicializador = new object();
         private static bool inicializado;
         private static string ruta;
@@ -120,14 +118,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS IX_Descansos_IdServidor ON Descansos(IdUsuario
                 }
                 using (var conexion = new Conexion(ruta))
                 {
-                    IntPtr error;
-                    int resultado = sqlite3_exec(conexion.Handle, Esquema, IntPtr.Zero, IntPtr.Zero, out error);
-                    if (resultado != SqliteOk)
-                    {
-                        string detalle = error == IntPtr.Zero ? "" : Marshal.PtrToStringAnsi(error);
-                        if (error != IntPtr.Zero) sqlite3_free(error);
-                        throw new InvalidOperationException("No se pudo crear el esquema offline. " + detalle);
-                    }
+                    conexion.EjecutarScript(Esquema);
                 }
                 inicializado = true;
                 try { MigrarEstadoTareaDetenida(); }
@@ -172,12 +163,11 @@ PRAGMA foreign_keys=ON;");
         {
             using (var conexion = new Conexion(ruta))
             {
-                IntPtr error;
-                int resultado = sqlite3_exec(conexion.Handle, sql, IntPtr.Zero, IntPtr.Zero, out error);
-                if (resultado == SqliteOk) return;
-                string detalle = error == IntPtr.Zero ? String.Empty : Marshal.PtrToStringAnsi(error);
-                if (error != IntPtr.Zero) sqlite3_free(error);
-                throw new InvalidOperationException("No se pudo migrar el esquema offline. " + detalle);
+                try { conexion.EjecutarScript(sql); }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("No se pudo migrar el esquema offline. " + ex.Message, ex);
+                }
             }
         }
 
@@ -308,151 +298,167 @@ PRAGMA foreign_keys=ON;");
 
         internal sealed class Conexion : IDisposable
         {
-            private IntPtr db;
-            public int Cambios { get { return sqlite3_changes(db); } }
-            public IntPtr Handle { get { return db; } }
+            private readonly SQLiteConnection db;
+            public int Cambios { get { return db.Changes; } }
 
             public Conexion(string archivo)
             {
-                int rc = sqlite3_open16(archivo, out db);
-                if (rc != SqliteOk) throw Error("No se pudo abrir la base offline.");
-                sqlite3_busy_timeout(db, 5000);
+                var builder = new SQLiteConnectionStringBuilder
+                {
+                    DataSource = archivo,
+                    Version = 3,
+                    Pooling = false
+                };
+                db = new SQLiteConnection(builder.ConnectionString);
+                db.DefaultTimeout = 5;
+                db.Open();
                 using (var stmt = Preparar("PRAGMA foreign_keys=ON;", null)) stmt.Avanzar();
             }
 
             public Sentencia Preparar(string sql, object[] parametros)
             {
-                IntPtr sentencia;
-                int rc = sqlite3_prepare16_v2(db, sql, -1, out sentencia, IntPtr.Zero);
-                if (rc != SqliteOk) throw Error("La consulta SQLite no es válida.");
-                var resultado = new Sentencia(this, sentencia);
-                try
+                var comando = db.CreateCommand();
+                comando.CommandText = NumerarParametros(sql, parametros == null ? 0 : parametros.Length);
+                if (parametros != null)
                 {
-                    if (parametros != null)
-                        for (int i = 0; i < parametros.Length; i++) resultado.Vincular(i + 1, parametros[i]);
-                    return resultado;
+                    for (int i = 0; i < parametros.Length; i++)
+                    {
+                        var parametro = comando.CreateParameter();
+                        parametro.ParameterName = "?" + (i + 1).ToString(CultureInfo.InvariantCulture);
+                        parametro.Value = NormalizarParametro(parametros[i]);
+                        comando.Parameters.Add(parametro);
+                    }
                 }
-                catch { resultado.Dispose(); throw; }
+                return new Sentencia(this, comando);
             }
 
             public Exception Error(string mensaje)
             {
-                string detalle = db == IntPtr.Zero ? "" : Marshal.PtrToStringAnsi(sqlite3_errmsg(db));
-                return new InvalidOperationException(mensaje + (String.IsNullOrEmpty(detalle) ? "" : " " + detalle));
+                return new InvalidOperationException(mensaje);
+            }
+
+            public void EjecutarScript(string sql)
+            {
+                if (String.IsNullOrWhiteSpace(sql)) return;
+                string[] sentencias = sql.Split(';');
+                foreach (string texto in sentencias)
+                {
+                    if (String.IsNullOrWhiteSpace(texto)) continue;
+                    using (SQLiteCommand comando = db.CreateCommand())
+                    {
+                        comando.CommandText = texto;
+                        using (SQLiteDataReader lector = comando.ExecuteReader())
+                            while (lector.Read()) { }
+                    }
+                }
             }
 
             public void Dispose()
             {
-                if (db != IntPtr.Zero) { sqlite3_close_v2(db); db = IntPtr.Zero; }
+                db.Dispose();
+            }
+
+            private static object NormalizarParametro(object valor)
+            {
+                if (valor == null || valor == DBNull.Value) return DBNull.Value;
+                if (valor is bool) return (bool)valor ? 1 : 0;
+                if (valor is DateTime)
+                {
+                    DateTime fecha = (DateTime)valor;
+                    if (fecha.Kind == DateTimeKind.Local) fecha = fecha.ToUniversalTime();
+                    return fecha.ToString("o", CultureInfo.InvariantCulture);
+                }
+                if (valor is Guid) return ((Guid)valor).ToString("D");
+                if (valor is string || valor is byte[] || valor is double || valor is float ||
+                    valor is decimal || valor is byte || valor is short || valor is int ||
+                    valor is long || valor is uint || valor is ushort || valor is ulong)
+                    return valor;
+                return Convert.ToString(valor, CultureInfo.InvariantCulture);
+            }
+
+            private static string NumerarParametros(string sql, int cantidad)
+            {
+                if (cantidad == 0 || String.IsNullOrEmpty(sql)) return sql;
+                var resultado = new StringBuilder(sql.Length + cantidad * 2);
+                char comilla = '\0';
+                int parametro = 0;
+                for (int i = 0; i < sql.Length; i++)
+                {
+                    char actual = sql[i];
+                    if (comilla != '\0')
+                    {
+                        resultado.Append(actual);
+                        if (actual == comilla)
+                        {
+                            if (i + 1 < sql.Length && sql[i + 1] == comilla)
+                                resultado.Append(sql[++i]);
+                            else
+                                comilla = '\0';
+                        }
+                        continue;
+                    }
+
+                    if (actual == '\'' || actual == '"' || actual == '`')
+                    {
+                        comilla = actual;
+                        resultado.Append(actual);
+                    }
+                    else if (actual == '[')
+                    {
+                        comilla = ']';
+                        resultado.Append(actual);
+                    }
+                    else if (actual == '?' && parametro < cantidad)
+                    {
+                        parametro++;
+                        resultado.Append('?').Append(parametro.ToString(CultureInfo.InvariantCulture));
+                    }
+                    else resultado.Append(actual);
+                }
+                if (parametro != cantidad)
+                    throw new ArgumentException("La cantidad de parámetros no coincide con la consulta SQLite.");
+                return resultado.ToString();
             }
         }
 
         internal sealed class Sentencia : IDisposable
         {
             private readonly Conexion conexion;
-            private IntPtr statement;
+            private readonly SQLiteCommand comando;
+            private SQLiteDataReader lector;
 
-            internal Sentencia(Conexion conexion, IntPtr statement)
+            internal Sentencia(Conexion conexion, SQLiteCommand comando)
             {
                 this.conexion = conexion;
-                this.statement = statement;
+                this.comando = comando;
             }
 
-            public int Avanzar() { return sqlite3_step(statement); }
+            public int Avanzar()
+            {
+                if (lector == null) lector = comando.ExecuteReader();
+                return lector.Read() ? SqliteRow : SqliteDone;
+            }
 
             public object Leer(int indice)
             {
-                if (sqlite3_column_type(statement, indice) == TipoNulo) return null;
-                int tipo = sqlite3_column_type(statement, indice);
-                if (tipo == 1) return sqlite3_column_int64(statement, indice);
-                if (tipo == 2) return sqlite3_column_double(statement, indice);
-                IntPtr valor = sqlite3_column_text(statement, indice);
-                int longitud = sqlite3_column_bytes(statement, indice);
-                if (valor == IntPtr.Zero || longitud <= 0) return String.Empty;
-                byte[] bytes = new byte[longitud];
-                Marshal.Copy(valor, bytes, 0, longitud);
-                return Encoding.UTF8.GetString(bytes);
+                if (lector == null || lector.IsDBNull(indice)) return null;
+                return lector.GetValue(indice);
             }
 
             public object Leer(string nombre)
             {
-                for (int i = 0; i < sqlite3_column_count(statement); i++)
-                    if (String.Equals(Marshal.PtrToStringAnsi(sqlite3_column_name(statement, i)), nombre, StringComparison.OrdinalIgnoreCase))
-                        return Leer(i);
-                throw conexion.Error("No existe la columna SQLite '" + nombre + "'.");
-            }
-
-            internal void Vincular(int indice, object valor)
-            {
-                int rc;
-                if (valor == null || valor == DBNull.Value) rc = sqlite3_bind_null(statement, indice);
-                else if (valor is bool) rc = sqlite3_bind_int64(statement, indice, (bool)valor ? 1 : 0);
-                else if (valor is byte || valor is short || valor is int || valor is long)
-                    rc = sqlite3_bind_int64(statement, indice, Convert.ToInt64(valor, CultureInfo.InvariantCulture));
-                else if (valor is float || valor is double || valor is decimal)
-                    rc = sqlite3_bind_double(statement, indice, Convert.ToDouble(valor, CultureInfo.InvariantCulture));
-                else if (valor is DateTime)
+                try { return Leer(lector.GetOrdinal(nombre)); }
+                catch (IndexOutOfRangeException)
                 {
-                    DateTime fecha = (DateTime)valor;
-                    if (fecha.Kind == DateTimeKind.Local) fecha = fecha.ToUniversalTime();
-                    rc = sqlite3_bind_text16(statement, indice, fecha.ToString("o", CultureInfo.InvariantCulture), -1, new IntPtr(-1));
+                    throw conexion.Error("No existe la columna SQLite '" + nombre + "'.");
                 }
-                else if (valor is Guid)
-                    rc = sqlite3_bind_text16(statement, indice, ((Guid)valor).ToString("D"), -1, new IntPtr(-1));
-                else
-                    rc = sqlite3_bind_text16(statement, indice, Convert.ToString(valor, CultureInfo.InvariantCulture), -1, new IntPtr(-1));
-                if (rc != SqliteOk) throw conexion.Error("No se pudo asignar un parámetro SQLite.");
             }
 
             public void Dispose()
             {
-                if (statement != IntPtr.Zero) { sqlite3_finalize(statement); statement = IntPtr.Zero; }
+                if (lector != null) lector.Dispose();
+                comando.Dispose();
             }
         }
-
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_open16")]
-        private static extern int sqlite3_open16([MarshalAs(UnmanagedType.LPWStr)] string filename, out IntPtr db);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_exec")]
-        private static extern int sqlite3_exec(IntPtr db, [MarshalAs(UnmanagedType.LPStr)] string sql, IntPtr callback, IntPtr argument, out IntPtr errorMessage);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_free")]
-        private static extern void sqlite3_free(IntPtr buffer);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_close_v2")]
-        private static extern int sqlite3_close_v2(IntPtr db);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_prepare16_v2")]
-        private static extern int sqlite3_prepare16_v2(IntPtr db, [MarshalAs(UnmanagedType.LPWStr)] string sql, int bytes, out IntPtr statement, IntPtr tail);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_step")]
-        private static extern int sqlite3_step(IntPtr statement);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_finalize")]
-        private static extern int sqlite3_finalize(IntPtr statement);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_bind_null")]
-        private static extern int sqlite3_bind_null(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_bind_int64")]
-        private static extern int sqlite3_bind_int64(IntPtr statement, int index, long value);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_bind_double")]
-        private static extern int sqlite3_bind_double(IntPtr statement, int index, double value);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_bind_text16")]
-        private static extern int sqlite3_bind_text16(IntPtr statement, int index, [MarshalAs(UnmanagedType.LPWStr)] string value, int bytes, IntPtr destructor);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_type")]
-        private static extern int sqlite3_column_type(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_int64")]
-        private static extern long sqlite3_column_int64(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_double")]
-        private static extern double sqlite3_column_double(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_text16")]
-        private static extern IntPtr sqlite3_column_text16(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_text")]
-        private static extern IntPtr sqlite3_column_text(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_bytes")]
-        private static extern int sqlite3_column_bytes(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_name")]
-        private static extern IntPtr sqlite3_column_name(IntPtr statement, int index);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_column_count")]
-        private static extern int sqlite3_column_count(IntPtr statement);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_changes")]
-        private static extern int sqlite3_changes(IntPtr db);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_busy_timeout")]
-        private static extern int sqlite3_busy_timeout(IntPtr db, int milliseconds);
-        [DllImport("winsqlite3.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sqlite3_errmsg")]
-        private static extern IntPtr sqlite3_errmsg(IntPtr db);
     }
 }

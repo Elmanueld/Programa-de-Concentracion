@@ -33,8 +33,7 @@ namespace CapaPresentacion
             }
             finally
             {
-                ventana.UseWaitCursor = false;
-                ventana.Enabled = true;
+                RestaurarEstado(ventana);
             }
         }
 
@@ -57,11 +56,22 @@ namespace CapaPresentacion
             }
             finally
             {
-                if (!ventana.IsDisposed)
-                {
-                    ventana.UseWaitCursor = false;
-                    ventana.Enabled = true;
-                }
+                RestaurarEstado(ventana);
+            }
+        }
+
+        public static async Task EjecutarEventoAsync(Form ventana, Func<Task> accion, string titulo)
+        {
+            try
+            {
+                await accion();
+            }
+            catch (Exception ex)
+            {
+                if (ventana == null || ventana.IsDisposed || ventana.Disposing)
+                    ErroresAplicacion.Registrar(ex, titulo ?? "Evento asíncrono de una ventana cerrada");
+                else
+                    ReportarError(ventana, ex, titulo ?? "No se pudo completar la operación");
             }
         }
 
@@ -87,13 +97,44 @@ namespace CapaPresentacion
                     "Código de ayuda: " + referencia + ". Si necesitas soporte, compártelo con quien te ayude.";
             }
 
-            MessageBox.Show(ventana, mensaje, titulo ?? "Programa de Concentración",
-                MessageBoxButtons.OK, recuperable || causa is ArgumentException
-                    ? MessageBoxIcon.Warning : MessageBoxIcon.Error);
+            MostrarMensajeSeguro(ventana, mensaje, titulo ?? "Programa de Concentración",
+                recuperable || causa is ArgumentException ? MessageBoxIcon.Warning : MessageBoxIcon.Error);
             if (estadoPersistenciaIncierto)
             {
                 Program.CierreControladoPorErrorCritico = true;
                 Application.Exit();
+            }
+        }
+
+        private static void MostrarMensajeSeguro(Form ventana, string mensaje, string titulo, MessageBoxIcon icono)
+        {
+            try
+            {
+                if (ventana != null && !ventana.IsDisposed && !ventana.Disposing)
+                    MessageBox.Show(ventana, mensaje, titulo, MessageBoxButtons.OK, icono);
+                else
+                    MessageBox.Show(mensaje, titulo, MessageBoxButtons.OK, icono);
+            }
+            catch (Exception error)
+            {
+                ErroresAplicacion.Registrar(error, "No se pudo mostrar el aviso de error");
+                try { MessageBox.Show(mensaje, titulo, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch { }
+            }
+        }
+
+        private static void RestaurarEstado(Form ventana)
+        {
+            try
+            {
+                if (ventana == null || ventana.IsDisposed || ventana.Disposing) return;
+                ventana.UseWaitCursor = false;
+                ventana.Enabled = true;
+            }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException ex)
+            {
+                ErroresAplicacion.Registrar(ex, "No se pudo restaurar el estado de la ventana");
             }
         }
 

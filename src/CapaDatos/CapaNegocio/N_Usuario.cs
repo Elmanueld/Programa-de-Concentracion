@@ -316,6 +316,8 @@ namespace CapaNegocio
         private static void ValidarDatosUsuario(E_Usuario usuario, bool incluirHash)
         {
             if (usuario == null) throw new ArgumentNullException("usuario");
+            if (usuario.Nombre != null)
+                usuario.Nombre = usuario.Nombre.Trim().Normalize(NormalizationForm.FormC);
             if (String.IsNullOrWhiteSpace(usuario.Nombre))
                 throw new ArgumentException("El nombre es obligatorio.");
             if (usuario.Nombre.Length > 50)

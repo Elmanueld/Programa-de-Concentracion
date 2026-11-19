@@ -23,8 +23,18 @@ namespace CapaNegocio
         public void ModificarConfiguracion(E_Configuracion configuracion)
         {
             if (configuracion == null) throw new ArgumentNullException("configuracion");
-            ValidarId(configuracion.IdConfiguracion, "configuración");
             ValidarId(configuracion.IdUsuario, "usuario");
+            // The local copy may not contain a server-created configuration yet
+            // (for example, the first save after signing in on a different PC).
+            // Treat that case as a per-user insert instead of attempting to update
+            // a stale or missing local ID.
+            E_Configuracion actual = Datos.BuscarConfiguracion(configuracion.IdUsuario);
+            if (actual == null)
+            {
+                Datos.InsertarConfiguracion(configuracion);
+                return;
+            }
+            configuracion.IdConfiguracion = actual.IdConfiguracion;
             Datos.ModificarConfiguracion(configuracion);
         }
 

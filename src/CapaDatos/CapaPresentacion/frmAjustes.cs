@@ -146,7 +146,7 @@ namespace CapaPresentacion
         private void ConfigurarInicioWindows(bool habilitado)
         {
             const string nombre = "ProgramaDeConcentracion";
-            using (RegistryKey inicio = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (RegistryKey inicio = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run"))
             {
                 if (inicio == null) throw new InvalidOperationException("Windows no permitió actualizar el inicio automático.");
                 if (habilitado) inicio.SetValue(nombre, "\"" + Application.ExecutablePath + "\" --inicio-windows");

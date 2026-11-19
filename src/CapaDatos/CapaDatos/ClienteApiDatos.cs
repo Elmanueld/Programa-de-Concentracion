@@ -240,7 +240,9 @@ namespace CapaDatos
         private static HttpClient CrearCliente()
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-            return new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
+            // Avoid keeping the window invisible while Windows is launching the
+            // application and the remembered account cannot reach the API.
+            return new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
         }
     }
 

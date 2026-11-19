@@ -18,32 +18,62 @@ namespace CapaPresentacion
         [STAThread]
         static void Main()
         {
-            InicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
-                String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            Application.ThreadException += Aplicacion_ThreadException;
-            AppDomain.CurrentDomain.UnhandledException += Dominio_UnhandledException;
-            TaskScheduler.UnobservedTaskException += Tareas_UnobservedTaskException;
-
-            E_Usuario sesionAutomatica = null;
-            string avisoInicio = null;
-            if (N_Usuario.ConexionRemotaConfigurada)
+            try
             {
-                try { sesionAutomatica = new N_Usuario().IniciarSesionAutomatico(); }
+                InicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
+                    String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += Aplicacion_ThreadException;
+                AppDomain.CurrentDomain.UnhandledException += Dominio_UnhandledException;
+                TaskScheduler.UnobservedTaskException += Tareas_UnobservedTaskException;
+
+                E_Usuario sesionAutomatica = null;
+                string avisoInicio = null;
+                try
+                {
+                    if (N_Usuario.ConexionRemotaConfigurada)
+                    {
+                        try { sesionAutomatica = new N_Usuario().IniciarSesionAutomatico(); }
+                        catch (Exception ex)
+                        {
+                            ErroresAplicacion.Registrar(ex, "Inicio automático");
+                            avisoInicio = OperacionUI.DescribirError(ex);
+                        }
+                    }
+                    else
+                        avisoInicio = "No se pudo conectar con tu cuenta en línea. Si ya usaste esta cuenta en este equipo, puedes intentar entrar sin conexión. Comprueba Internet e inténtalo de nuevo.";
+
+                    var inicio = new frmLogin(sesionAutomatica);
+                    if (!String.IsNullOrWhiteSpace(avisoInicio)) inicio.MostrarAvisoInicial(avisoInicio);
+                    AjustePantalla.Preparar(inicio);
+                    Application.Run(inicio);
+                }
                 catch (Exception ex)
                 {
-                    ErroresAplicacion.Registrar(ex, "Inicio automático");
-                    avisoInicio = OperacionUI.DescribirError(ex);
+                    MostrarErrorDeInicio(ex);
                 }
             }
-            else
-                avisoInicio = "No se pudo conectar con tu cuenta en línea. Si ya usaste esta cuenta en este equipo, puedes intentar entrar sin conexión. Comprueba Internet e inténtalo de nuevo.";
-            var inicio = new frmLogin(sesionAutomatica);
-            if (!String.IsNullOrWhiteSpace(avisoInicio)) inicio.MostrarAvisoInicial(avisoInicio);
-            AjustePantalla.Preparar(inicio);
-            Application.Run(inicio);
+            catch (Exception ex)
+            {
+                MostrarErrorDeInicio(ex);
+            }
+        }
+
+        private static void MostrarErrorDeInicio(Exception excepcion)
+        {
+            string referencia = ErroresAplicacion.Registrar(excepcion, "Inicio de la aplicación");
+            string mensaje;
+            try { mensaje = OperacionUI.DescribirError(excepcion); }
+            catch { mensaje = "No se pudo iniciar la aplicación. Vuelve a intentarlo."; }
+            try
+            {
+                MessageBox.Show(mensaje + Environment.NewLine + Environment.NewLine +
+                    "Código de ayuda: " + referencia + ". Si necesitas soporte, compártelo con quien te ayude.",
+                    "No se pudo iniciar el programa", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch { }
         }
 
         private static void Aplicacion_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
@@ -69,6 +99,13 @@ namespace CapaPresentacion
             catch (Exception ex)
             {
                 ErroresAplicacion.Registrar(ex, "Aviso de error de interfaz");
+                try
+                {
+                    MessageBox.Show("Ocurrió un error al completar la operación. La aplicación seguirá abierta. " +
+                        "Código de ayuda: " + referencia + ".",
+                        "No se pudo completar la operación", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch { }
             }
         }
 

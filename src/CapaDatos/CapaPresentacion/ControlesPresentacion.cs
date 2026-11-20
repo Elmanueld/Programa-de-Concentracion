@@ -678,6 +678,9 @@ namespace CapaPresentacion
 
         private static readonly ConditionalWeakTable<Form, Registro> Formularios =
             new ConditionalWeakTable<Form, Registro>();
+        private sealed class ControlEscalado { }
+        private static readonly ConditionalWeakTable<Control, ControlEscalado> ControlesEscalados =
+            new ConditionalWeakTable<Control, ControlEscalado>();
 
         public static void Preparar(Form formulario)
         {
@@ -761,7 +764,13 @@ namespace CapaPresentacion
             {
                 Control agregado = e.Control;
                 if (agregado is UserControl || agregado is IndicadorCarga)
-                    agregado.Scale(new SizeF(escala, escala));
+                {
+                    if (!ControlesEscalados.TryGetValue(agregado, out _))
+                    {
+                        agregado.Scale(new SizeF(escala, escala));
+                        ControlesEscalados.Add(agregado, new ControlEscalado());
+                    }
+                }
                 RegistrarControlesDinamicos(agregado, escala);
             };
 

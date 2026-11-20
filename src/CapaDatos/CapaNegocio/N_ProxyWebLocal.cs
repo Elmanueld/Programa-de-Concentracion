@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -14,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using CapaEntidades;
 
 namespace CapaNegocio
 {
@@ -32,6 +34,13 @@ namespace CapaNegocio
         private readonly HashSet<string> _dominiosPermitidos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _dependenciasConocidas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _navegacionesExternasPermitidas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _aplicacionesPermitidasPorNombre = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _aplicacionesPermitidasPorRuta = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<string> NavegadoresNoExentos = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "chrome", "msedge", "brave", "firefox", "opera", "vivaldi", "waterfox",
+            "librewolf", "floorp", "arc", "iexplore"
+        };
         private TcpListener _listener;
         private CancellationTokenSource _cancelacion;
         private X509Certificate2 _ca;
@@ -42,8 +51,61 @@ namespace CapaNegocio
 
         public N_ProxyWebLocal()
         {
-            RecuperarEstadoAnterior();
+            try { RecuperarEstadoAnterior(); }
+            catch (Exception ex) { Trace.TraceError("No se pudo recuperar el estado anterior del filtro web: " + ex); }
             AppDomain.CurrentDomain.ProcessExit += ProcessExit;
+        }
+
+        internal static bool RecuperarProxySiQuedoHuerfano()
+        {
+            using (RegistryKey internet = Registry.CurrentUser.OpenSubKey(RutaInternetSettings, false))
+            using (RegistryKey copia = Registry.CurrentUser.OpenSubKey(RutaCopiaProxy, false))
+            {
+                if (internet == null || copia == null ||
+                    Convert.ToInt32(internet.GetValue("ProxyEnable", 0), CultureInfo.InvariantCulture) != 1)
+                    return false;
+
+                string servidor = Convert.ToString(internet.GetValue("ProxyServer", ""), CultureInfo.InvariantCulture);
+                const string prefijo = ProxyLoopback + ":";
+                int puerto;
+                if (!servidor.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase) ||
+                    !Int32.TryParse(servidor.Substring(prefijo.Length), NumberStyles.None,
+                        CultureInfo.InvariantCulture, out puerto) || puerto < 1 || puerto > UInt16.MaxValue)
+                    return false;
+
+                bool proxyActivo = false;
+                try
+                {
+                    using (var cliente = new TcpClient())
+                    {
+                        Task conexion = cliente.ConnectAsync(IPAddress.Loopback, puerto);
+                        if (conexion.Wait(TimeSpan.FromMilliseconds(500)))
+                            proxyActivo = cliente.Connected;
+                        else
+                        {
+                            cliente.Close();
+                            try { conexion.GetAwaiter().GetResult(); }
+                            catch (Exception) { }
+                        }
+                    }
+                }
+                catch (AggregateException) { }
+                catch (SocketException) { }
+
+                if (proxyActivo) return true;
+
+                RestaurarConfiguracionProxy();
+                using (RegistryKey verificacion = Registry.CurrentUser.OpenSubKey(RutaInternetSettings, false))
+                {
+                    int habilitado = verificacion == null ? 1 :
+                        Convert.ToInt32(verificacion.GetValue("ProxyEnable", 0), CultureInfo.InvariantCulture);
+                    string servidorActual = verificacion == null ? servidor :
+                        Convert.ToString(verificacion.GetValue("ProxyServer", ""), CultureInfo.InvariantCulture);
+                    if (habilitado == 1 && String.Equals(servidorActual, servidor, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("No se pudo restaurar el proxy de Windows que quedó activo sin el programa.");
+                }
+                return false;
+            }
         }
 
         public void Iniciar(IEnumerable<string> dominios)
@@ -98,6 +160,192 @@ namespace CapaNegocio
             }
         }
 
+        public void ActualizarAplicacionesPermitidas(IEnumerable<E_Aplicacion> aplicaciones)
+        {
+            var nombres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rutas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (E_Aplicacion app in aplicaciones ?? Enumerable.Empty<E_Aplicacion>())
+            {
+                if (app == null) continue;
+                AgregarNombreAplicacion(nombres, app.Nombre);
+                string identificador = app.Identificador;
+                if (String.IsNullOrWhiteSpace(identificador)) continue;
+                int separadorPaquete = identificador.IndexOf('!');
+                if (separadorPaquete >= 0)
+                {
+                    AgregarNombreAplicacion(nombres, identificador.Substring(separadorPaquete + 1));
+                    continue;
+                }
+                if (Path.IsPathRooted(identificador))
+                {
+                    try
+                    {
+                        string ruta = Path.GetFullPath(identificador);
+                        rutas.Add(ruta);
+                        AgregarNombreAplicacion(nombres, Path.GetFileNameWithoutExtension(ruta));
+                    }
+                    catch { }
+                }
+                else
+                {
+                    AgregarNombreAplicacion(nombres, Path.GetFileNameWithoutExtension(identificador));
+                }
+            }
+            lock (_sync)
+            {
+                _aplicacionesPermitidasPorNombre.Clear();
+                _aplicacionesPermitidasPorNombre.UnionWith(nombres);
+                _aplicacionesPermitidasPorRuta.Clear();
+                _aplicacionesPermitidasPorRuta.UnionWith(rutas);
+            }
+        }
+
+        private static void AgregarNombreAplicacion(HashSet<string> destino, string nombre)
+        {
+            if (String.IsNullOrWhiteSpace(nombre)) return;
+            string normalizado = NormalizarNombreProceso(nombre);
+            if (!String.IsNullOrWhiteSpace(normalizado)) destino.Add(normalizado);
+        }
+
+        private bool EsConexionDeAplicacionPermitida(TcpClient cliente)
+        {
+            int pid = ObtenerPidConexion(cliente.Client);
+            if (pid <= 0) return false;
+            Dictionary<int, int> padres = ObtenerMapaProcesosPadre();
+            var visitados = new HashSet<int>();
+            for (int actual = pid, profundidad = 0;
+                 actual > 0 && profundidad < 20 && visitados.Add(actual);
+                 profundidad++)
+            {
+                try
+                {
+                    using (Process proceso = Process.GetProcessById(actual))
+                    {
+                        string nombre = proceso.ProcessName;
+                        // Una tarea puede admitir cualquier aplicación; los navegadores
+                        // completos siguen sometidos al bloqueo web.
+                        if (NavegadoresNoExentos.Contains(nombre)) return false;
+                        string ruta = null;
+                        try { ruta = proceso.MainModule == null ? null : proceso.MainModule.FileName; }
+                        catch { }
+                        if (AplicacionPermitida(nombre, ruta))
+                        {
+                            Trace.TraceInformation("Se exceptúa del filtro web la conexión de una app admitida (PID " + pid + ").");
+                            return true;
+                        }
+                    }
+                }
+                catch { return false; }
+                int padre;
+                if (!padres.TryGetValue(actual, out padre) || padre == actual) break;
+                actual = padre;
+            }
+            return false;
+        }
+
+        private bool AplicacionPermitida(string nombre, string ruta)
+        {
+            string nombreNormalizado = NormalizarNombreProceso(nombre);
+            string rutaNormalizada = null;
+            if (!String.IsNullOrWhiteSpace(ruta))
+            {
+                try { rutaNormalizada = Path.GetFullPath(ruta); }
+                catch { }
+            }
+            lock (_sync)
+                return (!String.IsNullOrWhiteSpace(nombreNormalizado) &&
+                        _aplicacionesPermitidasPorNombre.Contains(nombreNormalizado)) ||
+                       (!String.IsNullOrWhiteSpace(rutaNormalizada) &&
+                        _aplicacionesPermitidasPorRuta.Contains(rutaNormalizada));
+        }
+
+        private static string NormalizarNombreProceso(string valor)
+        {
+            return String.IsNullOrWhiteSpace(valor) ? String.Empty :
+                new string(valor.Where(Char.IsLetterOrDigit).Select(Char.ToUpperInvariant).ToArray());
+        }
+
+        private static int ObtenerPidConexion(Socket socket)
+        {
+            var local = socket.LocalEndPoint as IPEndPoint;
+            var remoto = socket.RemoteEndPoint as IPEndPoint;
+            if (local == null || remoto == null || local.AddressFamily != AddressFamily.InterNetwork ||
+                remoto.AddressFamily != AddressFamily.InterNetwork) return 0;
+            uint bytes = 0;
+            uint resultado = GetExtendedTcpTable(IntPtr.Zero, ref bytes, false, 2, 5, 0);
+            if (resultado != 122 || bytes == 0) return 0;
+            IntPtr tabla = Marshal.AllocHGlobal((int)bytes);
+            try
+            {
+                for (int intento = 0; intento < 2; intento++)
+                {
+                    resultado = GetExtendedTcpTable(tabla, ref bytes, false, 2, 5, 0);
+                    if (resultado == 122)
+                    {
+                        Marshal.FreeHGlobal(tabla);
+                        tabla = Marshal.AllocHGlobal((int)bytes);
+                        continue;
+                    }
+                    if (resultado != 0) return 0;
+                    int cantidad = Marshal.ReadInt32(tabla);
+                    const int tamanoFila = 24;
+                    for (int i = 0; i < cantidad; i++)
+                    {
+                        int fila = 4 + i * tamanoFila;
+                        uint estado = unchecked((uint)Marshal.ReadInt32(tabla, fila));
+                        int puertoLocal = PuertoAnfitrion(unchecked((uint)Marshal.ReadInt32(tabla, fila + 8)));
+                        int puertoRemoto = PuertoAnfitrion(unchecked((uint)Marshal.ReadInt32(tabla, fila + 16)));
+                        if (estado == 5 && puertoLocal == remoto.Port && puertoRemoto == local.Port)
+                            return Marshal.ReadInt32(tabla, fila + 20);
+                    }
+                    return 0;
+                }
+                return 0;
+            }
+            catch { return 0; }
+            finally { if (tabla != IntPtr.Zero) Marshal.FreeHGlobal(tabla); }
+        }
+
+        private static int PuertoAnfitrion(uint puertoRed)
+        {
+            return unchecked((ushort)IPAddress.NetworkToHostOrder(unchecked((short)(puertoRed & 0xFFFF))));
+        }
+
+        private static Dictionary<int, int> ObtenerMapaProcesosPadre()
+        {
+            const uint snapshotProcesos = 0x00000002;
+            IntPtr snapshot = CreateToolhelp32Snapshot(snapshotProcesos, 0);
+            var resultado = new Dictionary<int, int>();
+            if (snapshot == new IntPtr(-1)) return resultado;
+            try
+            {
+                var entrada = new ProcessEntry32 { dwSize = (uint)Marshal.SizeOf(typeof(ProcessEntry32)) };
+                if (!Process32First(snapshot, ref entrada)) return resultado;
+                do
+                {
+                    int pid = unchecked((int)entrada.th32ProcessID);
+                    int padre = unchecked((int)entrada.th32ParentProcessID);
+                    if (pid > 0) resultado[pid] = padre;
+                    entrada.dwSize = (uint)Marshal.SizeOf(typeof(ProcessEntry32));
+                } while (Process32Next(snapshot, ref entrada));
+            }
+            finally { CloseHandle(snapshot); }
+            return resultado;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private struct ProcessEntry32
+        {
+            public uint dwSize, cntUsage, th32ProcessID;
+            public IntPtr th32DefaultHeapID;
+            public uint th32ModuleID;
+            public int cntThreads;
+            public uint th32ParentProcessID;
+            public int pcPriClassBase;
+            public uint dwFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+        }
+
         private void AceptarClientes(CancellationToken token)
         {
             TcpListener listener = _listener;
@@ -125,6 +373,7 @@ namespace CapaNegocio
             {
                 try
                 {
+                    bool conexionDeAppPermitida = EsConexionDeAplicacionPermitida(cliente);
                     NetworkStream red = cliente.GetStream();
                     string cabecera = LeerCabecera(red);
                     if (String.IsNullOrEmpty(cabecera)) return;
@@ -135,7 +384,7 @@ namespace CapaNegocio
                         Uri destino = new Uri("https://" + peticion.Destino + "/");
                         // Las webs autorizadas conservan TLS extremo a extremo. Así el sitio
                         // recibe la huella TLS real del navegador y no la de HttpWebRequest.
-                        if (EsDominioPermitido(destino.IdnHost))
+                        if (conexionDeAppPermitida || EsDominioPermitido(destino.IdnHost))
                         {
                             TunelTransparente(cliente, destino);
                             return;
@@ -161,7 +410,7 @@ namespace CapaNegocio
                                 string host = ObtenerHost(peticionTls, destino.IdnHost);
                                 Uri uri = CrearUri(host, peticionTls.Destino, true);
                                 byte[] cuerpo = LeerCuerpo(tls, peticionTls.Cabeceras);
-                                if (!PuedeSolicitar(host, peticionTls.Cabeceras))
+                                if (!conexionDeAppPermitida && !PuedeSolicitar(host, peticionTls.Cabeceras))
                                 {
                                     EscribirBloqueo(tls, uri.IdnHost);
                                     break;
@@ -177,7 +426,7 @@ namespace CapaNegocio
                         if (!Uri.TryCreate(peticion.Destino, UriKind.Absolute, out uri))
                             uri = CrearUri(ObtenerHost(peticion, null), peticion.Destino, false);
                         byte[] cuerpo = LeerCuerpo(red, peticion.Cabeceras);
-                        if (!PuedeSolicitar(uri.IdnHost, peticion.Cabeceras))
+                        if (!conexionDeAppPermitida && !PuedeSolicitar(uri.IdnHost, peticion.Cabeceras))
                             EscribirBloqueo(red, uri.IdnHost);
                         else
                             Reenviar(peticion, uri, cuerpo, red);
@@ -629,7 +878,7 @@ namespace CapaNegocio
 
         private static void RecuperarEstadoAnterior()
         {
-            RestaurarConfiguracionProxy();
+            if (RecuperarProxySiQuedoHuerfano()) return;
             foreach (StoreLocation ubicacion in new[] { StoreLocation.LocalMachine, StoreLocation.CurrentUser })
             {
                 foreach (StoreName almacen in new[] { StoreName.My, StoreName.Root })
@@ -985,5 +1234,20 @@ namespace CapaNegocio
 
         [System.Runtime.InteropServices.DllImport("crypt32.dll", SetLastError = true, ExactSpelling = true)]
         private static extern bool CertDeleteCertificateFromStore(IntPtr certificate);
+
+        [System.Runtime.InteropServices.DllImport("iphlpapi.dll", SetLastError = true)]
+        private static extern uint GetExtendedTcpTable(IntPtr tcpTable, ref uint size, bool order, int addressFamily, int tableClass, uint reserved);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto, SetLastError = true)]
+        private static extern bool Process32First(IntPtr snapshot, ref ProcessEntry32 entry);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto, SetLastError = true)]
+        private static extern bool Process32Next(IntPtr snapshot, ref ProcessEntry32 entry);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr handle);
     }
 }

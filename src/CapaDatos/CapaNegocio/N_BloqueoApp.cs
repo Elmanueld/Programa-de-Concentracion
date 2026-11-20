@@ -24,6 +24,8 @@ namespace CapaNegocio
         AplicacionBloqueada;
         public event EventHandler<DescansoIniciadoEventArgs>
         DescansoIniciado;
+        public event EventHandler<DescansoIniciadoEventArgs>
+        DescansoTerminado;
         public event Action<Exception> ErrorSupervisor;
 
         private const int IntervaloRevisionProcesosMs = 2000;
@@ -37,6 +39,7 @@ namespace CapaNegocio
         private int _cicloEnEjecucion;
         private bool _disposed;
         private bool _descansoActivo;
+        private DescansoActual _descansoNotificado;
         private DateTime _proximaRecarga = DateTime.MinValue;
 
         private Programacion _programacion = new Programacion();
@@ -80,7 +83,8 @@ namespace CapaNegocio
                 "logonui",
                 "securityhealthservice",
                 "msmpeng",
-                "audiodg"
+                "audiodg",
+                "ProgramaConcentracion"
             };
 
         private sealed class DescansoActual
@@ -115,6 +119,7 @@ namespace CapaNegocio
 
                 _idUsuario = idUsuario;
                 _descansoActivo = false;
+                _descansoNotificado = null;
                 _programacion = new Programacion();
                 _proximaRecarga = DateTime.MinValue;
             }
@@ -150,6 +155,7 @@ namespace CapaNegocio
                 if (_disposed) return;
                 _idUsuario = 0;
                 _descansoActivo = false;
+                _descansoNotificado = null;
                 _programacion = new Programacion();
                 _proximaRecarga = DateTime.MinValue;
                 _cierresSolicitados.Clear();
@@ -199,6 +205,7 @@ namespace CapaNegocio
 
                 if (tareasEnHorario.Count == 0)
                 {
+                    FinalizarDescansoActivo();
                     _descansoActivo = false;
                     _cierresSolicitados.Clear();
                     return;
@@ -221,7 +228,10 @@ namespace CapaNegocio
                             .FirstOrDefault();
 
                         if (descanso != null)
+                        {
+                            _descansoNotificado = descanso;
                             NotificarDescansoIniciado(descanso);
+                        }
 
                         _descansoActivo = true;
                     }
@@ -229,6 +239,8 @@ namespace CapaNegocio
                     return;
                 }
 
+                if (_descansoActivo)
+                    FinalizarDescansoActivo();
                 _descansoActivo = false;
 
                 List<ReglaTarea> tareasQueBloqueanApps = tareasTrabajando
@@ -246,10 +258,6 @@ namespace CapaNegocio
 
                 permitidas.Agregar(programacion.AplicacionesCriticas);
 
-                permitidas.AgregarNombreProceso("chrome");
-                permitidas.AgregarNombreProceso("msedge");
-                permitidas.AgregarNombreProceso("brave");
-                permitidas.AgregarNombreProceso("firefox");
 
                 foreach (ReglaTarea regla in tareasQueBloqueanApps)
                     permitidas.Agregar(regla.AplicacionesPermitidas);
@@ -288,6 +296,9 @@ namespace CapaNegocio
                     _programacion = nueva;
                     _proximaRecarga = ahora.AddSeconds(
                         IntervaloRecargaProgramacionSegundos);
+                    Trace.TraceInformation("Supervisor de aplicaciones cargó " + nueva.Tareas.Count +
+                        " tareas; " + nueva.Tareas.Count(r => !r.Tarea.NoBloquearApps) +
+                        " tienen bloqueo de aplicaciones habilitado.");
                     _ultimoErrorSupervisor = null;
                 }
             }
@@ -332,9 +343,7 @@ namespace CapaNegocio
             foreach (E_Aplicacion app in catalogoApps.Where(a => a.EsCritica))
                 resultado.AplicacionesCriticas.Agregar(app);
 
-            List<E_Tarea> tareas =
-                new N_Tarea().BuscarTarea(idUsuario, "");
-
+            List<E_Tarea> tareas = new N_Tarea().BuscarTarea(idUsuario, "");
             var negocioTareaApp = new N_TareaAplicacion();
             var negocioDescanso = new N_Descanso();
 
@@ -507,6 +516,26 @@ namespace CapaNegocio
             }
         }
 
+        private void FinalizarDescansoActivo()
+        {
+            DescansoActual descanso = _descansoNotificado;
+            _descansoNotificado = null;
+            if (descanso == null) return;
+
+            var manejador = DescansoTerminado;
+            if (manejador == null) return;
+            try
+            {
+                manejador(this, new DescansoIniciadoEventArgs(
+                    descanso.NombreTarea, descanso.FinDescanso,
+                    descanso.DescansosRestantes));
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("No se pudo mostrar el aviso de fin de descanso: " + ex);
+            }
+        }
+
 
 
         private void NotificarAplicacionBloqueada(
@@ -593,33 +622,41 @@ namespace CapaNegocio
                         procesosVistos.Add(proceso.Id);
 
                         DateTime solicitudAnterior;
-                        if (_cierresSolicitados.TryGetValue(
-                            proceso.Id,
-                            out solicitudAnterior) &&
-                            (ahora - solicitudAnterior).TotalSeconds <
-                            SegundosAntesDeForzarCierre)
+                        if (_cierresSolicitados.TryGetValue(proceso.Id, out solicitudAnterior))
                         {
+                            if ((ahora - solicitudAnterior).TotalSeconds < SegundosAntesDeForzarCierre)
+                                continue;
+
+                            // Primero se dio tiempo a la aplicación para guardar y cerrar normalmente.
+                            // Si sigue abierta, la tarea de concentración ya no puede depender de que coopere.
+                            try
+                            {
+                                proceso.Kill();
+                                proceso.WaitForExit(1000);
+                                Trace.TraceInformation("Se cerró la aplicación bloqueada " + nombreProceso +
+                                    " (PID " + proceso.Id + ") después del período de gracia.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.TraceWarning("No se pudo cerrar la aplicación bloqueada " + nombreProceso +
+                                    " (PID " + proceso.Id + "): " + ex.GetType().Name + ": " + ex.Message);
+                            }
+                            finally
+                            {
+                                _cierresSolicitados.Remove(proceso.Id);
+                            }
                             continue;
                         }
 
                         string nombreParaAviso = proceso.MainWindowTitle;
-
                         if (String.IsNullOrWhiteSpace(nombreParaAviso))
                             nombreParaAviso = nombreProceso;
 
-                        NotificarAplicacionBloqueada(
-                            nombreParaAviso,
-                            nombreTarea);
-
-                        if (proceso.CloseMainWindow())
-                            _cierresSolicitados[proceso.Id] = ahora;
-                        else
-                            _cierresSolicitados.Remove(proceso.Id);
-                        // Solicita cerrar la ventana. No termina el proceso a la fuerza.
-                        if (proceso.CloseMainWindow())
-                            _cierresSolicitados[proceso.Id] = ahora;
-                        else
-                            _cierresSolicitados.Remove(proceso.Id);
+                        Trace.TraceInformation("Se bloquea la aplicación " + nombreProceso + " (PID " + proceso.Id + ").");
+                        NotificarAplicacionBloqueada(nombreParaAviso, nombreTarea);
+                        // Empieza el período de gracia incluso si la app no atiende WM_CLOSE.
+                        _cierresSolicitados[proceso.Id] = ahora;
+                        proceso.CloseMainWindow();
                     }
                     catch
                     {

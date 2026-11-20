@@ -21,6 +21,8 @@ namespace CapaPresentacion
         private frmAviso avisoTareaProxima;
         private frmDescanso formularioDescanso;
         private readonly NotifyIcon iconoNotificacion;
+        private readonly ContextMenuStrip menuBandeja;
+        private bool permitirCierreCompleto;
 
         private readonly N_Tarea tareas;
         private readonly N_BloqueoApp bloqueador;
@@ -57,12 +59,20 @@ namespace CapaPresentacion
             InitializeComponent();
             if (EnModoDiseno) return;
             if (usuario == null) throw new ArgumentNullException("usuario");
+            Icon iconoPrograma = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
+            Icon = iconoPrograma;
+            menuBandeja = new ContextMenuStrip();
+            menuBandeja.Items.Add("Abrir Programa de Concentración", null, (s, e) => SolicitarMostrarVentanaPrincipal());
+            menuBandeja.Items.Add(new ToolStripSeparator());
+            menuBandeja.Items.Add("Salir", null, (s, e) => SalirDesdeBandeja());
             iconoNotificacion = new NotifyIcon
             {
-                Icon = SystemIcons.Information,
-                Visible = false,
-                Text = "Programa de Concentración"
+                Icon = iconoPrograma,
+                Visible = true,
+                Text = "Programa de Concentración",
+                ContextMenuStrip = menuBandeja
             };
+            iconoNotificacion.DoubleClick += (s, e) => SolicitarMostrarVentanaPrincipal();
             tareas = new N_Tarea();
             bloqueador = N_BloqueoApp.Instancia;
             bloqueadorWeb = N_BloqueoWeb.Instancia;
@@ -80,40 +90,9 @@ namespace CapaPresentacion
             ControlesPresentacion.Optimizar(flTareas);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
-            FormClosing += (s, e) =>
-            {
-                bloqueadorWeb.ErrorAplicandoBloqueo -= BloqueadorWeb_ErrorAplicandoBloqueo;
-                bloqueador.ErrorSupervisor -= Bloqueador_ErrorSupervisor;
-                N_SincronizacionOffline.ErrorAlActualizarCopiaLocal -= Sincronizacion_ErrorAlActualizarCopiaLocal;
-                bloqueadorWeb.Detener();
-                bloqueador.Detener();
-                timerSincronizacion.Stop();
-                timerSincronizacion.Dispose();
-                timerAvisosTarea.Stop();
-                timerAvisosTarea.Dispose();
-                if (!Program.CierreControladoPorErrorCritico)
-                {
-                    PreferenciasUsuario prefsAlCerrar = ObtenerPreferencias();
-                    if (String.Equals(prefsAlCerrar.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase) && diaSeleccionado != null)
-                    {
-                        prefsAlCerrar.UltimaFechaSeleccionada = diaSeleccionado.Fecha.Date;
-                        try { PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, prefsAlCerrar); }
-                        catch (Exception ex)
-                        {
-                            OperacionUI.ReportarError(null, ex, "No se pudo guardar la última pantalla",
-                                "La aplicación se cerrará; la próxima vez se abrirá la pantalla guardada anteriormente.", true);
-                        }
-                    }
-                }
-                iconoNotificacion.Visible = false;
-                iconoNotificacion.Dispose();
-                if (fotoPerfilActual != null)
-                {
-                    pbFotoDePerfil.Image = null;
-                    fotoPerfilActual.Dispose();
-                    fotoPerfilActual = null;
-                }
-            };
+            FormClosing += PrincipalForm_FormClosing;
+            FormClosed += (s, e) => Program.QuitarPrincipal(this);
+            Program.RegistrarPrincipal(this);
 
             this.usuario = usuario;
             timerSincronizacion.Tick += TimerSincronizacion_Tick;
@@ -121,6 +100,7 @@ namespace CapaPresentacion
             aparienciaUsuario = AparienciaUsuarioApp.Cargar(usuario.IdUsuario);
             PaletaAplicacion.Aplicar(aparienciaUsuario);
             PreferenciasUsuario preferenciasIniciales = ObtenerPreferencias();
+            iconoNotificacion.Visible = true;
             if (String.Equals(preferenciasIniciales.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase) &&
                 preferenciasIniciales.UltimaFechaSeleccionada != DateTime.MinValue)
                 fechaActual = preferenciasIniciales.UltimaFechaSeleccionada;
@@ -133,6 +113,7 @@ namespace CapaPresentacion
             N_SincronizacionOffline.ErrorAlActualizarCopiaLocal += Sincronizacion_ErrorAlActualizarCopiaLocal;
             bloqueador.DescansoIniciado +=
                 Bloqueador_DescansoIniciado;
+            bloqueador.DescansoTerminado += Bloqueador_DescansoTerminado;
             bloqueadorWeb.ErrorAplicandoBloqueo += BloqueadorWeb_ErrorAplicandoBloqueo;
             bloqueador.Iniciar(usuario.IdUsuario);
             bloqueadorWeb.Iniciar(usuario.IdUsuario);
@@ -162,10 +143,12 @@ namespace CapaPresentacion
                 DialogResult resultado = NavegacionFormularios.MostrarModal(this, ajustes);
                 if (resultado == DialogResult.Abort)
                 {
+                    permitirCierreCompleto = true;
                     Close();
                     return;
                 }
                 ActualizarPerfil(ObtenerPreferencias());
+                iconoNotificacion.Visible = true;
                 if (resultado == DialogResult.OK)
                 {
                     AparienciaUsuarioApp.Aplicar(usuario.IdUsuario);
@@ -227,7 +210,7 @@ namespace CapaPresentacion
         {
             PreferenciasUsuario preferencias = ObtenerPreferencias();
             if (Program.InicioDesdeWindows && preferencias.IniciarConWindows && preferencias.IniciarMinimizado)
-                WindowState = FormWindowState.Minimized;
+                MinimizarEnBandeja();
 
             if (String.Equals((preferencias.PantallaInicio ?? String.Empty).Trim(),
                 "Tarea", StringComparison.OrdinalIgnoreCase))
@@ -237,6 +220,98 @@ namespace CapaPresentacion
                     using (var formulario = new frmTareas(usuario.IdUsuario, DateTime.Today))
                         NavegacionFormularios.MostrarModal(this, formulario);
                 }));
+            }
+        }
+
+        private void MostrarVentanaPrincipal()
+        {
+            if (IsDisposed) return;
+            ShowInTaskbar = true;
+            if (!Visible) Show();
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+            BringToFront();
+            Activate();
+        }
+
+        private void SolicitarMostrarVentanaPrincipal()
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (!IsDisposed) MostrarVentanaPrincipal();
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ErroresAplicacion.Registrar(ex, "No se pudo restaurar la ventana desde la bandeja");
+            }
+        }
+
+        private void MinimizarEnBandeja()
+        {
+            iconoNotificacion.Visible = true;
+            ShowInTaskbar = false;
+            WindowState = FormWindowState.Normal;
+            Hide();
+        }
+
+        internal void RestaurarDesdeInstanciaSecundaria()
+        {
+            SolicitarMostrarVentanaPrincipal();
+        }
+
+        private void SalirDesdeBandeja()
+        {
+            Program.SalidaSolicitada = true;
+            permitirCierreCompleto = true;
+            Close();
+        }
+
+        private void PrincipalForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing && !permitirCierreCompleto &&
+                !Program.CierreControladoPorErrorCritico && DialogResult != DialogResult.Retry)
+            {
+                e.Cancel = true;
+                MinimizarEnBandeja();
+                return;
+            }
+
+            bloqueadorWeb.ErrorAplicandoBloqueo -= BloqueadorWeb_ErrorAplicandoBloqueo;
+            bloqueador.ErrorSupervisor -= Bloqueador_ErrorSupervisor;
+            bloqueador.DescansoIniciado -= Bloqueador_DescansoIniciado;
+            bloqueador.DescansoTerminado -= Bloqueador_DescansoTerminado;
+            N_SincronizacionOffline.ErrorAlActualizarCopiaLocal -= Sincronizacion_ErrorAlActualizarCopiaLocal;
+            bloqueadorWeb.Detener();
+            bloqueador.Detener();
+            timerSincronizacion.Stop();
+            timerSincronizacion.Dispose();
+            timerAvisosTarea.Stop();
+            timerAvisosTarea.Dispose();
+            if (!Program.CierreControladoPorErrorCritico)
+            {
+                PreferenciasUsuario prefsAlCerrar = ObtenerPreferencias();
+                if (String.Equals(prefsAlCerrar.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase) && diaSeleccionado != null)
+                {
+                    prefsAlCerrar.UltimaFechaSeleccionada = diaSeleccionado.Fecha.Date;
+                    try { PreferenciasUsuarioApp.Guardar(usuario.IdUsuario, prefsAlCerrar); }
+                    catch (Exception ex)
+                    {
+                        OperacionUI.ReportarError(null, ex, "No se pudo guardar la última pantalla",
+                            "La aplicación se cerrará; la próxima vez se abrirá la pantalla guardada anteriormente.", true);
+                    }
+                }
+            }
+            iconoNotificacion.Visible = false;
+            iconoNotificacion.Dispose();
+            menuBandeja.Dispose();
+            if (fotoPerfilActual != null)
+            {
+                pbFotoDePerfil.Image = null;
+                fotoPerfilActual.Dispose();
+                fotoPerfilActual = null;
             }
         }
 
@@ -260,8 +335,11 @@ namespace CapaPresentacion
                 if (!avisosTareaEmitidos.Add(clave)) continue;
 
                 if (preferencias.MostrarComoNotificacion)
+                {
+                    iconoNotificacion.Visible = true;
                     iconoNotificacion.ShowBalloonTip(6000, "Tarea próxima",
                         "\"" + tarea.Nombre + "\" empieza a las " + inicio.ToString("HH:mm") + ".", ToolTipIcon.Info);
+                }
                 if (!preferencias.MostrarComoVentana) continue;
                 if (avisoTareaProxima == null || avisoTareaProxima.IsDisposed)
                 {
@@ -276,6 +354,25 @@ namespace CapaPresentacion
             }
         }
 
+        private void MostrarNotificacionTareaIniciada(E_Tarea tarea)
+        {
+            if (tarea == null) return;
+            PreferenciasUsuario preferencias = ObtenerPreferencias();
+            if (preferencias.NoMostrarAnuncios || preferencias.NoMostrarAvisos ||
+                !preferencias.MostrarComoNotificacion || iconoNotificacion == null)
+                return;
+
+            try
+            {
+                iconoNotificacion.Visible = true;
+                iconoNotificacion.ShowBalloonTip(6000, "Tarea iniciada",
+                    "Comenzó " + tarea.Nombre + ".", ToolTipIcon.Info);
+            }
+            catch (Exception ex)
+            {
+                ErroresAplicacion.Registrar(ex, "No se pudo mostrar la notificación de inicio de tarea");
+            }
+        }
         private void ProcesarEstadosDeTarea()
         {
             if (tareasCache == null) return;
@@ -293,6 +390,7 @@ namespace CapaPresentacion
                         tareas.CambiarEstadoTarea(usuario.IdUsuario, tarea.IdTarea, 'A');
                         tarea.Estado = 'A';
                         huboCambios = true;
+                        MostrarNotificacionTareaIniciada(tarea);
                     }
                     if (tarea.Estado == 'A' && ahora >= tarea.FechaFin)
                     {
@@ -303,6 +401,16 @@ namespace CapaPresentacion
                 }
                 catch (Exception ex)
                 {
+                    char estadoEsperado = ahora >= tarea.FechaFin ? 'C' : 'A';
+                    if (ReconciliarEstadoTarea(tarea, estadoEsperado))
+                    {
+                        // The request may have succeeded while its response was
+                        // lost, or this cached task may have been removed remotely.
+                        if (estadoEsperado == 'A') MostrarNotificacionTareaIniciada(tarea);
+                        huboCambios = true;
+                        continue;
+                    }
+
                     errorEnCiclo = true;
                     if (!errorEstadoTareaNotificado)
                     {
@@ -337,6 +445,30 @@ namespace CapaPresentacion
                 }
             }
             if (!errorEnCiclo) errorEstadoTareaNotificado = false;
+        }
+
+        private bool ReconciliarEstadoTarea(E_Tarea tarea, char estadoEsperado)
+        {
+            if (tarea == null) return false;
+            try
+            {
+                List<E_Tarea> actualizadas = tareas.BuscarTarea(usuario.IdUsuario, String.Empty)
+                    ?? new List<E_Tarea>();
+                E_Tarea actual = actualizadas.FirstOrDefault(t => t.IdTarea == tarea.IdTarea);
+                if (actual == null || actual.Estado == estadoEsperado)
+                {
+                    tareasCache = actualizadas;
+                    if (actual != null) tarea.Estado = actual.Estado;
+                    return true;
+                }
+            }
+            catch (Exception errorLectura)
+            {
+                ErroresAplicacion.Registrar(errorLectura,
+                    "Reconciliar estado de tarea después de un error de actualización");
+            }
+
+            return false;
         }
 
         private void CargarCalendario()
@@ -722,8 +854,11 @@ namespace CapaPresentacion
             PreferenciasUsuario preferencias = ObtenerPreferencias();
             if (preferencias.NoMostrarAnuncios || preferencias.NoMostrarAvisos) return;
             if (preferencias.MostrarComoNotificacion)
+            {
+                iconoNotificacion.Visible = true;
                 iconoNotificacion.ShowBalloonTip(5000, "Página o aplicación bloqueada",
                     "" + e.NombreAplicacion + " está bloqueada durante " + e.NombreTarea + ".", ToolTipIcon.Info);
+            }
             if (!preferencias.MostrarComoVentana) return;
 
             if (avisoBloqueo == null || avisoBloqueo.IsDisposed)
@@ -761,6 +896,7 @@ namespace CapaPresentacion
                 OperacionUI.ReportarError(this, ex, "No se pudo actualizar el inicio automático");
             }
             DialogResult = DialogResult.Retry;
+            permitirCierreCompleto = true;
             Close();
         }
 
@@ -831,7 +967,7 @@ namespace CapaPresentacion
                 try
                 {
                     BeginInvoke(new Action(
-                        () => MostrarAvisoDescanso(e)));
+                        () => MostrarAvisoDescansoSeguro(e)));
                 }
                 catch (InvalidOperationException)
                 {
@@ -841,7 +977,53 @@ namespace CapaPresentacion
                 return;
             }
 
-            MostrarAvisoDescanso(e);
+            MostrarAvisoDescansoSeguro(e);
+        }
+
+        private void Bloqueador_DescansoTerminado(
+            object sender,
+            DescansoIniciadoEventArgs e)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            if (InvokeRequired)
+            {
+                try { BeginInvoke(new Action(() => MostrarAvisoDescansoTerminadoSeguro(e))); }
+                catch (InvalidOperationException) { }
+                return;
+            }
+            MostrarAvisoDescansoTerminadoSeguro(e);
+        }
+
+        private void MostrarAvisoDescansoTerminadoSeguro(DescansoIniciadoEventArgs e)
+        {
+            try
+            {
+                PreferenciasUsuario preferencias = ObtenerPreferencias();
+                if (preferencias.NoMostrarAnuncios || preferencias.NoMostrarDescansos ||
+                    !preferencias.MostrarComoNotificacion || iconoNotificacion == null)
+                    return;
+
+                iconoNotificacion.Visible = true;
+                iconoNotificacion.ShowBalloonTip(6000, "Descanso terminado",
+                    "Terminó el descanso de " + e.NombreTarea + ". Puedes continuar con tu tarea.",
+                    ToolTipIcon.Info);
+            }
+            catch (Exception ex)
+            {
+                ErroresAplicacion.Registrar(ex, "No se pudo mostrar el aviso de fin de descanso");
+            }
+        }
+
+        private void MostrarAvisoDescansoSeguro(DescansoIniciadoEventArgs e)
+        {
+            try { MostrarAvisoDescanso(e); }
+            catch (Exception ex)
+            {
+                if (!IsDisposed && !Disposing)
+                    OperacionUI.ReportarError(this, ex, "No se pudo mostrar el aviso de descanso");
+                else
+                    ErroresAplicacion.Registrar(ex, "Mostrar descanso después de cerrar la pantalla");
+            }
         }
 
         private void MostrarAvisoDescanso(
@@ -853,8 +1035,11 @@ namespace CapaPresentacion
             PreferenciasUsuario preferencias = ObtenerPreferencias();
             if (preferencias.NoMostrarAnuncios || preferencias.NoMostrarDescansos) return;
             if (preferencias.MostrarComoNotificacion)
+            {
+                iconoNotificacion.Visible = true;
                 iconoNotificacion.ShowBalloonTip(5000, "Hora de descansar",
                     "Comenzó el descanso de " + e.NombreTarea + ".", ToolTipIcon.Info);
+            }
             if (!preferencias.MostrarComoVentana) return;
 
             if (avisoBloqueo != null && !avisoBloqueo.IsDisposed)
@@ -887,7 +1072,7 @@ namespace CapaPresentacion
 
         private void btnMinimizar_Click(object sender, EventArgs e)
         {
-            this.WindowState = FormWindowState.Minimized;
+            MinimizarEnBandeja();
         }
 
         private PreferenciasUsuario ObtenerPreferencias()
@@ -917,7 +1102,9 @@ namespace CapaPresentacion
 
         private void BtnTopCerrar_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            // The window close button hides the UI but keeps supervisors and
+            // tray actions alive, even when there are no active tasks.
+            MinimizarEnBandeja();
         }
     }
 }

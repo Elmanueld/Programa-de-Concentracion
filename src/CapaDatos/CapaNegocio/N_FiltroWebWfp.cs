@@ -25,6 +25,8 @@ namespace CapaNegocio
         private const uint FwpUint32 = 3;
         private const uint FwpByteBlob = 12;
         private const uint MatchEqual = 0;
+        // WFP action values include FWP_ACTION_FLAG_TERMINATING (0x1000).
+        // BLOCK = 0x1 | 0x1000; PERMIT = 0x2 | 0x1000.
         private const uint ActionBlock = 0x00001001;
         private const uint ActionPermit = 0x00001002;
         private const uint LoopbackV4 = 0x7f000001;
@@ -193,7 +195,11 @@ namespace CapaNegocio
                 }, conditions, false);
                 Filter filter = CrearFiltro(layer, name, action, weight, conditions, 1);
                 ulong id;
-                Comprobar(FwpmFilterAdd0(_engine, ref filter, IntPtr.Zero, out id), "FwpmFilterAdd0 (bloqueo navegador)");
+                int resultado = FwpmFilterAdd0(_engine, ref filter, IntPtr.Zero, out id);
+                string descripcion = "FwpmFilterAdd0 (bloqueo navegador; action=0x" + action.ToString("X8") +
+                    ", layer=" + layer.ToString("D") + ", weightType=" + FwpUint8 +
+                    ", conditionType=" + FwpByteBlob + ", match=" + MatchEqual + ")";
+                Comprobar(resultado, descripcion);
                 ids.Add(id);
             }
             finally
@@ -312,7 +318,8 @@ namespace CapaNegocio
         [StructLayout(LayoutKind.Explicit)] private struct ValueUnion { [FieldOffset(0)] public byte uint8; [FieldOffset(0)] public IntPtr pointer; }
         [StructLayout(LayoutKind.Sequential)] private struct Value { public uint type; public ValueUnion value; }
         [StructLayout(LayoutKind.Sequential)] private struct FilterAction { public uint type; public Guid calloutKey; }
-        [StructLayout(LayoutKind.Sequential)] private struct Filter { public Guid filterKey; public DisplayData displayData; public uint flags; public IntPtr providerKey; public ByteBlob providerData; public Guid layerKey; public Guid subLayerKey; public Value weight; public uint numFilterConditions; public IntPtr filterCondition; public FilterAction action; public ulong rawContext; public IntPtr reserved; public ulong filterId; public Value effectiveWeight; }
+        [StructLayout(LayoutKind.Explicit, Size = 16)] private struct FilterContext { [FieldOffset(0)] public ulong rawContext; [FieldOffset(0)] public Guid providerContextKey; }
+        [StructLayout(LayoutKind.Sequential)] private struct Filter { public Guid filterKey; public DisplayData displayData; public uint flags; public IntPtr providerKey; public ByteBlob providerData; public Guid layerKey; public Guid subLayerKey; public Value weight; public uint numFilterConditions; public IntPtr filterCondition; public FilterAction action; public FilterContext context; public IntPtr reserved; public ulong filterId; public Value effectiveWeight; }
 
         [DllImport("fwpuclnt.dll", CharSet = CharSet.Unicode, ExactSpelling = true)] private static extern int FwpmEngineOpen0(string serverName, uint authnService, IntPtr authIdentity, ref Session session, out IntPtr engineHandle);
         [DllImport("fwpuclnt.dll", ExactSpelling = true)] private static extern int FwpmEngineClose0(IntPtr engineHandle);

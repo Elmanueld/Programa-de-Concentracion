@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -186,11 +188,24 @@ namespace CapaDatos
                         throw new ApiRemotaNoDisponibleException(LeerMensaje(contenido));
                     if (!respuesta.IsSuccessStatusCode)
                     {
+                        string tipoContenido = respuesta.Content.Headers.ContentType == null
+                            ? String.Empty
+                            : respuesta.Content.Headers.ContentType.MediaType ?? String.Empty;
+                        bool respuestaJson = EsContenidoJson(tipoContenido) && PareceJson(contenido);
+
+                        // This API never returns an HTML 403. Hosting firewalls
+                        // can return one before the request reaches the API; treat
+                        // that as remote unavailability so the per-user offline
+                        // snapshot/outbox can keep the app usable.
+                        if (respuesta.StatusCode == HttpStatusCode.Forbidden && !respuestaJson)
+                            throw new ApiRemotaNoDisponibleException(
+                                "El servidor de alojamiento rechazó temporalmente la solicitud (HTTP 403, respuesta no JSON). Se intentará usar la copia local.");
+
                         string referencia = null;
                         IEnumerable<string> valores;
                         if (respuesta.Headers.TryGetValues("X-Error-Reference", out valores))
                             referencia = valores.FirstOrDefault();
-                        if (String.IsNullOrWhiteSpace(referencia))
+                        if (respuestaJson && String.IsNullOrWhiteSpace(referencia))
                         {
                             try
                             {
@@ -200,14 +215,17 @@ namespace CapaDatos
                             }
                             catch (Exception) { }
                         }
-                        throw new ApiDatosException(respuesta.StatusCode, LeerMensaje(contenido), referencia);
+                        string mensajeErrorApi = respuestaJson
+                            ? LeerMensaje(contenido)
+                            : "El servidor remoto respondió con HTTP " + (int)respuesta.StatusCode +
+                                " y un contenido que no corresponde a la API.";
+                        throw new ApiDatosException(respuesta.StatusCode, mensajeErrorApi, referencia);
                     }
                     return contenido;
                 }
             }
-            catch (ApiDatosException) { throw; }
-            catch (ApiRemotaNoDisponibleException) { throw; }
-            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is UriFormatException)
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException ||
+                ex is UriFormatException || ex is SocketException || ex is AuthenticationException)
             {
                 throw new ApiRemotaNoDisponibleException("No se pudo conectar con el servidor remoto. Comprueba Internet e inténtalo de nuevo.", ex);
             }
@@ -225,6 +243,23 @@ namespace CapaDatos
             catch { return "El servicio remoto no pudo completar la operación."; }
         }
 
+        private static bool EsContenidoJson(string tipoContenido)
+        {
+            return !String.IsNullOrWhiteSpace(tipoContenido) &&
+                (tipoContenido.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
+                 tipoContenido.EndsWith("+json", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool PareceJson(string contenido)
+        {
+            if (String.IsNullOrWhiteSpace(contenido)) return false;
+            int indice = 0;
+            if (contenido.Length > 0 && contenido[0] == '\uFEFF') indice++;
+            while (indice < contenido.Length && Char.IsWhiteSpace(contenido[indice])) indice++;
+            return indice < contenido.Length &&
+                (contenido[indice] == '{' || contenido[indice] == '[');
+        }
+
         private static string Texto(IDictionary<string, object> datos, string clave) =>
             datos != null && datos.ContainsKey(clave) ? Convert.ToString(datos[clave], CultureInfo.InvariantCulture) : null;
 
@@ -240,9 +275,12 @@ namespace CapaDatos
         private static HttpClient CrearCliente()
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-            // Avoid keeping the window invisible while Windows is launching the
-            // application and the remembered account cannot reach the API.
-            return new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+            // The web blocker changes the Windows system proxy to its local
+            // filter. App-to-API requests must bypass it to avoid self-blocking.
+            return new HttpClient(new HttpClientHandler { UseProxy = false })
+            {
+                Timeout = TimeSpan.FromSeconds(8)
+            };
         }
     }
 
@@ -278,6 +316,14 @@ namespace CapaDatos
         {
             StatusCode = status;
             Referencia = referencia;
+        }
+
+        public override string ToString()
+        {
+            string detalle = base.ToString() + Environment.NewLine + "HTTP status: " + (int)StatusCode;
+            if (!String.IsNullOrWhiteSpace(Referencia))
+                detalle += Environment.NewLine + "Remote reference: " + Referencia;
+            return detalle;
         }
     }
 

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -111,22 +112,41 @@ namespace CapaPresentacion
                 catch (Exception ex) { error = ex; }
 
                 if (IsDisposed || !IsHandleCreated) return;
-                BeginInvoke((Action)(async () =>
+                try
                 {
-                    if (flApps.Controls.Contains(_estadoCarga))
-                        flApps.Controls.Remove(_estadoCarga);
-                    if (!_estadoCarga.IsDisposed) _estadoCarga.Dispose();
-                    if (error != null)
+                    BeginInvoke((Action)(async () =>
                     {
-                        OperacionUI.ReportarError(this, error, "No se pudieron buscar las aplicaciones");
-                        return;
-                    }
-                    _appsInstaladas.AddRange(resultado ?? new List<E_Aplicacion>());
-                    if (chkAppsAbiertas.Checked)
-                        await ActualizarAppsActivasAsync();
-                    else
-                        MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
-                }));
+                        try
+                        {
+                            if (IsDisposed || Disposing) return;
+                            if (flApps.Controls.Contains(_estadoCarga))
+                                flApps.Controls.Remove(_estadoCarga);
+                            if (!_estadoCarga.IsDisposed) _estadoCarga.Dispose();
+                            if (error != null)
+                            {
+                                OperacionUI.ReportarError(this, error, "No se pudieron buscar las aplicaciones");
+                                return;
+                            }
+                            _appsInstaladas.AddRange(resultado ?? new List<E_Aplicacion>());
+                            if (chkAppsAbiertas.Checked)
+                                await ActualizarAppsActivasAsync();
+                            else
+                                MostrarAplicaciones(FiltrarAplicaciones(txtBuscar.Text));
+                        }
+                        catch (Exception ex)
+                        {
+                            if (!IsDisposed && !Disposing)
+                                OperacionUI.ReportarError(this, ex, "No se pudieron mostrar las aplicaciones");
+                            else
+                                ErroresAplicacion.Registrar(ex, "Carga asíncrona de aplicaciones tras cerrar el selector");
+                        }
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    if (!IsDisposed && !Disposing)
+                        ErroresAplicacion.Registrar(ex, "No se pudo actualizar el selector de aplicaciones");
+                }
             });
             hilo.IsBackground = true;
             hilo.Name = "Carga de aplicaciones AppsFolder";
@@ -165,6 +185,7 @@ namespace CapaPresentacion
 
             int procesoActual = Process.GetCurrentProcess().Id;
             int sesionActual = Process.GetCurrentProcess().SessionId;
+            var procesosConVentana = ObtenerProcesosConVentanaVisible();
             var identificadoresVistos = new HashSet<string>(
                 StringComparer.OrdinalIgnoreCase);
             var instaladasPorRuta = _appsInstaladas
@@ -180,38 +201,34 @@ namespace CapaPresentacion
                     {
                         if (proceso.Id == procesoActual ||
                             proceso.SessionId != sesionActual ||
-                            proceso.MainWindowHandle == IntPtr.Zero ||
-                            !IsWindowVisible(proceso.MainWindowHandle))
+                            !procesosConVentana.Contains(proceso.Id))
                         {
                             continue;
                         }
 
-                        string ruta;
-                        try
-                        {
-                            ruta = proceso.MainModule == null
-                                ? null
-                                : proceso.MainModule.FileName;
-                        }
-                        catch
-                        {
-                            // Omite procesos cuyo ejecutable no se puede leer.
-                            continue;
-                        }
+                        string nombreProceso = proceso.ProcessName;
+                        string ruta = ObtenerRutaProceso(proceso.Id);
 
-                        if (String.IsNullOrWhiteSpace(ruta) || ruta.Length > 255 ||
-                            !identificadoresVistos.Add(ruta))
+                        // Algunos procesos protegidos no permiten consultar su
+                        // ruta, y algunas rutas de paquetes exceden el límite de
+                        // la columna de identificador. Siguen siendo seleccionables
+                        // por nombre de exe en ambos casos.
+                        string identificador = String.IsNullOrWhiteSpace(ruta) || ruta.Length > 255
+                            ? nombreProceso + ".exe"
+                            : ruta;
+                        if (String.IsNullOrWhiteSpace(nombreProceso) ||
+                            !identificadoresVistos.Add(identificador))
                         {
                             continue;
                         }
 
                         E_Aplicacion registrada;
-                        instaladasPorRuta.TryGetValue(ruta, out registrada);
+                        instaladasPorRuta.TryGetValue(identificador, out registrada);
 
                         resultado.Add(registrada ?? new E_Aplicacion
                         {
-                            Nombre = proceso.ProcessName,
-                            Identificador = ruta,
+                            Nombre = nombreProceso,
+                            Identificador = identificador,
                             EsCritica = false,
                             RutaIcono = ruta,
                             IndiceIcono = 0
@@ -226,8 +243,65 @@ namespace CapaPresentacion
             return resultado;
         }
 
+        private static HashSet<int> ObtenerProcesosConVentanaVisible()
+        {
+            var procesos = new HashSet<int>();
+            EnumWindowsProc callback = (ventana, estado) =>
+            {
+                if (!IsWindowVisible(ventana)) return true;
+                uint idProceso;
+                GetWindowThreadProcessId(ventana, out idProceso);
+                if (idProceso > 0) procesos.Add((int)idProceso);
+                return true;
+            };
+
+            if (!EnumWindows(callback, IntPtr.Zero))
+                throw new InvalidOperationException(
+                    "Windows no pudo enumerar las ventanas abiertas.");
+            GC.KeepAlive(callback);
+            return procesos;
+        }
+
+        private static string ObtenerRutaProceso(int idProceso)
+        {
+            const uint ProcessQueryLimitedInformation = 0x1000;
+            IntPtr proceso = OpenProcess(ProcessQueryLimitedInformation, false, idProceso);
+            if (proceso == IntPtr.Zero) return null;
+
+            try
+            {
+                var ruta = new StringBuilder(32768);
+                uint capacidad = (uint)ruta.Capacity;
+                return QueryFullProcessImageName(proceso, 0, ruta, ref capacidad)
+                    ? ruta.ToString()
+                    : null;
+            }
+            finally { CloseHandle(proceso); }
+        }
+
+        private delegate bool EnumWindowsProc(IntPtr ventana, IntPtr estado);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr estado);
+
         [DllImport("user32.dll")]
         private static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint access, bool inheritHandle, int processId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool QueryFullProcessImageName(
+            IntPtr process, uint flags, StringBuilder executablePath, ref uint size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr handle);
 
         private void MostrarAplicaciones(IEnumerable<E_Aplicacion> aplicaciones)
         {

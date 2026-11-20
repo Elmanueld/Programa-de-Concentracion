@@ -37,6 +37,12 @@ namespace CapaDatos
                 ActivarModoOffline(idUsuario);
                 return local();
             }
+            catch (ApiDatosException ex) when ((int)ex.StatusCode >= 500 || (int)ex.StatusCode == 403)
+            {
+                // Reads may use only this user's local snapshot when the remote service is unavailable or denies the request.
+                ActivarModoOffline(idUsuario);
+                return local();
+            }
             catch (SqlException ex)
             {
                 if (!D_Comun.EsFalloDeConexion(ex)) throw;
@@ -480,6 +486,69 @@ namespace CapaDatos
                     AutoSesion = f.Booleano("AutoSesion"), SyncId = f.Texto("SyncId")
                 }, idUsuario);
             return rows.Count == 0 ? null : rows[0];
+        }
+
+        public static bool TieneConfiguracionPendiente(int idUsuario)
+        {
+            if (idUsuario <= 0) throw new ArgumentException("El usuario no es válido.");
+            object valor = SQLiteLocal.Escalar(@"SELECT COUNT(*) FROM Configuraciones c
+                INNER JOIN SyncOutbox o ON o.IdUsuario=c.IdUsuario AND o.SyncId=c.SyncId
+                WHERE c.IdUsuario=? AND c.SyncDeleted=0 AND o.TipoEntidad='Configuracion'", idUsuario);
+            return Convert.ToInt32(valor ?? 0, CultureInfo.InvariantCulture) > 0;
+        }
+
+        /// <summary>
+        /// Keeps this user's local startup preference in sync after a successful
+        /// remote write, even when a pending outbox entry prevents a full snapshot refresh.
+        /// This is a local mirror only and must not enqueue a second remote write.
+        /// </summary>
+        public static void ReflejarConfiguracionLocal(CapaEntidades.E_Configuracion configuracion)
+        {
+            if (configuracion == null || configuracion.IdUsuario <= 0)
+                throw new System.ArgumentException("La configuración no identifica a un usuario válido.");
+
+            try
+            {
+                var perfiles = SQLiteLocal.Consultar(
+                    "SELECT IdUsuario FROM UsuariosLocales WHERE IdUsuario=? AND SyncDeleted=0 LIMIT 1",
+                    f => f.Entero("IdUsuario"), configuracion.IdUsuario);
+                if (perfiles.Count == 0)
+                {
+                    System.Diagnostics.Trace.TraceWarning(
+                        "No se reflejó AutoSesion local: falta el perfil local del usuario " + configuracion.IdUsuario + ".");
+                    return;
+                }
+
+                var filas = SQLiteLocal.Consultar(
+                    "SELECT IdConfiguracion,SyncId FROM Configuraciones WHERE IdUsuario=? LIMIT 1",
+                    f => new { Id = f.Entero("IdConfiguracion"), SyncId = f.Texto("SyncId") },
+                    configuracion.IdUsuario);
+                DateTime ahora = DateTime.UtcNow;
+                if (filas.Count > 0)
+                {
+                    SQLiteLocal.Ejecutar(
+                        "UPDATE Configuraciones SET AutoSesion=?,SyncUpdatedUtc=?,SyncDeleted=0 WHERE IdConfiguracion=? AND IdUsuario=?",
+                        configuracion.AutoSesion, ahora, filas[0].Id, configuracion.IdUsuario);
+                    configuracion.SyncId = filas[0].SyncId;
+                    configuracion.IdConfiguracion = filas[0].Id;
+                }
+                else
+                {
+                    int idLocal = Convert.ToInt32(SQLiteLocal.Escalar(
+                        "SELECT COALESCE(MIN(IdConfiguracion),0)-1 FROM Configuraciones"));
+                    string syncId = Guid.NewGuid().ToString("D");
+                    SQLiteLocal.Ejecutar(
+                        "INSERT INTO Configuraciones(IdConfiguracion,IdUsuario,AutoSesion,SyncId,SyncUpdatedUtc,SyncDeleted) VALUES(?,?,?,?,?,0)",
+                        idLocal, configuracion.IdUsuario, configuracion.AutoSesion, syncId, ahora);
+                    configuracion.IdConfiguracion = idLocal;
+                    configuracion.SyncId = syncId;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("No se pudo reflejar AutoSesion en la copia local: " + ex);
+                NotificarErrorCopiaLocal(ex);
+            }
         }
 
         public static void ModificarConfiguracion(CapaEntidades.E_Configuracion configuracion)

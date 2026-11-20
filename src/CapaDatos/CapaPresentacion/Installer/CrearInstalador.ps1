@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $raizPresentacion = Split-Path -Parent $PSScriptRoot
 $salidaRelease = Join-Path $raizPresentacion 'bin\Release'
@@ -37,17 +37,44 @@ try {
     Remove-Item -LiteralPath $contenidoPayload -Recurse -Force
 
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Instalar.ps1') -Destination (Join-Path $directorioTemporal 'Instalar.ps1')
-    Set-Content -LiteralPath (Join-Path $directorioTemporal 'Instalar.bat') -Encoding ASCII -Value '@echo off', 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Instalar.ps1"'
+    Set-Content -LiteralPath (Join-Path $directorioTemporal 'Instalar.vbs') -Encoding ASCII -Value @(
+        'Set shell = CreateObject("WScript.Shell")',
+        'Set fso = CreateObject("Scripting.FileSystemObject")',
+        'scriptPath = fso.BuildPath(fso.GetParentFolderName(WScript.ScriptFullName), "Instalar.ps1")',
+        'command = "powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & scriptPath & """"',
+        'shell.Run command, 0, True'
+    )
     Set-Content -LiteralPath (Join-Path $directorioTemporal 'LEEME.txt') -Encoding UTF8 -Value @(
         'Programa de Concentración - Instalador',
         '',
-        'Descomprime el ZIP completo y ejecuta Instalar.bat.',
+        'Descomprime el ZIP completo y ejecuta Instalar.vbs. La consola del instalador se ejecuta oculta.',
         'El instalador descarga .NET Framework 4.8 desde Microsoft si hace falta.',
         'Al finalizar, el programa aparece en el menú Inicio. Windows puede pedir autorización al abrirlo.'
     )
     Compress-Archive -Path (Join-Path $directorioTemporal '*') -DestinationPath $salidaInstalador -Force
     if (-not (Test-Path -LiteralPath $salidaInstalador)) {
         throw 'No se pudo generar el paquete de instalación.'
+    }
+
+    $destinoInstalado = Join-Path $env:ProgramFiles 'Programa de Concentración'
+    if (Test-Path -LiteralPath (Join-Path $destinoInstalado 'ProgramaConcentracion.exe')) {
+        $actualizador = Join-Path $PSScriptRoot 'ActualizarInstalacion.ps1'
+        if (-not (Test-Path -LiteralPath $actualizador)) {
+            throw 'No se encontró el actualizador de la instalación existente.'
+        }
+        $argumentosActualizador = '-NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' +
+            $actualizador + '" -Origen "' + $salidaRelease + '"'
+        $identidadActual = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principalActual = New-Object Security.Principal.WindowsPrincipal($identidadActual)
+        $opcionesProceso = @{
+            FilePath = (Join-Path $PSHOME 'powershell.exe')
+            ArgumentList = $argumentosActualizador
+            WindowStyle = 'Hidden'
+        }
+        if (-not $principalActual.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            $opcionesProceso.Verb = 'RunAs'
+        }
+        Start-Process @opcionesProceso | Out-Null
     }
 
     $creado = $true

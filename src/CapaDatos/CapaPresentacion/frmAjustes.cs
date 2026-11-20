@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.Win32;
@@ -112,6 +113,21 @@ namespace CapaPresentacion
             try
             {
                 int minutos = LeerMinutos();
+                if (cbAutoSesion.Checked && !negocioUsuario.TieneCredencialRecordada(usuario.IdUsuario))
+                {
+                    string contrasena = SolicitarTexto(
+                        "Para iniciar sesión automáticamente, confirma tu contraseña una vez:", "", true);
+                    if (contrasena == null) return;
+                    try
+                    {
+                        negocioUsuario.IniciarSesion(usuario.Correo, contrasena);
+                    }
+                    finally { contrasena = null; }
+
+                    if (!negocioUsuario.TieneCredencialRecordada(usuario.IdUsuario))
+                        throw new InvalidOperationException("No se pudieron guardar las credenciales protegidas para el inicio automático. Comprueba los permisos de Windows e inténtalo de nuevo.");
+                }
+
                 E_Configuracion configuracion = negocioConfiguracion.BuscarConfiguracion(usuario.IdUsuario);
                 if (configuracion == null)
                     negocioConfiguracion.InsertarConfiguracion(new E_Configuracion { IdUsuario = usuario.IdUsuario, AutoSesion = cbAutoSesion.Checked });
@@ -120,6 +136,8 @@ namespace CapaPresentacion
                     configuracion.AutoSesion = cbAutoSesion.Checked;
                     negocioConfiguracion.ModificarConfiguracion(configuracion);
                 }
+                if (cbAutoSesion.Checked)
+                    negocioUsuario.HabilitarInicioAutomatico(usuario.IdUsuario);
 
                 preferencias.NoMostrarAnuncios = cbMostrarAnuncios.Checked;
                 preferencias.MostrarComoVentana = cbMostrarComoVentana.Checked;
@@ -145,13 +163,115 @@ namespace CapaPresentacion
 
         private void ConfigurarInicioWindows(bool habilitado)
         {
-            const string nombre = "ProgramaDeConcentracion";
-            using (RegistryKey inicio = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run"))
+            const string nombreTarea = "ProgramaDeConcentracion";
+            const string nombreRegistro = "ProgramaDeConcentracion";
+
+            if (habilitado)
             {
-                if (inicio == null) throw new InvalidOperationException("Windows no permitió actualizar el inicio automático.");
-                if (habilitado) inicio.SetValue(nombre, "\"" + Application.ExecutablePath + "\" --inicio-windows");
-                else inicio.DeleteValue(nombre, false);
+                RegistrarTareaInicioWindows(nombreTarea);
+                QuitarEntradaRun(nombreRegistro);
+                return;
             }
+
+            QuitarTareaInicioWindows(nombreTarea);
+            QuitarEntradaRun(nombreRegistro);
+        }
+
+        private static void RegistrarTareaInicioWindows(string nombre)
+        {
+            object servicioObjeto = null;
+            object carpetaObjeto = null;
+            object definicionObjeto = null;
+            try
+            {
+                Type tipoServicio = Type.GetTypeFromProgID("Schedule.Service");
+                if (tipoServicio == null)
+                    throw new InvalidOperationException("Windows no tiene disponible el Programador de tareas.");
+
+                servicioObjeto = Activator.CreateInstance(tipoServicio);
+                dynamic servicio = servicioObjeto;
+                servicio.Connect();
+                carpetaObjeto = servicio.GetFolder("\\");
+                definicionObjeto = servicio.NewTask(0);
+                dynamic definicion = definicionObjeto;
+                string usuario = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+
+                dynamic principal = definicion.Principal;
+                principal.UserId = usuario;
+                principal.LogonType = 3; // TASK_LOGON_INTERACTIVE_TOKEN
+                principal.RunLevel = 1; // TASK_RUNLEVEL_HIGHEST
+
+                dynamic configuracion = definicion.Settings;
+                configuracion.Enabled = true;
+                configuracion.StartWhenAvailable = true;
+                configuracion.DisallowStartIfOnBatteries = false;
+                configuracion.StopIfGoingOnBatteries = false;
+                configuracion.MultipleInstances = 2; // TASK_INSTANCES_IGNORE_NEW
+
+                dynamic disparador = definicion.Triggers.Create(9); // TASK_TRIGGER_LOGON
+                disparador.UserId = usuario;
+
+                dynamic accion = definicion.Actions.Create(0); // TASK_ACTION_EXEC
+                accion.Path = Application.ExecutablePath;
+                accion.Arguments = "--inicio-windows";
+                accion.WorkingDirectory = Path.GetDirectoryName(Application.ExecutablePath);
+
+                dynamic carpeta = carpetaObjeto;
+                carpeta.RegisterTaskDefinition(nombre, definicion, 6, usuario, null, 3, null);
+            }
+            catch (COMException ex)
+            {
+                throw new InvalidOperationException(
+                    "Windows no pudo registrar el inicio elevado del programa. Comprueba que tu cuenta puede crear tareas programadas.", ex);
+            }
+            finally
+            {
+                LiberarCom(carpetaObjeto);
+                LiberarCom(definicionObjeto);
+                LiberarCom(servicioObjeto);
+            }
+        }
+
+        private static void QuitarTareaInicioWindows(string nombre)
+        {
+            object servicioObjeto = null;
+            object carpetaObjeto = null;
+            try
+            {
+                Type tipoServicio = Type.GetTypeFromProgID("Schedule.Service");
+                if (tipoServicio == null) return;
+                servicioObjeto = Activator.CreateInstance(tipoServicio);
+                dynamic servicio = servicioObjeto;
+                servicio.Connect();
+                carpetaObjeto = servicio.GetFolder("\\");
+                dynamic carpeta = carpetaObjeto;
+                try { carpeta.DeleteTask(nombre, 0); }
+                catch (COMException ex) when ((uint)ex.ErrorCode == 0x80070002 || (uint)ex.ErrorCode == 0x8004130F) { }
+            }
+            catch (COMException ex)
+            {
+                throw new InvalidOperationException("Windows no pudo quitar la tarea de inicio del programa.", ex);
+            }
+            finally
+            {
+                LiberarCom(carpetaObjeto);
+                LiberarCom(servicioObjeto);
+            }
+        }
+
+        private static void QuitarEntradaRun(string nombre)
+        {
+            using (RegistryKey inicio = Registry.CurrentUser.OpenSubKey(
+                "Software\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
+                if (inicio != null) inicio.DeleteValue(nombre, false);
+            }
+        }
+
+        private static void LiberarCom(object objeto)
+        {
+            if (objeto != null && Marshal.IsComObject(objeto))
+                Marshal.FinalReleaseComObject(objeto);
         }
 
         private void BtnPlantilla_Click(object sender, EventArgs e)
@@ -382,7 +502,8 @@ namespace CapaPresentacion
     {
         public bool NoMostrarAnuncios { get; set; }
         public bool MostrarComoVentana { get; set; } = true;
-        public bool MostrarComoNotificacion { get; set; }
+        public bool MostrarComoNotificacion { get; set; } = true;
+        public bool PreferenciaNotificacionConfigurada { get; set; }
         public bool NoMostrarAvisos { get; set; }
         public bool NoMostrarDescansos { get; set; }
         public int MinutosAnticipacion { get; set; }
@@ -407,13 +528,31 @@ namespace CapaPresentacion
         public static PreferenciasUsuario Cargar(int idUsuario)
         {
             string ruta = Ruta(idUsuario);
-            if (!File.Exists(ruta)) return new PreferenciasUsuario();
+            if (!File.Exists(ruta))
+            {
+                var nuevas = new PreferenciasUsuario { PreferenciaNotificacionConfigurada = true };
+                return nuevas;
+            }
+
+            PreferenciasUsuario preferencias;
             using (var archivo = File.OpenRead(ruta))
-                return (PreferenciasUsuario)new XmlSerializer(typeof(PreferenciasUsuario)).Deserialize(archivo);
+                preferencias = (PreferenciasUsuario)new XmlSerializer(typeof(PreferenciasUsuario)).Deserialize(archivo);
+
+            // Los ajustes anteriores no distinguían el valor predeterminado de una elección explícita.
+            // Se activan una vez; desde aquí la casilla conserva la decisión del usuario.
+            if (!preferencias.PreferenciaNotificacionConfigurada)
+            {
+                preferencias.MostrarComoNotificacion = true;
+                preferencias.PreferenciaNotificacionConfigurada = true;
+                Guardar(idUsuario, preferencias);
+            }
+            return preferencias;
         }
 
         public static void Guardar(int idUsuario, PreferenciasUsuario preferencias)
         {
+            if (preferencias == null) throw new ArgumentNullException("preferencias");
+            preferencias.PreferenciaNotificacionConfigurada = true;
             string ruta = Ruta(idUsuario);
             string temporal = ruta + ".tmp";
             using (var archivo = File.Create(temporal))

@@ -51,6 +51,11 @@ namespace CapaDatos
 
         public void ModificarTarea(E_Tarea tarea)
         {
+            if (tarea.IdTarea < 0)
+            {
+                SQLiteLocal.EnTransaccion(() => D_SincronizacionOffline.ModificarTarea(tarea));
+                return;
+            }
             D_SincronizacionOffline.ConFallbackEscritura(tarea.IdUsuario,
             () => EjecutarCambio("sp_ModificarTarea", tarea.IdUsuario, tarea.IdTarea, comando =>
             {
@@ -65,6 +70,11 @@ namespace CapaDatos
 
         public void EliminarTarea(int idUsuario, int idTarea)
         {
+            if (idTarea < 0)
+            {
+                SQLiteLocal.EnTransaccion(() => D_SincronizacionOffline.EliminarTarea(idUsuario, idTarea));
+                return;
+            }
             D_SincronizacionOffline.ConFallbackEscritura(idUsuario,
             () => EjecutarCambio("sp_EliminarTarea", idUsuario, idTarea, comando => {
                 D_Comun.Entero(comando, "@IdTarea", idTarea);
@@ -73,6 +83,13 @@ namespace CapaDatos
 
         public void CambiarEstadoTarea(int idUsuario, int idTarea, char estado)
         {
+            // Offline-created tasks use negative local IDs until the outbox
+            // assigns them a server ID. Never send those IDs to SQL Server.
+            if (idTarea < 0)
+            {
+                SQLiteLocal.EnTransaccion(() => D_SincronizacionOffline.CambiarEstadoTarea(idUsuario, idTarea, estado));
+                return;
+            }
             D_SincronizacionOffline.ConFallbackEscritura(idUsuario,
             () => EjecutarCambio("sp_CambiarEstadoTarea", idUsuario, idTarea, comando =>
             {

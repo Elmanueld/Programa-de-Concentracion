@@ -124,6 +124,12 @@ namespace CapaNegocio
             }
             intentosFallidos = 0;
             D_SincronizacionOffline.ActivarModoOnline();
+            // Persist the newly authenticated account before cache capture or
+            // outbox processing; either can fail independently of the login.
+            try { CredencialOfflineLocal.Guardar(usuario, SeguridadContrasena.CrearHash(contrasena), contrasena); }
+            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
+            catch (CryptographicException ex) { AgregarAdvertenciaCacheLocal(ex); }
             try
             {
                 new D_SincronizacionOffline().CapturarCopiaCompleta(
@@ -136,12 +142,64 @@ namespace CapaNegocio
             catch (ApiRemotaNoDisponibleException ex) { AgregarAdvertenciaCacheLocal(ex); }
             catch (SqlException ex) { AgregarAdvertenciaCacheLocal(ex); }
             catch (InvalidOperationException ex) { AgregarAdvertenciaCacheLocal(ex); }
-            try { CredencialOfflineLocal.Guardar(usuario, SeguridadContrasena.CrearHash(contrasena), contrasena); }
-            catch (IOException ex) { AgregarAdvertenciaCacheLocal(ex); }
-            catch (UnauthorizedAccessException ex) { AgregarAdvertenciaCacheLocal(ex); }
-            catch (CryptographicException ex) { AgregarAdvertenciaCacheLocal(ex); }
             usuario.ContrasenaHash = null;
             return usuario;
+        }
+
+        public bool InicioAutomaticoConfiguradoLocalmente()
+        {
+            string contrasena;
+            E_Usuario cuenta = CredencialOfflineLocal.ObtenerSesionRecordada(out contrasena);
+            contrasena = null;
+            if (cuenta == null)
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático omitido: no hay una sesión recordada en este equipo.");
+                return false;
+            }
+            System.Diagnostics.Trace.TraceInformation(
+                "Inicio automático: se evaluará la última cuenta guardada (IdUsuario=" + cuenta.IdUsuario + ").");
+            if (CredencialOfflineLocal.InicioAutomaticoDeshabilitado(cuenta.IdUsuario))
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático omitido: está deshabilitado localmente para la cuenta recordada.");
+                return false;
+            }
+            // En línea, la configuración puede estar en el servicio remoto aunque
+            // este perfil aún no tenga una copia local completa. Solo se exige
+            // la copia para poder iniciar sesión automáticamente sin conexión.
+            if (!ConexionRemotaConfigurada &&
+                !D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario))
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático omitido: falta la copia local completa y el servicio en línea no está configurado.");
+                return false;
+            }
+
+            // En línea, no descartes el intento usando una copia local que puede
+            // estar desactualizada. IniciarSesionAutomatico autentica esta única
+            // cuenta recordada y luego valida AutoSesion en el servicio remoto.
+            if (ConexionRemotaConfigurada)
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático: se verificará la preferencia remota de la cuenta recordada.");
+                return true;
+            }
+
+            E_Configuracion configuracionLocal =
+                D_SincronizacionOffline.BuscarConfiguracion(cuenta.IdUsuario);
+            bool habilitado = configuracionLocal != null && configuracionLocal.AutoSesion;
+            System.Diagnostics.Trace.TraceInformation("Inicio automático " +
+                (habilitado ? "habilitado" : "omitido: la configuración local no está habilitada") +
+                " (IdUsuario=" + cuenta.IdUsuario + ").");
+            return habilitado;
+        }
+
+        public bool TieneCredencialRecordada(int idUsuario)
+        {
+            ValidarId(idUsuario);
+            string contrasena;
+            E_Usuario cuenta = CredencialOfflineLocal.ObtenerSesionRecordada(out contrasena);
+            bool disponible = cuenta != null && cuenta.IdUsuario == idUsuario &&
+                !String.IsNullOrEmpty(contrasena);
+            contrasena = null;
+            return disponible;
         }
 
         public E_Usuario IniciarSesionAutomatico()
@@ -152,6 +210,7 @@ namespace CapaNegocio
             if (CredencialOfflineLocal.InicioAutomaticoDeshabilitado(cuenta.IdUsuario)) return null;
             if (!ConexionRemotaConfigurada)
                 return ObtenerSesionAutomaticaOffline(cuenta);
+
             if (String.IsNullOrEmpty(contrasena))
                 return ObtenerSesionAutomaticaOffline(cuenta);
             try
@@ -163,6 +222,9 @@ namespace CapaNegocio
                     return null;
                 }
                 E_Configuracion configuracion = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
+                System.Diagnostics.Trace.TraceInformation("Inicio automático: AutoSesion=" +
+                    (configuracion != null && configuracion.AutoSesion ? "true" : "false") +
+                    " para IdUsuario=" + cuenta.IdUsuario + ".");
                 if (configuracion == null || !configuracion.AutoSesion)
                 {
                     Datos.CerrarSesionRemota();
@@ -171,6 +233,7 @@ namespace CapaNegocio
                 remoto.Nombre = String.IsNullOrEmpty(remoto.Nombre) ? cuenta.Nombre : remoto.Nombre;
                 remoto.ContrasenaHash = null;
                 D_SincronizacionOffline.ActivarModoOnline();
+                System.Diagnostics.Trace.TraceInformation("Inicio automático completado en línea.");
                 return remoto;
             }
             catch (ApiDatosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -188,11 +251,20 @@ namespace CapaNegocio
 
         private static E_Usuario ObtenerSesionAutomaticaOffline(E_Usuario cuenta)
         {
-            if (!D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario)) return null;
+            if (!D_SincronizacionOffline.TieneCopiaCompleta(cuenta.IdUsuario))
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático sin conexión omitido: falta la copia local completa.");
+                return null;
+            }
             D_SincronizacionOffline.ActivarModoOffline(cuenta.IdUsuario);
             E_Configuracion local = new N_Configuracion().BuscarConfiguracion(cuenta.IdUsuario);
-            if (local == null || !local.AutoSesion) return null;
+            if (local == null || !local.AutoSesion)
+            {
+                System.Diagnostics.Trace.TraceInformation("Inicio automático sin conexión omitido: la preferencia no está activa en la copia local.");
+                return null;
+            }
             cuenta.SesionSinConexion = true;
+            System.Diagnostics.Trace.TraceInformation("Inicio automático completado sin conexión.");
             return cuenta;
         }
 
@@ -201,6 +273,12 @@ namespace CapaNegocio
             ValidarId(idUsuario);
             CredencialOfflineLocal.DeshabilitarInicioAutomatico(idUsuario);
             Datos.CerrarSesionRemota();
+        }
+
+        public void HabilitarInicioAutomatico(int idUsuario)
+        {
+            ValidarId(idUsuario);
+            CredencialOfflineLocal.HabilitarInicioAutomatico(idUsuario);
         }
 
         public void RegistrarUsuario(E_Usuario usuario)

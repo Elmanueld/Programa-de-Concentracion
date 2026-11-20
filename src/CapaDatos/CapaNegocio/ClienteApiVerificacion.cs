@@ -77,7 +77,11 @@ namespace CapaNegocio
         private static HttpClient CrearCliente()
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-            return new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+            // Bypass the system proxy installed by the web-blocking feature.
+            return new HttpClient(new HttpClientHandler { UseProxy = false })
+            {
+                Timeout = TimeSpan.FromSeconds(20)
+            };
         }
 
         private static HttpResponseMessage Post(string ruta, object solicitud)

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using CapaEntidades;
 using CapaNegocio;
@@ -12,14 +15,37 @@ namespace CapaPresentacion
     {
         internal static bool InicioDesdeWindows { get; private set; }
         internal static bool CierreControladoPorErrorCritico { get; set; }
+        internal static bool SalidaSolicitada { get; set; }
+        private const string NombreMutexInstancia = "Local\\ProgramaDeConcentracion.InstanciaUnica";
+        private const string NombreEventoInstancia = "Local\\ProgramaDeConcentracion.MostrarVentana";
+        private static PrincipalForm principalActual;
+        private static frmLogin loginActual;
+
+        internal static void RegistrarPrincipal(PrincipalForm formulario) { principalActual = formulario; }
+        internal static void QuitarPrincipal(PrincipalForm formulario)
+        {
+            if (ReferenceEquals(principalActual, formulario)) principalActual = null;
+        }
         /// <summary>
         /// Punto de entrada principal para la aplicación.
         /// </summary>
         [STAThread]
         static void Main()
         {
+            bool instanciaNueva;
+            using (var mutexInstancia = new Mutex(true, NombreMutexInstancia, out instanciaNueva))
+            using (var eventoInstancia = new EventWaitHandle(false, EventResetMode.AutoReset,
+                NombreEventoInstancia, out bool eventoNuevo))
             try
             {
+                if (!instanciaNueva)
+                {
+                    try { EventWaitHandle.OpenExisting(NombreEventoInstancia).Set(); }
+                    catch (WaitHandleCannotBeOpenedException) { }
+                    catch (UnauthorizedAccessException ex) { Trace.TraceError("No se pudo avisar a la instancia activa: " + ex.Message); }
+                    return;
+                }
+
                 InicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
                     String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
                 Application.EnableVisualStyles();
@@ -28,32 +54,50 @@ namespace CapaPresentacion
                 Application.ThreadException += Aplicacion_ThreadException;
                 AppDomain.CurrentDomain.UnhandledException += Dominio_UnhandledException;
                 TaskScheduler.UnobservedTaskException += Tareas_UnobservedTaskException;
+                ConfigurarRegistroDiagnostico();
 
-                E_Usuario sesionAutomatica = null;
+                var detectorInstancia = new System.Windows.Forms.Timer { Interval = 400 };
+                detectorInstancia.Tick += (s, e) =>
+                {
+                    if (!eventoInstancia.WaitOne(0)) return;
+                    if (principalActual != null && !principalActual.IsDisposed)
+                        principalActual.RestaurarDesdeInstanciaSecundaria();
+                    else if (loginActual != null && !loginActual.IsDisposed)
+                        loginActual.RestaurarDesdeInstanciaSecundaria();
+                };
+                detectorInstancia.Start();
+
                 string avisoInicio = null;
+                E_Usuario sesionAutomatica = null;
                 try
                 {
-                    if (N_Usuario.ConexionRemotaConfigurada)
-                    {
-                        try { sesionAutomatica = new N_Usuario().IniciarSesionAutomatico(); }
-                        catch (Exception ex)
-                        {
-                            ErroresAplicacion.Registrar(ex, "Inicio automático");
-                            avisoInicio = OperacionUI.DescribirError(ex);
-                        }
-                    }
-                    else
-                        avisoInicio = "No se pudo conectar con tu cuenta en línea. Si ya usaste esta cuenta en este equipo, puedes intentar entrar sin conexión. Comprueba Internet e inténtalo de nuevo.";
-
-                    var inicio = new frmLogin(sesionAutomatica);
-                    if (!String.IsNullOrWhiteSpace(avisoInicio)) inicio.MostrarAvisoInicial(avisoInicio);
-                    AjustePantalla.Preparar(inicio);
-                    Application.Run(inicio);
+                    var negocioUsuario = new N_Usuario();
+                    // La preferencia se lee de la copia local (sin sesión API).
+                    // La configuración remota se verifica después de autenticar.
+                    if (negocioUsuario.InicioAutomaticoConfiguradoLocalmente())
+                        sesionAutomatica = negocioUsuario.IniciarSesionAutomatico();
+                    Trace.TraceInformation(sesionAutomatica == null
+                        ? "Arranque: se mostrará el formulario de acceso."
+                        : "Arranque: sesión automática preparada.");
                 }
                 catch (Exception ex)
                 {
-                    MostrarErrorDeInicio(ex);
+                    ErroresAplicacion.Registrar(ex, "Comprobación de inicio de sesión automático");
+                    avisoInicio = OperacionUI.DescribirError(ex);
                 }
+
+                if (!N_Usuario.ConexionRemotaConfigurada && sesionAutomatica == null &&
+                    String.IsNullOrWhiteSpace(avisoInicio))
+                    avisoInicio = "No se pudo conectar con tu cuenta en línea. Si ya usaste esta cuenta en este equipo, puedes intentar entrar sin conexión. Comprueba Internet e inténtalo de nuevo.";
+
+                var inicio = new frmLogin(sesionAutomatica);
+                loginActual = inicio;
+                inicio.FormClosed += (s, e) => { if (ReferenceEquals(loginActual, inicio)) loginActual = null; };
+                if (!String.IsNullOrWhiteSpace(avisoInicio)) inicio.MostrarAvisoInicial(avisoInicio);
+                AjustePantalla.Preparar(inicio);
+                Application.Run(inicio);
+                detectorInstancia.Stop();
+                detectorInstancia.Dispose();
             }
             catch (Exception ex)
             {
@@ -61,6 +105,23 @@ namespace CapaPresentacion
             }
         }
 
+        private static void ConfigurarRegistroDiagnostico()
+        {
+            try
+            {
+                string carpeta = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Programa-de-Concentracion", "Logs");
+                Directory.CreateDirectory(carpeta);
+                Trace.Listeners.Add(new TextWriterTraceListener(
+                    Path.Combine(carpeta, "diagnostico.log")));
+                Trace.AutoFlush = true;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("No se pudo iniciar el registro de diagnóstico: " + ex.GetType().Name);
+            }
+        }
         private static void MostrarErrorDeInicio(Exception excepcion)
         {
             string referencia = ErroresAplicacion.Registrar(excepcion, "Inicio de la aplicación");

@@ -54,8 +54,6 @@ namespace CapaNegocio
 
             lock (Sincronizador)
             {
-                string marcaDeshabilitada = RutaAutoInicioDeshabilitado(usuario.IdUsuario);
-                if (File.Exists(marcaDeshabilitada)) File.Delete(marcaDeshabilitada);
                 Registro registro = new Registro
                 {
                     IdUsuario = usuario.IdUsuario,
@@ -74,6 +72,14 @@ namespace CapaNegocio
                     File.WriteAllBytes(temporal, protegido);
                     if (File.Exists(ruta)) File.Replace(temporal, ruta, null);
                     else File.Move(temporal, ruta);
+
+                    // Solo se reactiva el auto inicio de esta cuenta después de
+                    // haber persistido correctamente su credencial. Así un
+                    // cambio de cuenta fallido no deja una sesión anterior a medias.
+                    string marcaDeshabilitada = RutaAutoInicioDeshabilitado(usuario.IdUsuario);
+                    if (File.Exists(marcaDeshabilitada)) File.Delete(marcaDeshabilitada);
+                    System.Diagnostics.Trace.TraceInformation(
+                        "Credencial local actualizada para la última cuenta usada (IdUsuario=" + usuario.IdUsuario + ").");
                 }
                 finally
                 {
@@ -141,6 +147,21 @@ namespace CapaNegocio
                 string ruta = RutaAutoInicioDeshabilitado(idUsuario);
                 Directory.CreateDirectory(Path.GetDirectoryName(ruta));
                 File.WriteAllText(ruta, DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            }
+        }
+
+        public static void HabilitarInicioAutomatico(int idUsuario)
+        {
+            if (idUsuario <= 0) throw new ArgumentException("El ID del usuario no es válido.");
+            lock (Sincronizador)
+            {
+                string ruta = RutaAutoInicioDeshabilitado(idUsuario);
+                try
+                {
+                    if (File.Exists(ruta)) File.Delete(ruta);
+                }
+                catch (IOException) { throw; }
+                catch (UnauthorizedAccessException) { throw; }
             }
         }
 

@@ -21,11 +21,6 @@ namespace CapaPresentacion
             ArrastreFormulario.Habilitar(this, pnlTop);
         }
 
-        protected override bool ShowWithoutActivation
-        {
-            get { return true; }
-        }
-
         public void ConfigurarContexto(
         string nombreAplicacion,
         string nombreTarea)

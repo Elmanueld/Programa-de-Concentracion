@@ -23,6 +23,7 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <ApplicationIcon>src\icons\programa.ico</ApplicationIcon>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
@@ -45,6 +46,7 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -306,5 +308,9 @@
           DestinationFolder="$(TargetDir)x64" SkipUnchangedFiles="true" />
     <Copy SourceFiles="..\CapaDatos\bin\$(Configuration)\x86\SQLite.Interop.dll"
           DestinationFolder="$(TargetDir)x86" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CrearPaqueteYActualizarInstalacion" AfterTargets="CopySQLiteInterop"
+          Condition=" '$(Configuration)' == 'Release' ">
+    <Exec Command="powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Installer\CrearInstalador.ps1&quot;" />
   </Target>
 </Project>

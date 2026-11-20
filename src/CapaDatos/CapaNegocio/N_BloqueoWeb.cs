@@ -10,7 +10,9 @@ namespace CapaNegocio
     /// <summary>Aplica y actualiza las reglas de conexión web durante las tareas.</summary>
     public sealed class N_BloqueoWeb : IDisposable
     {
-        public static N_BloqueoWeb Instancia { get; } = new N_BloqueoWeb();
+        private static readonly Lazy<N_BloqueoWeb> InstanciaLazy =
+            new Lazy<N_BloqueoWeb>(() => new N_BloqueoWeb());
+        public static N_BloqueoWeb Instancia { get { return InstanciaLazy.Value; } }
 
         private const int IntervaloRevisionMs = 3000;
         private const int IntervaloRecargaSegundos = 30;
@@ -27,6 +29,11 @@ namespace CapaNegocio
         private string _ultimoError;
 
         public event Action<Exception, string> ErrorAplicandoBloqueo;
+
+        public static void RecuperarProxySiQuedoHuerfano()
+        {
+            N_ProxyWebLocal.RecuperarProxySiQuedoHuerfano();
+        }
 
         private N_BloqueoWeb()
         {
@@ -96,7 +103,16 @@ namespace CapaNegocio
                     .GroupBy(uri => uri.AbsoluteUri, StringComparer.OrdinalIgnoreCase)
                     .Select(grupo => grupo.First())
                     .ToList();
-                string firma = CrearFirma(urlsPermitidas);
+                List<E_Aplicacion> aplicacionesPermitidas = tareasTrabajando
+                    .SelectMany(r => r.AplicacionesPermitidas)
+                    .Where(app => app != null)
+                    .GroupBy(app => app.IdAplicacion != 0
+                        ? "id:" + app.IdAplicacion
+                        : (app.Identificador ?? app.Nombre ?? String.Empty), StringComparer.OrdinalIgnoreCase)
+                    .Select(grupo => grupo.First())
+                    .ToList();
+                _proxy.ActualizarAplicacionesPermitidas(aplicacionesPermitidas);
+                string firma = CrearFirma(urlsPermitidas, aplicacionesPermitidas);
                 if (String.Equals(firma, _ultimaFirma, StringComparison.Ordinal)) return;
 
                 List<string> hosts = urlsPermitidas
@@ -180,12 +196,20 @@ namespace CapaNegocio
 
         private static List<ReglaWeb> CargarReglas(int idUsuario)
         {
+            // Mantener el mismo camino que la interfaz y la versión que ya
+            // aplicaba el filtro correctamente: remoto en línea, copia local
+            // como fallback cuando el servicio no está disponible.
             List<E_Tarea> tareas = new N_Tarea().BuscarTarea(idUsuario, "");
             List<E_Web> catalogo = new N_Web().BuscarWeb(idUsuario, "");
+            List<E_Aplicacion> aplicaciones = new N_Aplicacion().BuscarAplicacion(idUsuario, "");
             var websPorId = catalogo.Where(w => w != null && w.IdWeb > 0)
                 .GroupBy(w => w.IdWeb).ToDictionary(g => g.Key, g => g.First());
+            var aplicacionesPorId = aplicaciones.Where(app => app != null && app.IdAplicacion != 0)
+                .GroupBy(app => app.IdAplicacion).ToDictionary(g => g.Key, g => g.First());
             var tareaWeb = new N_TareaWeb();
+            var tareaAplicacion = new N_TareaAplicacion();
             var descansos = new N_Descanso();
+            List<E_Aplicacion> aplicacionesCriticas = aplicaciones.Where(app => app.EsCritica).ToList();
             var resultado = new List<ReglaWeb>();
 
             foreach (E_Tarea tarea in tareas)
@@ -198,6 +222,13 @@ namespace CapaNegocio
                     FechaFin = tarea.FechaFin,
                     Descanso = descansos.BuscarDescanso(idUsuario, tarea.IdTarea)
                 };
+                regla.AplicacionesPermitidas.AddRange(aplicacionesCriticas);
+                foreach (E_TareaAplicacion relacion in tareaAplicacion.Buscar(idUsuario, tarea.IdTarea))
+                {
+                    E_Aplicacion aplicacion;
+                    if (relacion != null && aplicacionesPorId.TryGetValue(relacion.IdAplicacion, out aplicacion))
+                        regla.AplicacionesPermitidas.Add(aplicacion);
+                }
                 foreach (E_TareaWeb relacion in tareaWeb.Buscar(idUsuario, tarea.IdTarea))
                 {
                     E_Web web;
@@ -226,10 +257,12 @@ namespace CapaNegocio
             return transcurrido % (intervalo + duracion) >= intervalo;
         }
 
-        private static string CrearFirma(IEnumerable<Uri> urls)
+        private static string CrearFirma(IEnumerable<Uri> urls, IEnumerable<E_Aplicacion> aplicaciones)
         {
-            return String.Join(Environment.NewLine, urls.Select(u => u.AbsoluteUri)
-                .OrderBy(u => u, StringComparer.OrdinalIgnoreCase));
+            return String.Join(Environment.NewLine,
+                urls.Select(u => "WEB:" + u.AbsoluteUri)
+                    .Concat(aplicaciones.Select(a => "APP:" + (a.Identificador ?? a.Nombre ?? String.Empty)))
+                    .OrderBy(valor => valor, StringComparer.OrdinalIgnoreCase));
         }
 
         public void Detener()
@@ -267,6 +300,7 @@ namespace CapaNegocio
             public DateTime FechaFin { get; set; }
             public E_Descanso Descanso { get; set; }
             public List<Uri> UrlsPermitidas { get; } = new List<Uri>();
+            public List<E_Aplicacion> AplicacionesPermitidas { get; } = new List<E_Aplicacion>();
         }
     }
 }

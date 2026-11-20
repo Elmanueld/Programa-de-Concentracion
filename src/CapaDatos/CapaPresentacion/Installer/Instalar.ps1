@@ -1,8 +1,42 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 function Mostrar-Mensaje([string]$texto, [string]$titulo, [int]$tipo) {
     $shell = New-Object -ComObject WScript.Shell
     $null = $shell.Popup($texto, 0, $titulo, $tipo)
+}
+
+function Obtener-VersionFrameworkRelease {
+    foreach ($vista in @([Microsoft.Win32.RegistryView]::Registry64, [Microsoft.Win32.RegistryView]::Registry32)) {
+        $base = $null
+        $clave = $null
+        try {
+            $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+                [Microsoft.Win32.RegistryHive]::LocalMachine, $vista)
+            $clave = $base.OpenSubKey('SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full')
+            if ($clave -and $clave.GetValue('Release')) {
+                return [int]$clave.GetValue('Release')
+            }
+        }
+        catch { }
+        finally {
+            if ($clave) { $clave.Dispose() }
+            if ($base) { $base.Dispose() }
+        }
+    }
+    return 0
+}
+
+function Esperar-CierrePrograma {
+    while ($true) {
+        $procesos = @(Get-Process -Name 'ProgramaConcentracion' -ErrorAction SilentlyContinue)
+        if ($procesos.Count -eq 0) { return }
+
+        $respuesta = (New-Object -ComObject WScript.Shell).Popup(
+            'El Programa de Concentración sigue abierto (posiblemente minimizado en la bandeja). Guarda lo que estés haciendo, elige Salir en el menú del icono de la bandeja y pulsa Reintentar. Pulsa Cancelar para detener la instalación.',
+            0, 'Cierra el programa para continuar', 5 + 48)
+
+        if ($respuesta -eq 2) { throw 'Instalación cancelada porque el programa sigue abierto.' }
+    }
 }
 
 $instaladorFramework = $null
@@ -13,19 +47,20 @@ try {
     $principal = New-Object Security.Principal.WindowsPrincipal($identidad)
     if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         $argumentos = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '"'
-        $procesoElevado = Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -Verb RunAs -ArgumentList $argumentos -Wait -PassThru
+        $procesoElevado = Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -Verb RunAs -WindowStyle Hidden -ArgumentList $argumentos -Wait -PassThru
         exit $procesoElevado.ExitCode
     }
 
-    $release = 0
-    $clave = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -ErrorAction SilentlyContinue
-    if ($clave -and $clave.Release) { $release = [int]$clave.Release }
+    Esperar-CierrePrograma
+
+    $release = Obtener-VersionFrameworkRelease
 
     if ($release -lt 528040) {
         Mostrar-Mensaje 'Se necesita .NET Framework 4.8. Se descargará desde Microsoft; Windows puede pedir autorización para instalarlo.' 'Programa de Concentración' 64
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $instaladorFramework = Join-Path $env:TEMP 'ndp48-web.exe'
-        Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?LinkId=2085155' -OutFile $instaladorFramework -UseBasicParsing
+        $instaladorFramework = Join-Path $env:TEMP 'NDP48-x86-x64-AllOS-ENU.exe'
+        Invoke-WebRequest -Uri 'https://download.microsoft.com/download/f/3/a/f3a6af84-da23-40a5-8d1c-49cc10c8e76f/NDP48-x86-x64-AllOS-ENU.exe' `
+            -OutFile $instaladorFramework -UseBasicParsing -TimeoutSec 300
         $firma = Get-AuthenticodeSignature -LiteralPath $instaladorFramework
         if ($firma.Status -ne 'Valid' -or $firma.SignerCertificate.Subject -notmatch 'Microsoft') {
             throw 'No se pudo validar el instalador de .NET Framework descargado desde Microsoft.'
@@ -35,7 +70,9 @@ try {
             Mostrar-Mensaje 'Windows instaló .NET Framework 4.8 y necesita reiniciarse. Reinicia el equipo y vuelve a ejecutar este instalador.' 'Reinicio necesario' 48
             exit 3010
         }
-        if ($proceso.ExitCode -ne 0) { throw 'No se pudo instalar .NET Framework 4.8.' }
+        if ($proceso.ExitCode -ne 0) {
+            throw "El instalador de .NET Framework 4.8 terminó con el código $($proceso.ExitCode)."
+        }
     }
 
     $archivoPayload = Join-Path $PSScriptRoot 'ProgramaConcentracionPayload.zip'
@@ -60,7 +97,15 @@ try {
     Start-Process -FilePath $atajo.TargetPath -WorkingDirectory $destino
 }
 catch {
-    Mostrar-Mensaje 'No se pudo completar la instalación. Comprueba tu conexión a Internet y que tengas permisos para instalar componentes de Windows; luego vuelve a intentarlo.' 'Error de instalación' 16
+    $detalle = $_.Exception.Message
+    $rutaLog = Join-Path $env:LOCALAPPDATA 'Programa-de-Concentracion\Logs\instalacion.log'
+    try {
+        New-Item -ItemType Directory -Path (Split-Path -Parent $rutaLog) -Force | Out-Null
+        $entrada = '[{0:O}] {1}{2}' -f [DateTime]::Now, $detalle, [Environment]::NewLine
+        [IO.File]::AppendAllText($rutaLog, $entrada, [Text.Encoding]::UTF8)
+    }
+    catch { $rutaLog = '(no se pudo escribir el log)' }
+    Mostrar-Mensaje ("No se pudo completar la instalación.`r`n`r`nDetalle: $detalle`r`n`r`nRegistro: $rutaLog") 'Error de instalación' 16
     exit 1
 }
 finally {

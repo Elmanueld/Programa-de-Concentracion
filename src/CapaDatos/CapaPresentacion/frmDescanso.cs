@@ -17,6 +17,7 @@ namespace CapaPresentacion
         private DateTime finDescanso;
         private int descansosRestantes;
         private string nombreTarea;
+        private bool descansoFinalizado;
 
         public frmDescanso()
         {
@@ -26,7 +27,7 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(pictureBox1, "favorite");
             IconosGoogle.Aplicar(btnCerrar, "close");
             temporizador.Interval = 1000;
-            temporizador.Tick += (s, e) => ActualizarContexto();
+            temporizador.Tick += Temporizador_Tick;
 
             btnCerrar.Click += (s, e) => Close();
             FormClosed += (s, e) => temporizador.Stop();
@@ -42,6 +43,8 @@ namespace CapaPresentacion
             nombreTarea = tarea;
             finDescanso = fechaFinDescanso;
             descansosRestantes = cantidadDescansosRestantes;
+            descansoFinalizado = false;
+            lblTexto.Text = "Es hora del descanso";
 
             ActualizarContexto();
             temporizador.Start();
@@ -54,9 +57,14 @@ namespace CapaPresentacion
             if (restante <= TimeSpan.Zero)
             {
                 temporizador.Stop();
-                Close();
+                descansoFinalizado = true;
+                lblTexto.Text = "Descanso terminado";
+                lblContexto.Text = "El descanso de \"" + (nombreTarea ?? "Tarea") +
+                    "\" terminó. Ya puedes continuar con tu tarea.";
                 return;
             }
+
+            if (descansoFinalizado) return;
 
             string tiempo = String.Format(
                 "{0:00}:{1:00}",
@@ -84,6 +92,16 @@ namespace CapaPresentacion
                 textoDescansos +
                 "\r\nTarea: " +
                 nombreTarea;
+        }
+
+        private void Temporizador_Tick(object sender, EventArgs e)
+        {
+            try { ActualizarContexto(); }
+            catch (Exception ex)
+            {
+                temporizador.Stop();
+                OperacionUI.ReportarError(this, ex, "No se pudo actualizar la cuenta del descanso");
+            }
         }
     }
 }

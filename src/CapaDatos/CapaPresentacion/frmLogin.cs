@@ -16,6 +16,7 @@ namespace CapaPresentacion
         private int reintentoRegistroEnCurso;
         private bool avisoRegistroPendienteMostrado;
         private E_Usuario sesionAutomatica;
+        private PrincipalForm principalActivo;
 
         public frmLogin() : this(null)
         {
@@ -25,6 +26,8 @@ namespace CapaPresentacion
         {
             InitializeComponent();
             if (EnModoDiseno) return;
+            try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application; }
+            catch { Icon = SystemIcons.Application; }
             var enlaceRecuperacion = new LinkLabel
             {
                 AutoSize = false,
@@ -70,10 +73,20 @@ namespace CapaPresentacion
             lblAcceso.Text = mensaje;
         }
 
+
         internal void PrepararParaMostrar()
         {
             Opacity = 1;
             ShowInTaskbar = true;
+        }
+
+        internal void RestaurarDesdeInstanciaSecundaria()
+        {
+            if (IsDisposed) return;
+            PrepararParaMostrar();
+            if (!Visible) Show();
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+            Activate();
         }
 
         private void FrmLogin_Shown(object sender, EventArgs e)
@@ -81,14 +94,20 @@ namespace CapaPresentacion
             if (sesionAutomatica == null) return;
             E_Usuario usuario = sesionAutomatica;
             sesionAutomatica = null;
+            Opacity = 0;
+            ShowInTaskbar = false;
             BeginInvoke(new Action(() =>
             {
                 if (IsDisposed) return;
                 try
                 {
-                    AparienciaUsuarioApp.Aplicar(usuario.IdUsuario);
-                    using (var principal = new PrincipalForm(usuario))
-                        NavegacionFormularios.MostrarModal(this, principal);
+                    AbrirPrincipal(usuario);
+                }
+                catch (Exception ex)
+                {
+                    OperacionUI.ReportarError(this, ex, "No se pudo abrir la cuenta");
+                    PrepararParaMostrar();
+                    if (!Visible) Show();
                 }
                 finally { usuario = null; }
             }));
@@ -117,19 +136,66 @@ namespace CapaPresentacion
             if (usuarios.AdvertenciaCacheLocal != null)
                 OperacionUI.ReportarError(this, usuarios.AdvertenciaCacheLocal, "Inicio de sesión completado con aviso",
                     "La cuenta se abrió correctamente, pero no se actualizó toda la información guardada en este equipo. Inicia sesión con Internet para volver a prepararla.", true);
-            AparienciaUsuarioApp.Aplicar(usuario.IdUsuario);
             clave.Clear();
             try
             {
-                using (var principal = new PrincipalForm(usuario))
-                    NavegacionFormularios.MostrarModal(this, principal);
+                AbrirPrincipal(usuario);
             }
+            catch (Exception ex) { OperacionUI.ReportarError(this, ex, "No se pudo abrir la cuenta"); }
             finally
             {
                 usuario = null;
                 clave.Clear();
-                correo.Focus();
+                if (Visible) correo.Focus();
             }
+        }
+
+        private void AbrirPrincipal(E_Usuario usuario)
+        {
+            if (usuario == null) throw new ArgumentNullException("usuario");
+            if (principalActivo != null && !principalActivo.IsDisposed)
+            {
+                principalActivo.RestaurarDesdeInstanciaSecundaria();
+                return;
+            }
+
+            AparienciaUsuarioApp.Aplicar(usuario.IdUsuario);
+            var principal = new PrincipalForm(usuario);
+            principalActivo = principal;
+            principal.FormClosed += PrincipalActivo_FormClosed;
+
+            // PrincipalForm is modeless and independent of the hidden login.
+            // This lets it disappear into the tray without closing the app loop
+            // or revealing the login window again.
+            Opacity = 0;
+            ShowInTaskbar = false;
+            Hide();
+            try { principal.Show(); }
+            catch
+            {
+                principal.FormClosed -= PrincipalActivo_FormClosed;
+                principalActivo = null;
+                principal.Dispose();
+                PrepararParaMostrar();
+                Show();
+                throw;
+            }
+        }
+
+        private void PrincipalActivo_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            var principal = sender as PrincipalForm;
+            if (ReferenceEquals(principalActivo, principal)) principalActivo = null;
+            if (Program.SalidaSolicitada)
+            {
+                if (!IsDisposed) Close();
+                return;
+            }
+
+            if (IsDisposed) return;
+            PrepararParaMostrar();
+            if (!Visible) Show();
+            Activate();
         }
 
         private void EnlaceRecuperacion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

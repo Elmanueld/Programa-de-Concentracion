@@ -59,6 +59,7 @@ namespace CapaPresentacion
             InitializeComponent();
             if (EnModoDiseno) return;
             if (usuario == null) throw new ArgumentNullException("usuario");
+            AjustePantalla.Preparar(this);
             Icon iconoPrograma = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
             Icon = iconoPrograma;
             menuBandeja = new ContextMenuStrip();

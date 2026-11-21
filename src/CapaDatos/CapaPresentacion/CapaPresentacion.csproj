@@ -308,9 +308,7 @@
           DestinationFolder="$(TargetDir)x64" SkipUnchangedFiles="true" />
     <Copy SourceFiles="..\CapaDatos\bin\$(Configuration)\x86\SQLite.Interop.dll"
           DestinationFolder="$(TargetDir)x86" SkipUnchangedFiles="true" />
-  </Target>
-  <Target Name="CrearPaqueteYActualizarInstalacion" AfterTargets="CopySQLiteInterop"
-          Condition=" '$(Configuration)' == 'Release' ">
-    <Exec Command="powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Installer\CrearInstalador.ps1&quot;" />
+    <Exec Command="powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Installer\CrearInstalador.ps1&quot;"
+          Condition=" '$(Configuration)' == 'Release' " />
   </Target>
 </Project>

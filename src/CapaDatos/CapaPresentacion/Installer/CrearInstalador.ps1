@@ -2,13 +2,17 @@
 
 $raizPresentacion = Split-Path -Parent $PSScriptRoot
 $salidaRelease = Join-Path $raizPresentacion 'bin\Release'
-$salidaInstalador = Join-Path $salidaRelease 'ProgramaConcentracion-Instalador.zip'
+$raizRepositorio = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
+$directorioDistribucion = Join-Path $raizRepositorio 'dist'
+$salidaInstalador = Join-Path $directorioDistribucion 'ProgramaConcentracion-Instalador.zip'
 $directorioTemporal = Join-Path $PSScriptRoot ('.build-' + [Guid]::NewGuid().ToString('N'))
 $creado = $false
 
 if (-not (Test-Path (Join-Path $salidaRelease 'ProgramaConcentracion.exe'))) {
     throw 'Primero compila CapaPresentacion en configuración Release.'
 }
+
+New-Item -ItemType Directory -Path $directorioDistribucion -Force | Out-Null
 
 New-Item -ItemType Directory -Path $directorioTemporal -Force | Out-Null
 try {
@@ -59,14 +63,9 @@ try {
     $validador = Join-Path $PSScriptRoot 'ValidarInstalador.ps1'
     & $validador -Zip $salidaInstalador -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
 
-    $raizRepositorio = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
-    $directorioDistribucion = Join-Path $raizRepositorio 'dist'
-    New-Item -ItemType Directory -Path $directorioDistribucion -Force | Out-Null
-    $paqueteDistribucion = Join-Path $directorioDistribucion 'ProgramaConcentracion-Instalador.zip'
-    Copy-Item -LiteralPath $salidaInstalador -Destination $paqueteDistribucion -Force
-    & $validador -Zip $paqueteDistribucion -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
     $destinoInstalado = Join-Path $env:ProgramFiles 'Programa de Concentración'
-    if (Test-Path -LiteralPath (Join-Path $destinoInstalado 'ProgramaConcentracion.exe')) {
+    if ($env:PC_SOLO_GENERAR_PAQUETE -ne '1' -and
+        (Test-Path -LiteralPath (Join-Path $destinoInstalado 'ProgramaConcentracion.exe'))) {
         $actualizador = Join-Path $PSScriptRoot 'ActualizarInstalacion.ps1'
         if (-not (Test-Path -LiteralPath $actualizador)) {
             throw 'No se encontró el actualizador de la instalación existente.'

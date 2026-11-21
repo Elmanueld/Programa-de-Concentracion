@@ -6,12 +6,18 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+function Get-Sha256Hex([string]$Path) {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($Path)
+    try { return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '') }
+    finally { $stream.Dispose(); $sha.Dispose() }
+}
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $archivoZip = (Resolve-Path -LiteralPath $Zip).Path
 $archivoExe = (Resolve-Path -LiteralPath $Executable).Path
-$hashEsperado = (Get-FileHash -LiteralPath $archivoExe -Algorithm SHA256).Hash
+$hashEsperado = Get-Sha256Hex $archivoExe
 $paquete = [IO.Compression.ZipFile]::OpenRead($archivoZip)
 $memoriaPayload = $null
 $contenidoPayload = $null

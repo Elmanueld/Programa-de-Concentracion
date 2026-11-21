@@ -690,7 +690,22 @@ namespace CapaPresentacion
             if (registro.Preparado) return;
 
             registro.Preparado = true;
-            formulario.Load += (s, e) => AjustarAlAreaVisible(formulario);
+            formulario.Shown += (s, e) =>
+            {
+                if (formulario.IsDisposed || !formulario.IsHandleCreated) return;
+                try
+                {
+                    formulario.BeginInvoke(new Action(() =>
+                    {
+                        if (!formulario.IsDisposed)
+                            AjustarAlAreaVisible(formulario);
+                    }));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Trace.TraceError("No se pudo programar el escalado de pantalla: " + ex);
+                }
+            };
         }
 
         private static void AjustarAlAreaVisible(Form formulario)
@@ -712,7 +727,7 @@ namespace CapaPresentacion
                 (float)clienteMaxAncho / Math.Max(1, clienteOriginal.Width),
                 (float)clienteMaxAlto / Math.Max(1, clienteOriginal.Height));
 
-            formulario.SuspendLayout();
+            SuspenderArbol(formulario);
             try
             {
                 formulario.WindowState = FormWindowState.Normal;
@@ -739,10 +754,30 @@ namespace CapaPresentacion
                 formulario.MaximumSize = area.Size;
                 formulario.StartPosition = FormStartPosition.Manual;
                 CentrarEnAreaVisible(formulario, area);
+                Trace.TraceInformation("AjustePantalla: {0}; área {1}x{2}; diseño {3}x{4}; escala {5}; resultado {6}x{7}.",
+                    formulario.Name, area.Width, area.Height, clienteOriginal.Width, clienteOriginal.Height,
+                    escala.ToString("0.000"), formulario.ClientSize.Width, formulario.ClientSize.Height);
             }
-            finally { formulario.ResumeLayout(true); }
+            finally
+            {
+                ReanudarArbol(formulario);
+                formulario.PerformLayout();
+            }
         }
 
+        private static void SuspenderArbol(Control control)
+        {
+            control.SuspendLayout();
+            foreach (Control hijo in control.Controls)
+                SuspenderArbol(hijo);
+        }
+
+        private static void ReanudarArbol(Control control)
+        {
+            foreach (Control hijo in control.Controls)
+                ReanudarArbol(hijo);
+            control.ResumeLayout(false);
+        }
         private static void CentrarEnAreaVisible(Form formulario, Rectangle area)
         {
             Rectangle referencia = area;

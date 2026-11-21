@@ -56,6 +56,15 @@ try {
         throw 'No se pudo generar el paquete de instalación.'
     }
 
+    $validador = Join-Path $PSScriptRoot 'ValidarInstalador.ps1'
+    & $validador -Zip $salidaInstalador -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
+
+    $raizRepositorio = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
+    $directorioDistribucion = Join-Path $raizRepositorio 'dist'
+    New-Item -ItemType Directory -Path $directorioDistribucion -Force | Out-Null
+    $paqueteDistribucion = Join-Path $directorioDistribucion 'ProgramaConcentracion-Instalador.zip'
+    Copy-Item -LiteralPath $salidaInstalador -Destination $paqueteDistribucion -Force
+    & $validador -Zip $paqueteDistribucion -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
     $destinoInstalado = Join-Path $env:ProgramFiles 'Programa de Concentración'
     if (Test-Path -LiteralPath (Join-Path $destinoInstalado 'ProgramaConcentracion.exe')) {
         $actualizador = Join-Path $PSScriptRoot 'ActualizarInstalacion.ps1'

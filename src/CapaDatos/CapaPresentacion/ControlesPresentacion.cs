@@ -668,7 +668,7 @@ namespace CapaPresentacion
         }
     }
 
-    /// <summary>Reduce formularios grandes para que quepan en el área visible de cualquier pantalla.</summary>
+    /// <summary>Escala formularios y todos sus controles de forma uniforme para ajustarlos al área visible.</summary>
     internal static class AjustePantalla
     {
         private sealed class Registro
@@ -708,16 +708,16 @@ namespace CapaPresentacion
             int clienteMaxAncho = Math.Max(1, area.Width - marcoAncho);
             int clienteMaxAlto = Math.Max(1, area.Height - marcoAlto);
 
-            float escala = Math.Min(1f, Math.Min(
+            float escala = Math.Min(
                 (float)clienteMaxAncho / Math.Max(1, clienteOriginal.Width),
-                (float)clienteMaxAlto / Math.Max(1, clienteOriginal.Height)));
+                (float)clienteMaxAlto / Math.Max(1, clienteOriginal.Height));
 
             formulario.SuspendLayout();
             try
             {
                 formulario.WindowState = FormWindowState.Normal;
                 formulario.MaximumSize = Size.Empty;
-                if (escala < 0.999f)
+                if (Math.Abs(escala - 1f) > 0.001f)
                 {
                     Size minimoOriginal = formulario.MinimumSize;
                     formulario.MinimumSize = Size.Empty;

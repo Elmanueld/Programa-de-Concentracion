@@ -38,6 +38,8 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(btnManual, "add_link");
             IconosGoogle.Aplicar(btnCerrar, "close");
             btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
+            ControlesPresentacion.PrepararPaginacion(flBusqueda);
+            ControlesPresentacion.PrepararPaginacion(flWebSeleccionadas);
             ControlesPresentacion.Optimizar(flBusqueda);
             ControlesPresentacion.Optimizar(flWebSeleccionadas);
             ArrastreFormulario.Habilitar(this, pnlTop);

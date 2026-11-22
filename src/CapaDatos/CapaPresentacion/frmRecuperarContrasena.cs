@@ -82,6 +82,7 @@ namespace CapaPresentacion
 
             AcceptButton = restablecer;
             CancelButton = cancelar;
+            AjustePantalla.Preparar(this);
             FormClosed += (sender, args) =>
             {
                 nuevaContrasena.Clear();

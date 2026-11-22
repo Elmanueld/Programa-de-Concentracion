@@ -17,6 +17,9 @@ namespace CapaPresentacion
             {
                 components.Dispose();
             }
+            if (disposing)
+            {
+            }
             base.Dispose(disposing);
         }
 
@@ -109,7 +112,7 @@ namespace CapaPresentacion
             // ucTareas
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.Controls.Add(this.pnlTargetaTarea);
             this.Name = "ucTareas";
             this.Size = new System.Drawing.Size(292, 129);

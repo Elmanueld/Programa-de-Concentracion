@@ -93,7 +93,7 @@ namespace CapaPresentacion
             // 
             // flWebSeleccionadas
             // 
-            this.flWebSeleccionadas.AutoScroll = true;
+            this.flWebSeleccionadas.AutoScroll = false;
             this.flWebSeleccionadas.BackColor = System.Drawing.Color.Transparent;
             this.flWebSeleccionadas.Location = new System.Drawing.Point(12, 12);
             this.flWebSeleccionadas.Name = "flWebSeleccionadas";
@@ -225,7 +225,7 @@ namespace CapaPresentacion
             // 
             // flBusqueda
             // 
-            this.flBusqueda.AutoScroll = true;
+            this.flBusqueda.AutoScroll = false;
             this.flBusqueda.BackColor = System.Drawing.Color.Transparent;
             this.flBusqueda.Location = new System.Drawing.Point(12, 12);
             this.flBusqueda.Name = "flBusqueda";
@@ -274,7 +274,7 @@ namespace CapaPresentacion
             // frmSeleccionarWeb
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Lavender;
             this.ClientSize = new System.Drawing.Size(1377, 721);
             this.Controls.Add(this.pnlPequenoLink);

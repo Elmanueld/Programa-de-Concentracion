@@ -169,7 +169,7 @@ namespace CapaPresentacion
             // 
             // flApps
             // 
-            this.flApps.AutoScroll = true;
+            this.flApps.AutoScroll = false;
             this.flApps.BackColor = System.Drawing.Color.Transparent;
             this.flApps.Location = new System.Drawing.Point(12, 12);
             this.flApps.Name = "flApps";
@@ -194,7 +194,7 @@ namespace CapaPresentacion
             // frmSeleccionarApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Lavender;
             this.ClientSize = new System.Drawing.Size(1195, 771);
             this.Controls.Add(this.txtBuscar);

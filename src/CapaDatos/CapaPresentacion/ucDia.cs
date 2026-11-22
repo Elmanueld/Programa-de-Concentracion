@@ -105,7 +105,7 @@ namespace CapaPresentacion
             // El día de hoy conserva un borde propio incluso cuando está
             // seleccionado, para que ambos estados sigan siendo reconocibles.
             pnlDia.BorderColor = esHoy ? colorHoy : Color.Transparent;
-            pnlDia.BorderWidth = esHoy ? 2F : 0F;
+            pnlDia.BorderWidth = esHoy ? 2F * AjustePantalla.EscalaActual(this) : 0F;
             lbldia.ForeColor = PaletaAplicacion.ColorTextoContraste(colorDiaActual);
             pnlListTareas.Back = colorPanel;
             pnlListTareas.BorderColor = colorBorde;
@@ -119,16 +119,12 @@ namespace CapaPresentacion
             if (e.Index < 0 || e.Index >= listTareas.Items.Count) return;
             Color fondo = pnlListTareas.Back.GetValueOrDefault(listTareas.BackColor);
             using (var pincel = new SolidBrush(fondo)) e.Graphics.FillRectangle(pincel, e.Bounds);
+            int margenTexto = Math.Max(0, (int)Math.Round(2 * AjustePantalla.EscalaActual(this)));
             TextRenderer.DrawText(e.Graphics, listTareas.GetItemText(listTareas.Items[e.Index]),
-                listTareas.Font, Rectangle.Inflate(e.Bounds, -2, 0),
+                listTareas.Font, Rectangle.Inflate(e.Bounds, -margenTexto, 0),
                 PaletaAplicacion.ColorTextoContraste(fondo), TextFormatFlags.Left |
                 TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis |
                 TextFormatFlags.NoPrefix);
-        }
-
-        private void AjustarDistribucion()
-        {
-
         }
 
         public void ActualizarTema()
@@ -152,5 +148,6 @@ namespace CapaPresentacion
         {
 
         }
+
     }
 }

@@ -42,6 +42,7 @@ namespace CapaPresentacion
             _estadoCarga = new IndicadorCarga();
             IconosGoogle.Aplicar(btnCerrar, "close");
             btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
+            ControlesPresentacion.PrepararPaginacion(flApps);
             ControlesPresentacion.Optimizar(flApps);
             // El FlowLayoutPanel transparente no repinta bien el área que deja
             // libre al desplazarse sobre el panel redondeado de AntdUI.

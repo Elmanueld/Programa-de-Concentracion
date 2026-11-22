@@ -60,6 +60,7 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(btnGuardar, "save");
             btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
             ArrastreFormulario.Habilitar(this, pnlTop);
+            ControlesPresentacion.PrepararPaginacion(flTareas);
             ConfigurarListasTransparentes();
             this.idUsuario = idUsuario;
             preferencias = CargarApariencia(idUsuario);

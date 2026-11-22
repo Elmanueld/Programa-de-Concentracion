@@ -350,6 +350,8 @@ namespace CapaPresentacion
             public string Nombre;
             public int Ancho;
             public int Alto;
+            public int AnchoAplicado;
+            public int AltoAplicado;
             public Image Generado;
             public bool ImagenPersonalizada;
         }
@@ -374,7 +376,9 @@ namespace CapaPresentacion
                     ColorActual = color,
                     Nombre = nombre,
                     Ancho = recurso.Width,
-                    Alto = recurso.Height
+                    Alto = recurso.Height,
+                    AnchoAplicado = recurso.Width,
+                    AltoAplicado = recurso.Height
                 };
                 Estados.Add(control, estado);
                 control.Disposed += (s, e) =>
@@ -425,7 +429,8 @@ namespace CapaPresentacion
                 Image nuevo = null;
                 try
                 {
-                    nuevo = Renderizar(estado.Nombre, estado.Ancho, estado.Alto, color);
+                    Size tamano = TamanoRenderizado(raiz, estado);
+                    nuevo = Renderizar(estado.Nombre, tamano.Width, tamano.Height, color);
                 }
                 catch (ArgumentException) { return; }
                 catch (InvalidDataException) { return; }
@@ -442,6 +447,33 @@ namespace CapaPresentacion
                 }
             }
             foreach (Control hijo in raiz.Controls) AplicarPaleta(hijo);
+        }
+
+        internal static void AplicarEscala(Control control, float escala)
+        {
+            EstadoIcono estado;
+            if (control == null || !Estados.TryGetValue(control, out estado) ||
+                estado.ImagenPersonalizada) return;
+            Size tamano = new Size(Math.Max(1, (int)Math.Round(estado.Ancho * escala)),
+                Math.Max(1, (int)Math.Round(estado.Alto * escala)));
+            if (tamano.Width == estado.AnchoAplicado && tamano.Height == estado.AltoAplicado) return;
+            Image nuevo;
+            try { nuevo = Renderizar(estado.Nombre, tamano.Width, tamano.Height, estado.ColorActual); }
+            catch { return; }
+            if (nuevo == null) return;
+            Image anterior = estado.Generado;
+            AsignarImagen(control, nuevo);
+            estado.Generado = nuevo;
+            estado.AnchoAplicado = tamano.Width;
+            estado.AltoAplicado = tamano.Height;
+            if (anterior != null && !ReferenceEquals(anterior, nuevo)) anterior.Dispose();
+        }
+
+        private static Size TamanoRenderizado(Control control, EstadoIcono estado)
+        {
+            float escala = AjustePantalla.EscalaActual(control);
+            return new Size(Math.Max(1, (int)Math.Round(estado.Ancho * escala)),
+                Math.Max(1, (int)Math.Round(estado.Alto * escala)));
         }
 
         public static void EstablecerImagenPersonalizada(Control control, Image imagen)

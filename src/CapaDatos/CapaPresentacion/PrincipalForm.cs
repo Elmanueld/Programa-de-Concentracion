@@ -88,6 +88,13 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(pbFotoDePerfil, "account_circle");
             IconosGoogle.Aplicar(btnDetener, "stop_circle");
             ControlesPresentacion.Optimizar(tlpCalendario);
+            // Esta lista usa desplazamiento real; la paginación sigue activa
+            // en las listas de selección de aplicaciones y webs.
+            flTareas.AutoScroll = true;
+            flTareas.PaginacionHabilitada = false;
+            flTareas.FlowDirection = FlowDirection.TopDown;
+            flTareas.WrapContents = false;
+            flTareas.Layout += FlTareas_Layout;
             ControlesPresentacion.Optimizar(flTareas);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
@@ -134,8 +141,6 @@ namespace CapaPresentacion
             ProcesarEstadosDeTarea();
 
         }
-
-
 
         private void BtnConfiguracion_Click(object sender, EventArgs e)
         {
@@ -675,6 +680,28 @@ namespace CapaPresentacion
             ActualizarEstadoBotonDetener();
         }
 
+        private bool centrandoTarjetas;
+
+        private void FlTareas_Layout(object sender, LayoutEventArgs e)
+        {
+            if (centrandoTarjetas || flTareas == null || flTareas.IsDisposed) return;
+            centrandoTarjetas = true;
+            try
+            {
+                int anchoDisponible = flTareas.ClientSize.Width;
+                foreach (Control tarjeta in flTareas.Controls)
+                {
+                    if (tarjeta.IsDisposed) continue;
+                    int espacioLateral = Math.Max(0, (anchoDisponible - tarjeta.Width) / 2);
+                    Padding margen = tarjeta.Margin;
+                    Padding centrado = new Padding(espacioLateral, margen.Top,
+                        espacioLateral, margen.Bottom);
+                    if (margen != centrado) tarjeta.Margin = centrado;
+                }
+            }
+            finally { centrandoTarjetas = false; }
+        }
+
         private E_Tarea ObtenerTareaActual()
         {
             if (tareasCache == null) return null;
@@ -1073,7 +1100,8 @@ namespace CapaPresentacion
 
         private void btnMinimizar_Click(object sender, EventArgs e)
         {
-            MinimizarEnBandeja();
+            ShowInTaskbar = true;
+            WindowState = FormWindowState.Minimized;
         }
 
         private PreferenciasUsuario ObtenerPreferencias()

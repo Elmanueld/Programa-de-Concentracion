@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 using CapaEntidades;
 
@@ -6,6 +7,7 @@ namespace CapaPresentacion
 {
     public partial class ucTareas : UserControl
     {
+
         public E_Tarea Tarea { get; private set; }
 
         public event EventHandler EliminarSolicitado;
@@ -15,6 +17,7 @@ namespace CapaPresentacion
         {
             InitializeComponent();
             if (FormularioSuave.EnModoDiseno) return;
+            pnlTargetaTarea.Dock = DockStyle.Fill;
             btnBorrar.Click += btnBorrar_Click;
             btnEditar.Click += btnEditar_Click;
         }

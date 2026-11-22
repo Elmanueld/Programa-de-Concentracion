@@ -65,6 +65,7 @@ namespace CapaPresentacion
             IconosGoogle.Aplicar(btnGuardar, "save");
             IconosGoogle.Aplicar(btnCerrar, "close");
             btnTopMinimizar.Click += (s, e) => WindowState = FormWindowState.Minimized;
+            ControlesPresentacion.PrepararPaginacion(flLista);
             ControlesPresentacion.Optimizar(flLista);
             ArrastreFormulario.Habilitar(this, pnlTop);
 
@@ -520,7 +521,8 @@ namespace CapaPresentacion
                 base.OnResize(e);
                 if (Width <= 0 || Height <= 0) return;
 
-                int diametro = Math.Min(24, Math.Min(Width, Height));
+                int diametro = Math.Min(
+                    (int)Math.Round(24 * AjustePantalla.EscalaActual(this)), Math.Min(Width, Height));
                 using (var trazado = new GraphicsPath())
                 {
                     trazado.AddArc(0, 0, diametro, diametro, 180, 90);

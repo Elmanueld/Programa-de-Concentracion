@@ -17,6 +17,9 @@ namespace CapaPresentacion
             {
                 components.Dispose();
             }
+            if (disposing)
+            {
+            }
             base.Dispose(disposing);
         }
 
@@ -89,7 +92,7 @@ namespace CapaPresentacion
             // ucDia
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.Controls.Add(this.pnlListTareas);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "ucDia";

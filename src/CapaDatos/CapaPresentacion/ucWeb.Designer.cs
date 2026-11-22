@@ -76,7 +76,7 @@
             // ucWeb
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.Controls.Add(this.lblLink);
             this.Controls.Add(this.btnQuitar);
             this.Controls.Add(this.lblNombre);

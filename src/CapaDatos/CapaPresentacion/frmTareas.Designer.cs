@@ -186,7 +186,7 @@ namespace CapaPresentacion
             // 
             // flLista
             // 
-            this.flLista.AutoScroll = true;
+            this.flLista.AutoScroll = false;
             this.flLista.BackColor = System.Drawing.Color.Transparent;
             this.flLista.Font = new System.Drawing.Font("Inter", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.flLista.Location = new System.Drawing.Point(12, 12);
@@ -692,7 +692,7 @@ namespace CapaPresentacion
             // frmTareas
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Lavender;
             this.ClientSize = new System.Drawing.Size(1276, 756);
             this.Controls.Add(this.btnCancelar);

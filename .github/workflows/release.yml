@@ -56,4 +56,6 @@ jobs:
         with:
           name: Programa de Concentración ${{ github.ref_name }}
           generate_release_notes: true
-          files: dist/ProgramaConcentracion-Instalador.zip
+          files: |
+            ProgramaConcentracion-Instalador.zip
+            ProgramaConcentracion-Portatil.zip

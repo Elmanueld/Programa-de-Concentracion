@@ -21,10 +21,6 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - uses: NuGet/setup-nuget@v2
 
-      - name: Guardar instalador versionado para validar
-        shell: pwsh
-        run: Copy-Item dist/ProgramaConcentracion-Instalador.zip "$env:RUNNER_TEMP/instalador-versionado.zip"
-
       - name: Restaurar paquetes del proyecto de escritorio
         run: nuget restore src/CapaDatos/ProgramaConcentracion.sln -NonInteractive
 
@@ -33,7 +29,7 @@ jobs:
 
       - name: Verificar que el instalador versionado coincide con Release
         shell: pwsh
-        run: ./src/CapaDatos/CapaPresentacion/Installer/ValidarInstalador.ps1 -Zip "$env:RUNNER_TEMP/instalador-versionado.zip" -Executable ./src/CapaDatos/CapaPresentacion/bin/Release/ProgramaConcentracion.exe
+        run: ./src/CapaDatos/CapaPresentacion/Installer/ValidarInstalador.ps1 -Zip ./ProgramaConcentracion-Instalador.zip -PortableZip ./ProgramaConcentracion-Portatil.zip -Executable ./src/CapaDatos/CapaPresentacion/bin/Release/ProgramaConcentracion.exe
 
       - name: Ejecutar pruebas del Backend (repositorios falsos; sin SMTP ni SQL remoto)
         run: dotnet run --project src/CapaDatos/Backend.Tests/Backend.Tests.csproj --configuration Release --no-build

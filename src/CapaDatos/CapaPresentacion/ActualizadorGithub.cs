@@ -20,7 +20,7 @@ namespace CapaPresentacion
     {
         private const string ApiUltimaPublicacion =
             "https://api.github.com/repos/Elmanueld/Programa-de-Concentracion/releases/latest";
-        private const string NombreInstalador = "ProgramaConcentracion-Instalador.zip";
+        private const string NombrePaquetePortable = "ProgramaConcentracion-Portatil.zip";
         private static int comprobacionIniciada;
 
         public static async void ComprobarYOfrecer(IWin32Window propietario)
@@ -40,16 +40,20 @@ namespace CapaPresentacion
                     "Actualización disponible", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (respuesta != DialogResult.Yes) return;
 
-                string carpeta = PrepararInstalador(publicada);
-                string script = Path.Combine(carpeta, "Instalar.ps1");
-                if (!File.Exists(script) || !File.Exists(Path.Combine(carpeta, "ProgramaConcentracionPayload.zip")))
+                string carpeta = PrepararPaquetePortable(publicada);
+                string script = Path.Combine(carpeta, "ActualizarInstalacion.ps1");
+                if (!File.Exists(script) || !File.Exists(Path.Combine(carpeta, "ProgramaConcentracion.exe")))
                     throw new InvalidDataException("El paquete de actualización está incompleto.");
+
+                string argumentos = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File \"" + script +
+                    "\" -Origen \"" + carpeta + "\" -Destino \"" + Application.StartupPath +
+                    "\" -Ejecutable \"" + Application.ExecutablePath + "\" -Reiniciar";
 
                 var inicio = new ProcessStartInfo
                 {
                     FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
                         "WindowsPowerShell\\v1.0\\powershell.exe"),
-                    Arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File \"" + script + "\"",
+                    Arguments = argumentos,
                     UseShellExecute = true,
                     Verb = "runas",
                     WindowStyle = ProcessWindowStyle.Hidden,
@@ -111,7 +115,7 @@ namespace CapaPresentacion
                     if (asset == null) continue;
                     object nombre, url, digest;
                     if (asset.TryGetValue("name", out nombre) &&
-                        String.Equals(Convert.ToString(nombre, CultureInfo.InvariantCulture), NombreInstalador, StringComparison.Ordinal) &&
+                        String.Equals(Convert.ToString(nombre, CultureInfo.InvariantCulture), NombrePaquetePortable, StringComparison.Ordinal) &&
                         asset.TryGetValue("browser_download_url", out url) &&
                         asset.TryGetValue("digest", out digest))
                     {
@@ -142,11 +146,11 @@ namespace CapaPresentacion
             }
         }
 
-        private static string PrepararInstalador(Publicacion publicacion)
+        private static string PrepararPaquetePortable(Publicacion publicacion)
         {
             string raiz = Path.Combine(Path.GetTempPath(), "ProgramaConcentracion-Actualizacion-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(raiz);
-            string archivoZip = Path.Combine(raiz, NombreInstalador);
+            string archivoZip = Path.Combine(raiz, NombrePaquetePortable);
             var solicitud = (HttpWebRequest)WebRequest.Create(publicacion.Url);
             solicitud.Method = "GET";
             solicitud.UserAgent = "Programa-de-Concentracion-Updater/1.0";
@@ -166,15 +170,15 @@ namespace CapaPresentacion
 
             using (ZipArchive zip = ZipFile.OpenRead(archivoZip))
             {
-                string[] esperados = { "Instalar.ps1", "Instalar.vbs", "LEEME.txt", "ProgramaConcentracionPayload.zip" };
                 string[] encontrados = zip.Entries.Select(e => e.FullName).ToArray();
-                if (encontrados.Length != esperados.Length ||
-                    esperados.Any(e => !encontrados.Contains(e, StringComparer.OrdinalIgnoreCase)) ||
+                string prefijo = "ProgramaConcentracion/";
+                if (!encontrados.Contains(prefijo + "ProgramaConcentracion.exe", StringComparer.OrdinalIgnoreCase) ||
+                    !encontrados.Contains(prefijo + "ActualizarInstalacion.ps1", StringComparer.OrdinalIgnoreCase) ||
                     encontrados.Any(e => Path.IsPathRooted(e) || e.Replace('\\', '/').Split('/').Any(p => p == "..")))
-                    throw new InvalidDataException("El paquete de actualización no tiene el contenido esperado.");
+                    throw new InvalidDataException("El ZIP portátil no tiene el contenido esperado.");
                 zip.ExtractToDirectory(raiz);
             }
-            return raiz;
+            return Path.Combine(raiz, "ProgramaConcentracion");
         }
 
         private static Version ParsearVersion(string texto)

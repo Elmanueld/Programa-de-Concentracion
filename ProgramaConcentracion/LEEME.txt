@@ -1,0 +1,5 @@
+﻿Programa de Concentración - versión portátil
+
+Mantén juntos todos los archivos de esta carpeta.
+Abre ProgramaConcentracion.exe para iniciar la aplicación.
+Requiere Windows y .NET Framework 4.8.

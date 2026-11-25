@@ -3,8 +3,9 @@
 $raizPresentacion = Split-Path -Parent $PSScriptRoot
 $salidaRelease = Join-Path $raizPresentacion 'bin\Release'
 $raizRepositorio = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
-$directorioDistribucion = Join-Path $raizRepositorio 'dist'
-$salidaInstalador = Join-Path $directorioDistribucion 'ProgramaConcentracion-Instalador.zip'
+$directorioPortable = Join-Path $raizRepositorio 'ProgramaConcentracion'
+$salidaPortable = Join-Path $raizRepositorio 'ProgramaConcentracion-Portatil.zip'
+$salidaInstalador = Join-Path $raizRepositorio 'ProgramaConcentracion-Instalador.zip'
 $directorioTemporal = Join-Path $PSScriptRoot ('.build-' + [Guid]::NewGuid().ToString('N'))
 $creado = $false
 
@@ -12,13 +13,13 @@ if (-not (Test-Path (Join-Path $salidaRelease 'ProgramaConcentracion.exe'))) {
     throw 'Primero compila CapaPresentacion en configuración Release.'
 }
 
-New-Item -ItemType Directory -Path $directorioDistribucion -Force | Out-Null
-
 New-Item -ItemType Directory -Path $directorioTemporal -Force | Out-Null
 try {
     $payload = Join-Path $directorioTemporal 'ProgramaConcentracionPayload.zip'
     $contenidoPayload = Join-Path $directorioTemporal 'payload'
+    $contenidoPortable = Join-Path $directorioTemporal 'ProgramaConcentracion'
     New-Item -ItemType Directory -Path $contenidoPayload -Force | Out-Null
+    New-Item -ItemType Directory -Path $contenidoPortable -Force | Out-Null
     $archivosAplicacion = Get-ChildItem -LiteralPath $salidaRelease -File -Recurse | Where-Object {
         $_.FullName -notmatch '\\app\.publish\\' -and
         $_.Name -ne 'ProgramaConcentracion-Instalador.zip' -and
@@ -36,7 +37,21 @@ try {
         $directorioDestino = Split-Path -Parent $rutaDestino
         New-Item -ItemType Directory -Path $directorioDestino -Force | Out-Null
         Copy-Item -LiteralPath $archivo.FullName -Destination $rutaDestino -Force
+
+        $rutaPortable = Join-Path $contenidoPortable $rutaRelativa
+        $directorioDestinoPortable = Split-Path -Parent $rutaPortable
+        New-Item -ItemType Directory -Path $directorioDestinoPortable -Force | Out-Null
+        Copy-Item -LiteralPath $archivo.FullName -Destination $rutaPortable -Force
     }
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ActualizarInstalacion.ps1') `
+        -Destination (Join-Path $contenidoPortable 'ActualizarInstalacion.ps1') -Force
+    Set-Content -LiteralPath (Join-Path $contenidoPortable 'LEEME.txt') -Encoding UTF8 -Value @(
+        'Programa de Concentración - versión portátil',
+        '',
+        'Mantén juntos todos los archivos de esta carpeta.',
+        'Abre ProgramaConcentracion.exe para iniciar la aplicación.',
+        'Requiere Windows y .NET Framework 4.8.'
+    )
     Compress-Archive -Path (Join-Path $contenidoPayload '*') -DestinationPath $payload -Force
     Remove-Item -LiteralPath $contenidoPayload -Recurse -Force
 
@@ -56,12 +71,22 @@ try {
         'Al finalizar, el programa aparece en el menú Inicio. Windows puede pedir autorización al abrirlo.'
     )
     Compress-Archive -Path (Join-Path $directorioTemporal '*') -DestinationPath $salidaInstalador -Force
+    Compress-Archive -Path $contenidoPortable -DestinationPath $salidaPortable -Force
     if (-not (Test-Path -LiteralPath $salidaInstalador)) {
         throw 'No se pudo generar el paquete de instalación.'
     }
+    if (-not (Test-Path -LiteralPath $salidaPortable)) {
+        throw 'No se pudo generar el paquete portátil.'
+    }
 
     $validador = Join-Path $PSScriptRoot 'ValidarInstalador.ps1'
-    & $validador -Zip $salidaInstalador -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
+    & $validador -Zip $salidaInstalador -PortableZip $salidaPortable `
+        -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
+
+    if (Test-Path -LiteralPath $directorioPortable) {
+        Remove-Item -LiteralPath $directorioPortable -Recurse -Force
+    }
+    Move-Item -LiteralPath $contenidoPortable -Destination $directorioPortable
 
     $destinoInstalado = Join-Path $env:ProgramFiles 'Programa de Concentración'
     if ($env:PC_SOLO_GENERAR_PAQUETE -ne '1' -and
@@ -76,7 +101,7 @@ try {
         $principalActual = New-Object Security.Principal.WindowsPrincipal($identidadActual)
         $opcionesProceso = @{
             FilePath = (Join-Path $PSHOME 'powershell.exe')
-            ArgumentList = $argumentosActualizador
+            ArgumentList = $argumentosActualizador + ' -Reiniciar'
             WindowStyle = 'Hidden'
         }
         if (-not $principalActual.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {

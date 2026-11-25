@@ -1,6 +1,11 @@
 ﻿param(
     [Parameter(Mandatory = $true)]
-    [string]$Origen
+    [string]$Origen,
+    [Parameter(Mandatory = $false)]
+    [string]$Destino,
+    [Parameter(Mandatory = $false)]
+    [string]$Ejecutable,
+    [switch]$Reiniciar
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,15 +16,24 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 }
 
 $raizOrigen = (Resolve-Path -LiteralPath $Origen).Path.TrimEnd('\')
-$destino = Join-Path $env:ProgramFiles 'Programa de Concentración'
-if (-not (Test-Path -LiteralPath (Join-Path $destino 'ProgramaConcentracion.exe'))) {
-    exit 0
+if ([string]::IsNullOrWhiteSpace($Destino)) {
+    $destino = Join-Path $env:ProgramFiles 'Programa de Concentración'
+} else {
+    $destino = [System.IO.Path]::GetFullPath($Destino)
 }
+if ([string]::IsNullOrWhiteSpace($Ejecutable)) {
+    $Ejecutable = Join-Path $destino 'ProgramaConcentracion.exe'
+} else {
+    $Ejecutable = [System.IO.Path]::GetFullPath($Ejecutable)
+}
+if (-not (Test-Path -LiteralPath (Join-Path $destino 'ProgramaConcentracion.exe')) -and
+    [string]::IsNullOrWhiteSpace($Destino)) { exit 0 }
+New-Item -ItemType Directory -Path $destino -Force | Out-Null
 
 $carpetaLog = Join-Path $env:LOCALAPPDATA 'Programa-de-Concentracion\Logs'
 New-Item -ItemType Directory -Path $carpetaLog -Force | Out-Null
 $rutaLog = Join-Path $carpetaLog 'actualizaciones.log'
-[IO.File]::AppendAllText($rutaLog, ('[{0:O}] Actualización preparada; esperando que cierre la aplicación.{1}' -f [DateTime]::Now, [Environment]::NewLine), [Text.Encoding]::UTF8)
+[IO.File]::AppendAllText($rutaLog, ('[{0:O}] Actualización preparada en {1}; esperando que cierre la aplicación.{2}' -f [DateTime]::Now, $destino, [Environment]::NewLine), [Text.Encoding]::UTF8)
 
 $mutex = New-Object System.Threading.Mutex($false, 'Local\ProgramaConcentracionActualizador')
 if (-not $mutex.WaitOne(0)) { exit 0 }
@@ -52,6 +66,9 @@ foreach ($archivo in $archivos) {
 }
 
 [IO.File]::AppendAllText($rutaLog, ('[{0:O}] Se actualizaron {1} archivos desde Release.{2}' -f [DateTime]::Now, $archivos.Count, [Environment]::NewLine), [Text.Encoding]::UTF8)
+if ($Reiniciar -and (Test-Path -LiteralPath $Ejecutable)) {
+    Start-Process -FilePath $Ejecutable -WorkingDirectory $destino
+}
 }
 finally {
     $mutex.ReleaseMutex()

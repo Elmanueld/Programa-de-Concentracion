@@ -1,6 +1,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Zip,
+    [Parameter(Mandatory = $false)]
+    [string]$PortableZip,
     [Parameter(Mandatory = $true)]
     [string]$Executable
 )
@@ -44,6 +46,24 @@ try {
         throw "El EXE del instalador no coincide con el Release. Instalador: $hashReal; Release: $hashEsperado."
     }
     Write-Host "Instalador verificado: ProgramaConcentracion.exe $hashReal"
+
+    if ($PortableZip) {
+        $archivoPortable = (Resolve-Path -LiteralPath $PortableZip).Path
+        $paquetePortable = [IO.Compression.ZipFile]::OpenRead($archivoPortable)
+        try {
+            $entradaExePortable = $paquetePortable.GetEntry('ProgramaConcentracion/ProgramaConcentracion.exe')
+            if (-not $entradaExePortable) { throw 'El ZIP portátil no contiene ProgramaConcentracion/ProgramaConcentracion.exe.' }
+            $flujoExePortable = $entradaExePortable.Open()
+            $shaPortable = [Security.Cryptography.SHA256]::Create()
+            try { $hashPortable = [BitConverter]::ToString($shaPortable.ComputeHash($flujoExePortable)).Replace('-', '') }
+            finally { $flujoExePortable.Dispose(); $shaPortable.Dispose() }
+            if ($hashPortable -ne $hashEsperado) {
+                throw "El EXE portátil no coincide con Release. Portátil: $hashPortable; Release: $hashEsperado."
+            }
+            Write-Host "ZIP portátil verificado: ProgramaConcentracion.exe $hashPortable"
+        }
+        finally { $paquetePortable.Dispose() }
+    }
 }
 finally {
     if ($contenidoPayload) { $contenidoPayload.Dispose() }

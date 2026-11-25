@@ -51,6 +51,13 @@ Descarga el [instalador para Windows](https://github.com/Elmanueld/Programa-de-C
 
 Como alternativa, descarga el [paquete portátil](https://github.com/Elmanueld/Programa-de-Concentracion/releases/latest/download/ProgramaConcentracion-Portatil.zip), extráelo y abre `ProgramaConcentracion/ProgramaConcentracion.exe`; mantén juntos todos los archivos de esa carpeta. También puedes explorar la [carpeta de la aplicación en el repositorio](ProgramaConcentracion/). Cada compilación Release genera el instalador y el paquete portátil desde el mismo ejecutable, y CI comprueba el paquete antes de publicarlo. La aplicación usa la API remota por HTTPS y mantiene SQLite local para trabajar sin conexión; los paquetes no incluyen credenciales de SQL ni SMTP. Para descargar los archivos publicados, visita [Versiones](https://github.com/Elmanueld/Programa-de-Concentracion/releases).
 
+## Manuales
+
+- [Manual de usuario (PDF)](docs/manuales/manual_usuario_v1.0.pdf) | [fuente Markdown](docs/manuales/manual_usuario_v1.0.md)
+- [Manual técnico (PDF)](docs/manuales/manual_tecnico_v1.0.pdf) | [fuente Markdown](docs/manuales/manual_tecnico_v1.0.md)
+- [Capturas del manual de usuario](docs/manuales/capturas/)
+- [Inventario de pruebas](docs/tests/Inventario_pruebas_v1.0.md)
+
 ## Pruebas automáticas
 
 ```powershell

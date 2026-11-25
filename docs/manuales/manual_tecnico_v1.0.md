@@ -32,11 +32,11 @@ Funciones principales: calendario y tareas; selección de aplicaciones y webs; d
 
 ### Preparar el código
 
-1. Abrir `ProgramaConcentracion.sln` en Visual Studio con el targeting pack de .NET Framework 4.8.
+1. Abrir `src/CapaDatos/ProgramaConcentracion.sln` en Visual Studio con el targeting pack de .NET Framework 4.8.
 2. Restaurar paquetes NuGet desde Visual Studio. Para los proyectos SDK de .NET también se puede usar `dotnet restore .\ProgramaConcentracion.sln`.
 3. Restaurar y compilar en Debug con MSBuild de Visual Studio. Confirmar que `System.Data.SQLite.Core` y el ensamblado `System.Data.SQLite` se resuelven en el proyecto clásico `CapaDatos`.
-4. Para crear el paquete de Windows, compilar `CapaPresentacion` en Release. El destino `CopySQLiteInterop` ejecuta `CapaPresentacion/Installer/CrearInstalador.ps1`, que empaqueta el ejecutable ya compilado.
-5. Para instalar el paquete creado, descomprimir el ZIP completo y ejecutar `Instalar.vbs`. El instalador incluido puede descargar .NET Framework 4.8 desde Microsoft si falta y agrega el programa al menú Inicio.
+4. Para crear los paquetes de Windows, compilar `CapaPresentacion` en Release. El destino `CopySQLiteInterop` ejecuta `src/CapaDatos/CapaPresentacion/Installer/CrearInstalador.ps1` y genera `ProgramaConcentracion-Setup.exe`, el ZIP portátil y la carpeta de aplicación de la raíz.
+5. La instalación para usuarios se distribuye como un único `ProgramaConcentracion-Setup.exe` adjunto a una GitHub Release. El ejecutable autoextraíble incluye el payload y el asistente de instalación; no se deben entregar fuentes, pruebas ni herramientas de desarrollo al usuario final. El instalador puede descargar .NET Framework 4.8 desde Microsoft si falta.
 
 En esta revisión, `dotnet build .\ProgramaConcentracion.sln --no-restore` no resolvió la referencia SQLite del proyecto clásico, mientras que MSBuild de Visual Studio con `-restore` compiló la solución completa en una carpeta de verificación separada. Use Visual Studio/MSBuild para compilar esta solución en Windows.
 
@@ -123,7 +123,7 @@ No hay un framework unitario tradicional en el repositorio: `Backend.Tests` es u
 dotnet run --project .\Backend.Tests\Backend.Tests.csproj
 ```
 
-La suite ejecutada en esta revisión tuvo 38 comprobaciones correctas. No existe selector por categoría ni suite de UI. La compilación general debe hacerse con herramientas que resuelvan los proyectos clásicos y SQLite. El inventario detallado y resultados están en `docs/tests/Inventario_pruebas_v1.0.md`.
+La suite del backend contiene comprobaciones con repositorios falsos; la suite WinForms valida reglas y controles de interfaz. No existe selector por categoría ni suite de UI automatizada completa. La compilación general debe hacerse con herramientas que resuelvan los proyectos clásicos y SQLite. El inventario detallado está en `docs/tests/Inventario_pruebas_v1.0.md`.
 
 ## 7. Seguridad, datos y límites
 

@@ -7,7 +7,7 @@
 *.suo
 __pycache__/
 *.py[cod]
-src/CapaDatos/docs/manual_usuario_v1.0_actualizado*.pdf
+docs/manuales/*_actualizado*.pdf
 ProgramaConcentracion-Instalador.zip
 ProgramaConcentracion-Portatil.zip
 ProgramaConcentracion-Setup.exe

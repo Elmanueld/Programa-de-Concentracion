@@ -13,9 +13,11 @@ from reportlab.platypus import (BaseDocTemplate, Frame, PageBreak, PageTemplate,
     Paragraph, Spacer, ListFlowable, ListItem, HRFlowable, Image)
 
 
-ROOT = Path(__file__).resolve().parent.parent
-DOCS = ROOT / "docs"
-FONT_DIR = ROOT / "CapaPresentacion" / "Fonts"
+ROOT = Path(__file__).resolve().parents[2]
+CAPA_DATOS = ROOT / "src" / "CapaDatos"
+DOCS = ROOT / "docs" / "manuales"
+TEST_DOCS = ROOT / "docs" / "tests"
+FONT_DIR = CAPA_DATOS / "CapaPresentacion" / "Fonts"
 pdfmetrics.registerFont(TTFont("Inter", str(FONT_DIR / "Inter-Regular.ttf")))
 pdfmetrics.registerFont(TTFont("Inter-Bold", str(FONT_DIR / "Inter-Bold.ttf")))
 pdfmetrics.registerFontFamily("Inter", normal="Inter", bold="Inter-Bold", italic="Inter", boldItalic="Inter-Bold")
@@ -174,10 +176,10 @@ def build(source, output, subtitle):
 
 
 if __name__ == "__main__":
-    tests = DOCS / "tests" / "Inventario_pruebas_v1.0.md"
+    tests = TEST_DOCS / "Inventario_pruebas_v1.0.md"
     technical = DOCS / "manual_tecnico_v1.0.md"
     user = DOCS / "manual_usuario_v1.0.md"
-    build(tests, DOCS / "tests" / "Test_Documentation_v1.0.pdf", "Inventario y resultados de pruebas")
+    build(tests, TEST_DOCS / "Inventario_pruebas_v1.0.pdf", "Inventario y resultados de pruebas")
     build(technical, DOCS / "manual_tecnico_v1.0.pdf", "Instalación, arquitectura, configuración y diagnóstico")
     build(user, DOCS / "manual_usuario_v1.0.pdf", "Guía de uso para personas usuarias")
-    print("PDFs generados en docs/ y docs/tests/.")
+    print("PDFs generados en docs/manuales/ y docs/tests/.")

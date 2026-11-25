@@ -19,12 +19,10 @@ Programa de Concentración ayuda a organizar el tiempo de enfoque. Permite crear
 
 ### Instalar
 
-1. Descomprime el ZIP de instalación completo.
-2. Ejecuta `Instalar.vbs` dentro de la carpeta descomprimida.
-3. Espera a que finalice. Si Windows muestra una solicitud de autorización, revisa el nombre del programa antes de aceptarla.
-4. Abre **Programa de Concentración** desde el menú Inicio.
-
-El instalador puede descargar .NET Framework 4.8 si el equipo no lo tiene.
+1. Descarga `ProgramaConcentracion-Setup.exe` desde la sección **Releases** del repositorio.
+2. Abre el archivo descargado. El asistente instala el programa; Windows puede pedir autorización.
+3. Si el equipo no tiene .NET Framework 4.8, el instalador ofrece descargarlo desde Microsoft.
+4. Al terminar, abre **Programa de Concentración** desde el menú Inicio.
 
 Al abrir el programa, si hay una versión más reciente publicada, aparecerá una pregunta para instalarla. Si aceptas, Windows solicitará autorización para actualizar; el programa se cerrará durante la instalación y se abrirá de nuevo al finalizar.
 
@@ -114,6 +112,6 @@ En el menú del icono, selecciona **Abrir Programa de Concentración** para most
 
 ## 8. Ayuda y limitaciones visuales
 
-Esta edición incorpora capturas reales de las pantallas de acceso, registro, calendario, creación de tareas con descansos, selección de aplicaciones y páginas web, configuración, personalización de apariencia y menú de la bandeja del sistema. Las capturas de las demás funciones se añadirán al recibirlas. No se usan mockups ni imágenes de otra aplicación.
+Esta guía incluye capturas reales de los flujos principales: acceso, registro, calendario, creación de tareas y descansos, selección de aplicaciones y sitios web, configuración, apariencia y bandeja del sistema. Las acciones complementarias se explican paso a paso aunque no todas tengan una captura propia. No se usan mockups ni imágenes de otra aplicación.
 
 Si aparece un error, anota el mensaje y contacta con quien administra la instalación. No borres la base local ni los archivos pendientes de sincronización. Si no se puede iniciar sesión, revisa conexión y vuelve a intentar; una cuenta que ya usó el equipo puede disponer de inicio sin conexión.

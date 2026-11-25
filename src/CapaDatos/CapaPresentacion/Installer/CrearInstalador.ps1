@@ -6,7 +6,9 @@ $raizRepositorio = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $directorioPortable = Join-Path $raizRepositorio 'ProgramaConcentracion'
 $salidaPortable = Join-Path $raizRepositorio 'ProgramaConcentracion-Portatil.zip'
 $salidaInstalador = Join-Path $raizRepositorio 'ProgramaConcentracion-Instalador.zip'
+$salidaInstaladorExe = Join-Path $raizRepositorio 'ProgramaConcentracion-Setup.exe'
 $directorioTemporal = Join-Path $PSScriptRoot ('.build-' + [Guid]::NewGuid().ToString('N'))
+$directorioIExpress = Join-Path $env:TEMP ('PCSetup-' + [Guid]::NewGuid().ToString('N'))
 $creado = $false
 
 if (-not (Test-Path (Join-Path $salidaRelease 'ProgramaConcentracion.exe'))) {
@@ -45,13 +47,15 @@ try {
     }
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ActualizarInstalacion.ps1') `
         -Destination (Join-Path $contenidoPortable 'ActualizarInstalacion.ps1') -Force
-    Set-Content -LiteralPath (Join-Path $contenidoPortable 'LEEME.txt') -Encoding UTF8 -Value @(
+    $textoPortable = @(
         'Programa de Concentración - versión portátil',
         '',
         'Mantén juntos todos los archivos de esta carpeta.',
         'Abre ProgramaConcentracion.exe para iniciar la aplicación.',
         'Requiere Windows y .NET Framework 4.8.'
     )
+    [IO.File]::WriteAllLines((Join-Path $contenidoPortable 'LEEME.txt'),
+        [string[]]$textoPortable, [System.Text.UTF8Encoding]::new($true))
     Compress-Archive -Path (Join-Path $contenidoPayload '*') -DestinationPath $payload -Force
     Remove-Item -LiteralPath $contenidoPayload -Recurse -Force
 
@@ -63,14 +67,22 @@ try {
         'command = "powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & scriptPath & """"',
         'shell.Run command, 0, True'
     )
-    Set-Content -LiteralPath (Join-Path $directorioTemporal 'LEEME.txt') -Encoding UTF8 -Value @(
+    $textoInstalador = @(
         'Programa de Concentración - Instalador',
         '',
         'Descomprime el ZIP completo y ejecuta Instalar.vbs. La consola del instalador se ejecuta oculta.',
         'El instalador descarga .NET Framework 4.8 desde Microsoft si hace falta.',
         'Al finalizar, el programa aparece en el menú Inicio. Windows puede pedir autorización al abrirlo.'
     )
-    Compress-Archive -Path (Join-Path $directorioTemporal '*') -DestinationPath $salidaInstalador -Force
+    [IO.File]::WriteAllLines((Join-Path $directorioTemporal 'LEEME.txt'),
+        [string[]]$textoInstalador, [System.Text.UTF8Encoding]::new($true))
+    $archivosInstalador = @(
+        (Join-Path $directorioTemporal 'ProgramaConcentracionPayload.zip'),
+        (Join-Path $directorioTemporal 'Instalar.ps1'),
+        (Join-Path $directorioTemporal 'Instalar.vbs'),
+        (Join-Path $directorioTemporal 'LEEME.txt')
+    )
+    Compress-Archive -Path $archivosInstalador -DestinationPath $salidaInstalador -Force
     Compress-Archive -Path $contenidoPortable -DestinationPath $salidaPortable -Force
     if (-not (Test-Path -LiteralPath $salidaInstalador)) {
         throw 'No se pudo generar el paquete de instalación.'
@@ -79,8 +91,92 @@ try {
         throw 'No se pudo generar el paquete portátil.'
     }
 
+    # Crea un único EXE autoextraíble con el instalador y sus recursos. IExpress
+    # forma parte de Windows, por lo que el usuario no necesita herramientas de
+    # desarrollo ni descargar archivos separados para instalar la aplicación.
+    $iexpress = Join-Path $env:WINDIR 'System32\iexpress.exe'
+    if (-not (Test-Path -LiteralPath $iexpress)) {
+        throw 'No se encontró IExpress de Windows para generar el instalador EXE.'
+    }
+    if (Test-Path -LiteralPath $salidaInstaladorExe) {
+        Remove-Item -LiteralPath $salidaInstaladorExe -Force
+    }
+    New-Item -ItemType Directory -Path $directorioIExpress -Force | Out-Null
+    $directorioFuentesIExpress = Join-Path $directorioIExpress 'Files'
+    New-Item -ItemType Directory -Path $directorioFuentesIExpress -Force | Out-Null
+    $salidaInstaladorExeTemporal = Join-Path $directorioIExpress 'ProgramaConcentracion-Setup.exe'
+    $nombresArchivos = @(
+        'ProgramaConcentracionPayload.zip',
+        'Instalar.ps1',
+        'Instalar.vbs',
+        'LEEME.txt'
+    )
+    foreach ($nombre in $nombresArchivos) {
+        Copy-Item -LiteralPath (Join-Path $directorioTemporal $nombre) `
+            -Destination (Join-Path $directorioFuentesIExpress $nombre) -Force
+    }
+    $lineasArchivos = for ($indice = 0; $indice -lt $nombresArchivos.Count; $indice++) {
+        '%FILE' + $indice + '%='
+    }
+    $lineasStrings = for ($indice = 0; $indice -lt $nombresArchivos.Count; $indice++) {
+        'FILE' + $indice + '=' + $nombresArchivos[$indice]
+    }
+    $rutaDirectiva = Join-Path $directorioIExpress 'ProgramaConcentracion-Setup.sed'
+    $directiva = @(
+        '[Version]',
+        'Class=IEXPRESS',
+        'SEDVersion=3',
+        '[Options]',
+        'PackagePurpose=InstallApp',
+        'ShowInstallProgramWindow=0',
+        'HideExtractAnimation=1',
+        'UseLongFileName=1',
+        'InsideCompressed=1',
+        'CAB_FixedSize=0',
+        'CAB_ResvCodeSigning=0',
+        'RebootMode=N',
+        'InstallPrompt=',
+        'DisplayLicense=',
+        'FinishMessage=',
+        ('TargetName=' + $salidaInstaladorExeTemporal),
+        'FriendlyName=Programa de Concentracion',
+        'AppLaunched=wscript.exe Instalar.vbs',
+        'PostInstallCmd=<None>',
+        'AdminQuietInstCmd=',
+        'UserQuietInstCmd=',
+        'SourceFiles=SourceFiles',
+        '[SourceFiles]',
+        ('SourceFiles0=' + $directorioFuentesIExpress),
+        '[SourceFiles0]'
+    ) + $lineasArchivos + @('[Strings]') + $lineasStrings
+    Set-Content -LiteralPath $rutaDirectiva -Value $directiva -Encoding ASCII
+    & $iexpress /N /Q $rutaDirectiva
+    # IExpress puede devolver el control antes de que termine de escribir el CAB
+    # autoextraíble. Espera a que el EXE exista y su tamaño deje de cambiar.
+    $longitudAnterior = -1L
+    $lecturasEstables = 0
+    for ($intento = 0; $intento -lt 120 -and $lecturasEstables -lt 3; $intento++) {
+        if (Test-Path -LiteralPath $salidaInstaladorExeTemporal) {
+            $longitudActual = (Get-Item -LiteralPath $salidaInstaladorExeTemporal).Length
+            if ($longitudActual -gt 65536 -and $longitudActual -eq $longitudAnterior) {
+                $lecturasEstables++
+            } else {
+                $lecturasEstables = 0
+            }
+            $longitudAnterior = $longitudActual
+        } else {
+            $longitudAnterior = -1L
+            $lecturasEstables = 0
+        }
+        if ($lecturasEstables -lt 3) { Start-Sleep -Seconds 1 }
+    }
+    if ($lecturasEstables -lt 3) {
+        throw 'IExpress no pudo generar ProgramaConcentracion-Setup.exe.'
+    }
+    Move-Item -LiteralPath $salidaInstaladorExeTemporal -Destination $salidaInstaladorExe -Force
+
     $validador = Join-Path $PSScriptRoot 'ValidarInstalador.ps1'
-    & $validador -Zip $salidaInstalador -PortableZip $salidaPortable `
+    & $validador -Zip $salidaInstalador -PortableZip $salidaPortable -InstallerExe $salidaInstaladorExe `
         -Executable (Join-Path $salidaRelease 'ProgramaConcentracion.exe')
 
     if (Test-Path -LiteralPath $directorioPortable) {
@@ -111,12 +207,15 @@ try {
     }
 
     $creado = $true
-    Get-Item -LiteralPath $salidaInstalador | Select-Object FullName, Length
+    Get-Item -LiteralPath $salidaInstaladorExe, $salidaPortable | Select-Object FullName, Length
 }
 finally {
     if ($creado -and (Test-Path -LiteralPath $directorioTemporal)) {
         Remove-Item -LiteralPath $directorioTemporal -Recurse -Force -ErrorAction SilentlyContinue
     } elseif (Test-Path -LiteralPath $directorioTemporal) {
         Write-Host "Se conservaron archivos temporales para diagnóstico: $directorioTemporal"
+    }
+    if ($creado -and (Test-Path -LiteralPath $directorioIExpress)) {
+        Remove-Item -LiteralPath $directorioIExpress -Recurse -Force -ErrorAction SilentlyContinue
     }
 }

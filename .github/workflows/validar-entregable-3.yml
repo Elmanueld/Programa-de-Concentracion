@@ -29,7 +29,7 @@ jobs:
 
       - name: Verificar que el instalador versionado coincide con Release
         shell: pwsh
-        run: ./src/CapaDatos/CapaPresentacion/Installer/ValidarInstalador.ps1 -Zip ./ProgramaConcentracion-Instalador.zip -PortableZip ./ProgramaConcentracion-Portatil.zip -Executable ./src/CapaDatos/CapaPresentacion/bin/Release/ProgramaConcentracion.exe
+        run: ./src/CapaDatos/CapaPresentacion/Installer/ValidarInstalador.ps1 -Zip ./ProgramaConcentracion-Instalador.zip -PortableZip ./ProgramaConcentracion-Portatil.zip -InstallerExe ./ProgramaConcentracion-Setup.exe -Executable ./src/CapaDatos/CapaPresentacion/bin/Release/ProgramaConcentracion.exe
 
       - name: Ejecutar pruebas del Backend (repositorios falsos; sin SMTP ni SQL remoto)
         run: dotnet run --project src/CapaDatos/Backend.Tests/Backend.Tests.csproj --configuration Release --no-build

@@ -425,8 +425,10 @@ namespace CapaPresentacion
             float escala = EscalaBarra();
             int altoBarra = AltoBarraActual();
             int margen = Math.Max(1, (int)Math.Round(4 * escala));
-            int anchoBoton = Math.Max(1, (int)Math.Round(48 * escala));
-            int altoBoton = Math.Max(1, (int)Math.Round(42 * escala));
+            // Las flechas conservan el mínimo táctil incluso cuando el
+            // formulario se reduce unos píxeles para caber en el área visible.
+            int anchoBoton = Math.Max(48, (int)Math.Round(48 * escala));
+            int altoBoton = Math.Max(42, (int)Math.Round(42 * escala));
             anterior.Size = new Size(anchoBoton, altoBoton);
             siguiente.Size = new Size(anchoBoton, altoBoton);
             int margenIzquierdo = (int)Math.Round(margenOriginal.Left * escala);
@@ -447,17 +449,20 @@ namespace CapaPresentacion
                 // Reserve the controls on the right while allowing the category
                 // label to use the remaining width. The old fixed 220x26 box
                 // clipped both the rounded label and its text on frmTareas.
-                int anchoEncabezado = Math.Max(0, anchoBarra - (int)Math.Round(200 * escala));
+                int siguienteX = Math.Max(margen, anchoBarra - anchoBoton - margen);
+                int anteriorX = Math.Max(margen, siguienteX - anchoBoton - margen);
+                int anchoContadorMinimo = Math.Max(1, (int)Math.Round(32 * escala));
+                int anchoEncabezado = Math.Max(0,
+                    anteriorX - 4 * margen - anchoContadorMinimo);
                 encabezado.SetBounds(margen, Math.Max(0, (altoBarra - (int)Math.Round(38 * escala)) / 2),
                     anchoEncabezado, Math.Max(1, (int)Math.Round(38 * escala)));
-                anterior.SetBounds(Math.Max(anchoEncabezado + 2 * margen,
-                    anchoBarra - (int)Math.Round(106 * escala)), Math.Max(0, (altoBarra - altoBoton) / 2),
+                anterior.SetBounds(anteriorX, Math.Max(0, (altoBarra - altoBoton) / 2),
                     anchoBoton, altoBoton);
-                siguiente.SetBounds(Math.Max(anterior.Right + margen,
-                    anchoBarra - anchoBoton - margen), Math.Max(0, (altoBarra - altoBoton) / 2),
+                siguiente.SetBounds(siguienteX, Math.Max(0, (altoBarra - altoBoton) / 2),
                     anchoBoton, altoBoton);
-                pagina.SetBounds(Math.Max(0, anterior.Left - (int)Math.Round(68 * escala)), 0,
-                    Math.Max(1, (int)Math.Round(64 * escala)), altoBarra);
+                int contadorX = encabezado.Right + margen;
+                int contadorDerecha = Math.Max(contadorX + 1, anterior.Left - margen);
+                pagina.SetBounds(contadorX, 0, contadorDerecha - contadorX, altoBarra);
             }
             else
             {
@@ -475,7 +480,7 @@ namespace CapaPresentacion
 
         private int AltoBarraActual()
         {
-            return Math.Max(1, (int)Math.Round(AltoBarraDiseno * EscalaBarra()));
+            return Math.Max(42, (int)Math.Round(AltoBarraDiseno * EscalaBarra()));
         }
 
         private void AplicarPagina()

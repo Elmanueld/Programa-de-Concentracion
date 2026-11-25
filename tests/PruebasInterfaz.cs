@@ -117,7 +117,9 @@ internal static class PruebasInterfaz
             comprobar(botones.All(boton => boton.Width >= 48 && boton.Height >= 42 &&
                 boton.Left >= 0 && boton.Top >= 0 && boton.Right <= barra.ClientSize.Width &&
                 boton.Bottom <= barra.ClientSize.Height),
-                "Las flechas redondeadas caben dentro de la barra sin recorte");
+                "Las flechas redondeadas caben dentro de la barra sin recorte (barra " +
+                barra.ClientSize.Width + "x" + barra.ClientSize.Height + "; botones " +
+                String.Join(", ", botones.Select(boton => boton.Bounds.ToString())) + ")");
             comprobar(botones.All(boton => !String.IsNullOrWhiteSpace(boton.Text)),
                 "Las dos flechas muestran su texto completo");
 

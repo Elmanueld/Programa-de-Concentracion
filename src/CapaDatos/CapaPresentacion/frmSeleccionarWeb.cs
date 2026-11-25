@@ -238,9 +238,6 @@ namespace CapaPresentacion
 
                 System.Diagnostics.Trace.TraceWarning(
                     "Falló la búsqueda en Internet: " + ex);
-
-                OperacionUI.ReportarError(this, ex, "No se pudo consultar el buscador web");
-
                 MostrarMensajeBusqueda(
                     "No se pudo buscar en Internet. Las páginas visibles " +
                     "son coincidencias guardadas en tu cuenta.");

@@ -5,3 +5,6 @@
 **/UpgradeLog.htm
 *.user
 *.suo
+__pycache__/
+*.py[cod]
+src/CapaDatos/docs/manual_usuario_v1.0_actualizado*.pdf

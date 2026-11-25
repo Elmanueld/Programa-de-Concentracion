@@ -397,9 +397,12 @@ namespace CapaNegocio
             if (usuario.Nombre != null)
                 usuario.Nombre = usuario.Nombre.Trim().Normalize(NormalizationForm.FormC);
             if (String.IsNullOrWhiteSpace(usuario.Nombre))
-                throw new ArgumentException("El nombre es obligatorio.");
+                throw new ArgumentException("El nombre de usuario es obligatorio.");
             if (usuario.Nombre.Length > 50)
-                throw new ArgumentException("El nombre no puede exceder 50 caracteres.");
+                throw new ArgumentException("El nombre de usuario no puede exceder 50 caracteres.");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(usuario.Nombre, @"^[\p{L}\p{N}_]+$",
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+                throw new ArgumentException("El nombre de usuario no puede contener caracteres especiales.");
             ValidarCorreo(usuario.Correo);
             if (incluirHash) ValidarHash(usuario.ContrasenaHash);
         }

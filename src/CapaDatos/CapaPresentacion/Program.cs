@@ -38,16 +38,28 @@ namespace CapaPresentacion
                 NombreEventoInstancia, out bool eventoNuevo))
             try
             {
+                bool inicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
+                    String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
                 if (!instanciaNueva)
                 {
-                    try { EventWaitHandle.OpenExisting(NombreEventoInstancia).Set(); }
-                    catch (WaitHandleCannotBeOpenedException) { }
-                    catch (UnauthorizedAccessException ex) { Trace.TraceError("No se pudo avisar a la instancia activa: " + ex.Message); }
+                    // Los lanzadores de inicio pueden estar duplicados en equipos
+                    // actualizados desde versiones anteriores. Una segunda
+                    // instancia de Windows no debe restaurar la ventana que la
+                    // primera instancia está ocultando al arrancar.
+                    if (!inicioDesdeWindows)
+                    {
+                        try { EventWaitHandle.OpenExisting(NombreEventoInstancia).Set(); }
+                        catch (WaitHandleCannotBeOpenedException) { }
+                        catch (UnauthorizedAccessException ex) { Trace.TraceError("No se pudo avisar a la instancia activa: " + ex.Message); }
+                    }
+                    else
+                    {
+                        Trace.TraceInformation("Se omitió una segunda instancia del inicio de Windows.");
+                    }
                     return;
                 }
 
-                InicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
-                    String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
+                InicioDesdeWindows = inicioDesdeWindows;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -85,10 +97,6 @@ namespace CapaPresentacion
                     ErroresAplicacion.Registrar(ex, "Comprobación de inicio de sesión automático");
                     avisoInicio = OperacionUI.DescribirError(ex);
                 }
-
-                if (!N_Usuario.ConexionRemotaConfigurada && sesionAutomatica == null &&
-                    String.IsNullOrWhiteSpace(avisoInicio))
-                    avisoInicio = "No se pudo conectar con tu cuenta en línea. Si ya usaste esta cuenta en este equipo, puedes intentar entrar sin conexión. Comprueba Internet e inténtalo de nuevo.";
 
                 var inicio = new frmLogin(sesionAutomatica);
                 loginActual = inicio;

@@ -214,6 +214,7 @@ namespace CapaPresentacion
 
         private void PrincipalForm_Shown(object sender, EventArgs e)
         {
+            ActualizadorGithub.ComprobarYOfrecer(this);
             PreferenciasUsuario preferencias = ObtenerPreferencias();
             if (Program.InicioDesdeWindows && preferencias.IniciarConWindows && preferencias.IniciarMinimizado)
                 MinimizarEnBandeja();
@@ -346,7 +347,7 @@ namespace CapaPresentacion
                     iconoNotificacion.ShowBalloonTip(6000, "Tarea próxima",
                         "\"" + tarea.Nombre + "\" empieza a las " + inicio.ToString("HH:mm") + ".", ToolTipIcon.Info);
                 }
-                if (!preferencias.MostrarComoVentana) continue;
+                if (!preferencias.MostrarComoVentana || VentanaEnBandeja) continue;
                 if (avisoTareaProxima == null || avisoTareaProxima.IsDisposed)
                 {
                     avisoTareaProxima = new frmAviso();
@@ -359,6 +360,8 @@ namespace CapaPresentacion
                 if (!avisoTareaProxima.Visible) avisoTareaProxima.Show();
             }
         }
+
+        private bool VentanaEnBandeja => !Visible || !ShowInTaskbar;
 
         private void MostrarNotificacionTareaIniciada(E_Tarea tarea)
         {
@@ -621,19 +624,9 @@ namespace CapaPresentacion
 
                 bool sincronizada = await Task.Run(() => sincronizacion.Sincronizar(usuario.IdUsuario));
                 if (IsDisposed || Disposing) return;
-                if (!sincronizada)
-                {
-                    if (!errorSincronizacionNotificado)
-                    {
-                        OperacionUI.ReportarError(this,
-                            new InvalidOperationException("No hay conexión con el servicio en línea."),
-                            "Cambios pendientes de enviar",
-                            "Los cambios siguen guardados en este equipo. Se enviarán automáticamente cuando vuelva la conexión.",
-                            true);
-                        errorSincronizacionNotificado = true;
-                    }
-                    return;
-                }
+                // La falta temporal de red es una condición normal: los cambios
+                // permanecen en la copia local y el siguiente ciclo reintentará.
+                if (!sincronizada) return;
                 errorSincronizacionNotificado = false;
                 errorCopiaLocalNotificado = false;
                 DateTime fecha = diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha;
@@ -887,7 +880,7 @@ namespace CapaPresentacion
                 iconoNotificacion.ShowBalloonTip(5000, "Página o aplicación bloqueada",
                     "" + e.NombreAplicacion + " está bloqueada durante " + e.NombreTarea + ".", ToolTipIcon.Info);
             }
-            if (!preferencias.MostrarComoVentana) return;
+            if (!preferencias.MostrarComoVentana || VentanaEnBandeja) return;
 
             if (avisoBloqueo == null || avisoBloqueo.IsDisposed)
             {
@@ -1068,7 +1061,7 @@ namespace CapaPresentacion
                 iconoNotificacion.ShowBalloonTip(5000, "Hora de descansar",
                     "Comenzó el descanso de " + e.NombreTarea + ".", ToolTipIcon.Info);
             }
-            if (!preferencias.MostrarComoVentana) return;
+            if (!preferencias.MostrarComoVentana || VentanaEnBandeja) return;
 
             if (avisoBloqueo != null && !avisoBloqueo.IsDisposed)
                 avisoBloqueo.Close();
@@ -1100,8 +1093,7 @@ namespace CapaPresentacion
 
         private void btnMinimizar_Click(object sender, EventArgs e)
         {
-            ShowInTaskbar = true;
-            WindowState = FormWindowState.Minimized;
+            MinimizarEnBandeja();
         }
 
         private PreferenciasUsuario ObtenerPreferencias()

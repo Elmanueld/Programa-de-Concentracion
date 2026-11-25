@@ -301,8 +301,20 @@ namespace CapaPresentacion
                 string actual = SolicitarTexto("Contraseña actual:", "", true);
                 if (actual == null || !VerificarContrasenaActual(actual, "Cambiar correo")) return;
             }
-            string valor = SolicitarTexto(nombre ? "Nuevo nombre:" : "Nuevo correo:", nombre ? usuario.Nombre : usuario.Correo);
+            string valor = SolicitarTexto(nombre ? "Nuevo nombre de usuario:" : "Nuevo correo:", nombre ? usuario.Nombre : usuario.Correo);
             if (valor == null) return;
+            string nuevoNombreUsuario = valor.Trim().Normalize(System.Text.NormalizationForm.FormC);
+            string errorNombreUsuario = String.IsNullOrWhiteSpace(nuevoNombreUsuario) ? "El nombre de usuario es obligatorio." :
+                nuevoNombreUsuario.Length > 50 ? "El nombre de usuario no puede exceder 50 caracteres." :
+                System.Text.RegularExpressions.Regex.IsMatch(nuevoNombreUsuario, @"^[\p{L}\p{N}_]+$",
+                    System.Text.RegularExpressions.RegexOptions.CultureInvariant) ? null :
+                "El nombre de usuario no puede contener caracteres especiales.";
+            if (nombre && errorNombreUsuario != null)
+            {
+                MessageBox.Show(this, errorNombreUsuario,
+                    "Revisa el nombre de usuario", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             try
             {
                 var actualizado = new E_Usuario { IdUsuario = usuario.IdUsuario, Nombre = nombre ? valor.Trim() : usuario.Nombre, Correo = nombre ? usuario.Correo : valor.Trim() };
@@ -310,7 +322,7 @@ namespace CapaPresentacion
                 usuario.Nombre = actualizado.Nombre;
                 usuario.Correo = actualizado.Correo;
                 MostrarAdvertenciaCacheLocal("El cambio de cuenta se guardó, pero la copia de este equipo quedó desactualizada. Conéctate a Internet antes de usar esta cuenta sin conexión.");
-                MessageBox.Show(this, nombre ? "Nombre actualizado." : "Correo actualizado. Debes verificar el nuevo correo para volver a iniciar sesión.",
+                MessageBox.Show(this, nombre ? "Nombre de usuario actualizado." : "Correo actualizado. Debes verificar el nuevo correo para volver a iniciar sesión.",
                     "Cuenta", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex) { OperacionUI.ReportarError(this, ex, "No se pudo actualizar la cuenta"); }

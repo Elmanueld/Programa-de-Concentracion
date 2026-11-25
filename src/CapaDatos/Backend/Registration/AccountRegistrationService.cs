@@ -9,11 +9,18 @@ public sealed class AccountRegistrationService(IAccountRegistrationRepository re
         string passwordHash,
         CancellationToken cancellationToken)
     {
+        var normalizedName = name?.Trim().Normalize(System.Text.NormalizationForm.FormC);
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            throw new InvalidUsernameException("El nombre de usuario es obligatorio.");
+        if (normalizedName.Length > 50)
+            throw new InvalidUsernameException("El nombre de usuario no puede exceder 50 caracteres.");
+        if (!UserNameRules.IsValid(normalizedName))
+            throw new InvalidUsernameException("El nombre de usuario no puede contener caracteres especiales.");
         if (!IsValidPasswordHash(passwordHash))
             throw new ArgumentException("El hash de contraseña no tiene un formato permitido.");
 
         var idUsuario = await repository.RegisterOrGetIdempotentAsync(
-            name.Trim(), email.Trim(), passwordHash, cancellationToken);
+            normalizedName!, email.Trim(), passwordHash, cancellationToken);
 
         return idUsuario ?? throw new AccountRegistrationConflictException();
     }
@@ -35,5 +42,15 @@ public sealed class AccountRegistrationService(IAccountRegistrationRepository re
         }
     }
 }
+
+public static class UserNameRules
+{
+    public static bool IsValid(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Length <= 50 &&
+        System.Text.RegularExpressions.Regex.IsMatch(value, @"^[\p{L}\p{N}_]+$",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+}
+
+public sealed class InvalidUsernameException(string message) : ArgumentException(message) { }
 
 public sealed class AccountRegistrationConflictException : Exception { }

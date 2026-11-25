@@ -30,6 +30,10 @@ public sealed class AccountRegistrationController(IAccountRegistrationService se
                 message = "Ya existe una cuenta con ese correo, o el registro anterior no coincide. Inicia sesión o recupera la contraseña."
             });
         }
+        catch (InvalidUsernameException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
         catch (ArgumentException)
         {
             return BadRequest(new { message = "Los datos de registro no son válidos." });

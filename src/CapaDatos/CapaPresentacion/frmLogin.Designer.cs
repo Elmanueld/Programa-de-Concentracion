@@ -129,11 +129,11 @@ namespace CapaPresentacion
             // lblMarcaTitulo
             // 
             this.lblMarcaTitulo.BackColor = System.Drawing.Color.Transparent;
-            this.lblMarcaTitulo.Font = new System.Drawing.Font("Inter", 25F, System.Drawing.FontStyle.Bold);
+            this.lblMarcaTitulo.Font = new System.Drawing.Font("Inter", 22F, System.Drawing.FontStyle.Bold);
             this.lblMarcaTitulo.ForeColor = System.Drawing.Color.White;
-            this.lblMarcaTitulo.Location = new System.Drawing.Point(24, 168);
+            this.lblMarcaTitulo.Location = new System.Drawing.Point(18, 168);
             this.lblMarcaTitulo.Name = "lblMarcaTitulo";
-            this.lblMarcaTitulo.Size = new System.Drawing.Size(358, 152);
+            this.lblMarcaTitulo.Size = new System.Drawing.Size(356, 152);
             this.lblMarcaTitulo.TabIndex = 1;
             this.lblMarcaTitulo.Text = "Enfócate en\nlo importante";
             this.lblMarcaTitulo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -152,13 +152,14 @@ namespace CapaPresentacion
             // lblMarcaPie
             // 
             this.lblMarcaPie.BackColor = System.Drawing.Color.Transparent;
-            this.lblMarcaPie.Font = new System.Drawing.Font("Inter", 9F);
+            this.lblMarcaPie.Font = new System.Drawing.Font("Inter", 8F);
             this.lblMarcaPie.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(207)))), ((int)(((byte)(220)))), ((int)(((byte)(247)))));
-            this.lblMarcaPie.Location = new System.Drawing.Point(72, 636);
+            this.lblMarcaPie.Location = new System.Drawing.Point(24, 636);
             this.lblMarcaPie.Name = "lblMarcaPie";
-            this.lblMarcaPie.Size = new System.Drawing.Size(308, 24);
+            this.lblMarcaPie.Size = new System.Drawing.Size(342, 28);
             this.lblMarcaPie.TabIndex = 3;
             this.lblMarcaPie.Text = "PROGRAMA DE CONCENTRACIÓN";
+            this.lblMarcaPie.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // pnlTarjeta
             // 
@@ -553,7 +554,7 @@ namespace CapaPresentacion
             this.lblNombre.Name = "lblNombre";
             this.lblNombre.Size = new System.Drawing.Size(460, 24);
             this.lblNombre.TabIndex = 0;
-            this.lblNombre.Text = "Nombre";
+            this.lblNombre.Text = "Nombre de usuario";
             this.lblNombre.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // nombre
@@ -567,7 +568,7 @@ namespace CapaPresentacion
             this.nombre.Location = new System.Drawing.Point(34, 43);
             this.nombre.MaxLength = 50;
             this.nombre.Name = "nombre";
-            this.nombre.PlaceholderText = "Tu nombre";
+            this.nombre.PlaceholderText = "Tu nombre de usuario";
             this.nombre.Radius = 9;
             this.nombre.Size = new System.Drawing.Size(460, 40);
             this.nombre.TabIndex = 1;

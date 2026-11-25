@@ -91,7 +91,11 @@ namespace CapaPresentacion
 
         private void FrmLogin_Shown(object sender, EventArgs e)
         {
-            if (sesionAutomatica == null) return;
+            if (sesionAutomatica == null)
+            {
+                ActualizadorGithub.ComprobarYOfrecer(this);
+                return;
+            }
             E_Usuario usuario = sesionAutomatica;
             sesionAutomatica = null;
             Opacity = 0;
@@ -208,6 +212,20 @@ namespace CapaPresentacion
         {
             try
             {
+                string nombreUsuario = nombre.Text.Trim().Normalize(System.Text.NormalizationForm.FormC);
+                string errorNombre = String.IsNullOrWhiteSpace(nombreUsuario) ? "El nombre de usuario es obligatorio." :
+                    nombreUsuario.Length > 50 ? "El nombre de usuario no puede exceder 50 caracteres." :
+                    System.Text.RegularExpressions.Regex.IsMatch(nombreUsuario, @"^[\p{L}\p{N}_]+$",
+                        System.Text.RegularExpressions.RegexOptions.CultureInvariant) ? null :
+                    "El nombre de usuario no puede contener caracteres especiales.";
+                if (errorNombre != null)
+                {
+                    MessageBox.Show(this, errorNombre,
+                        "Revisa el nombre de usuario", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    nombre.Focus();
+                    nombre.SelectAll();
+                    return;
+                }
                 if (!String.Equals(contrasenaRegistro.Text, confirmar.Text, StringComparison.Ordinal))
                 {
                     MessageBox.Show(this, "Las contraseñas no coinciden. Escríbelas igual en ambos campos.",

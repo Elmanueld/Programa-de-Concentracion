@@ -70,6 +70,17 @@ internal sealed class PruebasBackend
             "recorta los datos y conserva el IdUsuario idempotente del repositorio");
         Comprobar(repositorio.Hash == hash, "transfiere únicamente el hash de contraseña recibido");
 
+        foreach (string nombreValido in new[] { "Ana", "Ana_2026", "Élodie", "用户12" })
+            Comprobar(UserNameRules.IsValid(nombreValido), $"acepta el nombre de usuario válido '{nombreValido}'");
+        foreach (string nombreInvalido in new[] { "Ana María", "Ana!", "", "   ", new string('a', 51) })
+            Comprobar(!UserNameRules.IsValid(nombreInvalido), "rechaza un nombre vacío, con espacios/caracteres especiales o demasiado largo");
+        int llamadasAntesDeNombreInvalido = repositorio.Llamadas;
+        await EsperarAsync<InvalidUsernameException>(
+            () => servicio.RegisterAsync("Ana María", "ana@example.com", hash, CancellationToken.None),
+            "rechaza nombres no válidos antes de acceder al repositorio");
+        Comprobar(repositorio.Llamadas == llamadasAntesDeNombreInvalido,
+            "no intenta registrar un nombre no válido en el repositorio");
+
         int llamadas = repositorio.Llamadas;
         await EsperarAsync<ArgumentException>(
             () => servicio.RegisterAsync("Ana", "ana@example.com", "password", CancellationToken.None),
@@ -117,7 +128,8 @@ internal sealed class PruebasBackend
         RevisarParametros(typeof(SendVerificationRequest), ("Email", typeof(EmailAddressAttribute)));
         RevisarParametros(typeof(ConfirmVerificationRequest), ("Email", typeof(EmailAddressAttribute)),
             ("Code", typeof(RegularExpressionAttribute)));
-        RevisarParametros(typeof(RegisterAccountRequest), ("Email", typeof(EmailAddressAttribute)),
+        RevisarParametros(typeof(RegisterAccountRequest), ("Name", typeof(RequiredAttribute)),
+            ("Email", typeof(EmailAddressAttribute)),
             ("PasswordHash", typeof(RequiredAttribute)));
         RevisarParametros(typeof(SendPasswordRecoveryRequest), ("Email", typeof(EmailAddressAttribute)));
         RevisarParametros(typeof(ConfirmPasswordRecoveryRequest), ("Code", typeof(RegularExpressionAttribute)),

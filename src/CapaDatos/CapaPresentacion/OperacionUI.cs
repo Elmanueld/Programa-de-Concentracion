@@ -110,8 +110,13 @@ namespace CapaPresentacion
         {
             try
             {
-                if (ventana != null && !ventana.IsDisposed && !ventana.Disposing)
+                if (ventana != null)
+                {
+                    // A message box owned by a hidden/disposed form can become an
+                    // unexpected visible application window while the app is in the tray.
+                    if (ventana.IsDisposed || ventana.Disposing || !ventana.Visible) return;
                     MessageBox.Show(ventana, mensaje, titulo, MessageBoxButtons.OK, icono);
+                }
                 else
                     MessageBox.Show(mensaje, titulo, MessageBoxButtons.OK, icono);
             }
@@ -190,7 +195,9 @@ namespace CapaPresentacion
             }
 
             if (excepcion is CapaNegocio.ApiVerificacionException apiError)
-                return apiError.Message;
+                return ContieneDetalleTecnico(apiError.Message)
+                    ? "No se pudo completar la solicitud. Inténtalo de nuevo más tarde."
+                    : apiError.Message;
             if (excepcion is TaskCanceledException || excepcion is TimeoutException)
                 return "La solicitud tardó demasiado. Comprueba Internet y vuelve a intentarlo.";
             if (excepcion is HttpRequestException || excepcion is WebException || excepcion is SocketException)
@@ -241,7 +248,8 @@ namespace CapaPresentacion
         {
             if (String.IsNullOrWhiteSpace(mensaje)) return false;
             string[] terminos = { "SQLite", "SQL Server", "ConnectionStrings", "ApiBaseUrl", "Verification__",
-                "Smtp__", "GUID", "procedure", "procedimiento", "HTTP", "endpoint", "backend", "SqlException" };
+                "Smtp__", "GUID", "procedure", "procedimiento", "HTTP", "endpoint", "backend", "SqlException",
+                "PBKDF2", "DPAPI", "HMAC", "stack trace", "inner exception", "JSON", "token", "assembly" };
             return terminos.Any(termino => mensaje.IndexOf(termino, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 

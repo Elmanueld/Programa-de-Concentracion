@@ -41,17 +41,17 @@ namespace CapaPresentacion
             this.btnAgregarTarea = new AntdUI.Button();
             this.btnDetener = new AntdUI.Button();
             this.pnlTop = new System.Windows.Forms.Panel();
-            this.btnTopCerrar = new AntdUI.Button();
-            this.lblBienvenida = new System.Windows.Forms.Label();
+            this.flTopText = new System.Windows.Forms.FlowLayoutPanel();
             this.pbFotoDePerfil = new AntdUI.Image3D();
+            this.lblBienvenida = new System.Windows.Forms.Label();
+            this.lblVersionTop = new System.Windows.Forms.Label();
+            this.btnTopCerrar = new AntdUI.Button();
             this.btnTopMinimizar = new AntdUI.Button();
             this.btnTopConfiguracion = new AntdUI.Button();
             this.btnTopCerrarSesion = new AntdUI.Button();
             this.pnlPequenoDiaSeleccionado = new AntdUI.Panel();
             this.pnlLayoutTareas = new AntdUI.Panel();
             this.pnlLayoutCalendario = new AntdUI.Panel();
-            this.lblVersionTop = new System.Windows.Forms.Label();
-            this.flTopText = new System.Windows.Forms.FlowLayoutPanel();
             this.pnlPequenoMartes.SuspendLayout();
             this.pnlPequenoMiercoles.SuspendLayout();
             this.pnlPequenoLunes.SuspendLayout();
@@ -60,10 +60,10 @@ namespace CapaPresentacion
             this.pnlPequenoSabado.SuspendLayout();
             this.pnlPequenoDomingo.SuspendLayout();
             this.pnlTop.SuspendLayout();
+            this.flTopText.SuspendLayout();
             this.pnlPequenoDiaSeleccionado.SuspendLayout();
             this.pnlLayoutTareas.SuspendLayout();
             this.pnlLayoutCalendario.SuspendLayout();
-            this.flTopText.SuspendLayout();
             this.SuspendLayout();
             //
             // tlpCalendario
@@ -370,6 +370,7 @@ namespace CapaPresentacion
             //
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlTop.Controls.Add(this.pbFotoDePerfil);
             this.pnlTop.Controls.Add(this.flTopText);
             this.pnlTop.Controls.Add(this.btnTopCerrar);
             this.pnlTop.Controls.Add(this.btnTopMinimizar);
@@ -380,6 +381,49 @@ namespace CapaPresentacion
             this.pnlTop.Padding = new System.Windows.Forms.Padding(10);
             this.pnlTop.Size = new System.Drawing.Size(1956, 60);
             this.pnlTop.TabIndex = 75;
+            //
+            // flTopText
+            //
+            this.flTopText.Controls.Add(this.lblBienvenida);
+            this.flTopText.Controls.Add(this.lblVersionTop);
+            this.flTopText.Location = new System.Drawing.Point(180, 12);
+            this.flTopText.Name = "flTopText";
+            this.flTopText.Size = new System.Drawing.Size(1188, 36);
+            this.flTopText.TabIndex = 83;
+            //
+            // pbFotoDePerfil
+            //
+            this.pbFotoDePerfil.BackColor = System.Drawing.Color.Transparent;
+            this.pbFotoDePerfil.Location = new System.Drawing.Point(120, 0);
+            this.pbFotoDePerfil.Name = "pbFotoDePerfil";
+            this.pbFotoDePerfil.Size = new System.Drawing.Size(57, 57);
+            this.pbFotoDePerfil.TabIndex = 79;
+            //
+            // lblBienvenida
+            //
+            this.lblBienvenida.AutoSize = true;
+            this.lblBienvenida.BackColor = System.Drawing.Color.Transparent;
+            this.lblBienvenida.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblBienvenida.ForeColor = System.Drawing.Color.White;
+            this.lblBienvenida.Location = new System.Drawing.Point(3, 0);
+            this.lblBienvenida.Name = "lblBienvenida";
+            this.lblBienvenida.Size = new System.Drawing.Size(296, 40);
+            this.lblBienvenida.TabIndex = 80;
+            this.lblBienvenida.Text = "Bienvenido, Nombre";
+            this.lblBienvenida.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // lblVersionTop
+            //
+            this.lblVersionTop.AutoSize = true;
+            this.lblVersionTop.BackColor = System.Drawing.Color.Transparent;
+            this.lblVersionTop.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblVersionTop.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblVersionTop.Location = new System.Drawing.Point(305, 0);
+            this.lblVersionTop.Name = "lblVersionTop";
+            this.lblVersionTop.Size = new System.Drawing.Size(71, 23);
+            this.lblVersionTop.TabIndex = 82;
+            this.lblVersionTop.Text = "Versión";
+            this.lblVersionTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // btnTopCerrar
             //
@@ -396,26 +440,6 @@ namespace CapaPresentacion
             this.btnTopCerrar.Size = new System.Drawing.Size(60, 60);
             this.btnTopCerrar.TabIndex = 81;
             this.btnTopCerrar.Click += new System.EventHandler(this.BtnTopCerrar_Click);
-            //
-            // lblBienvenida
-            //
-            this.lblBienvenida.BackColor = System.Drawing.Color.Transparent;
-            this.lblBienvenida.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblBienvenida.ForeColor = System.Drawing.Color.White;
-            this.lblBienvenida.Location = new System.Drawing.Point(66, 0);
-            this.lblBienvenida.Name = "lblBienvenida";
-            this.lblBienvenida.Size = new System.Drawing.Size(855, 60);
-            this.lblBienvenida.TabIndex = 80;
-            this.lblBienvenida.Text = "Bienvenido, Nombre";
-            this.lblBienvenida.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
-            // pbFotoDePerfil
-            //
-            this.pbFotoDePerfil.BackColor = System.Drawing.Color.Transparent;
-            this.pbFotoDePerfil.Location = new System.Drawing.Point(3, 3);
-            this.pbFotoDePerfil.Name = "pbFotoDePerfil";
-            this.pbFotoDePerfil.Size = new System.Drawing.Size(57, 57);
-            this.pbFotoDePerfil.TabIndex = 79;
             //
             // btnTopMinimizar
             //
@@ -506,28 +530,6 @@ namespace CapaPresentacion
             this.pnlLayoutCalendario.TabIndex = 94;
             this.pnlLayoutCalendario.Text = "panel9";
             //
-            // lblVersionTop
-            //
-            this.lblVersionTop.BackColor = System.Drawing.Color.Transparent;
-            this.lblVersionTop.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblVersionTop.ForeColor = System.Drawing.Color.Gainsboro;
-            this.lblVersionTop.Location = new System.Drawing.Point(927, 0);
-            this.lblVersionTop.Name = "lblVersionTop";
-            this.lblVersionTop.Size = new System.Drawing.Size(258, 36);
-            this.lblVersionTop.TabIndex = 82;
-            this.lblVersionTop.Text = "Versión";
-            this.lblVersionTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
-            // flTopText
-            //
-            this.flTopText.Controls.Add(this.pbFotoDePerfil);
-            this.flTopText.Controls.Add(this.lblBienvenida);
-            this.flTopText.Controls.Add(this.lblVersionTop);
-            this.flTopText.Location = new System.Drawing.Point(120, 0);
-            this.flTopText.Name = "flTopText";
-            this.flTopText.Size = new System.Drawing.Size(1272, 60);
-            this.flTopText.TabIndex = 83;
-            //
             // PrincipalForm
             //
             this.BackColor = System.Drawing.Color.Lavender;
@@ -559,10 +561,11 @@ namespace CapaPresentacion
             this.pnlPequenoSabado.ResumeLayout(false);
             this.pnlPequenoDomingo.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
+            this.flTopText.ResumeLayout(false);
+            this.flTopText.PerformLayout();
             this.pnlPequenoDiaSeleccionado.ResumeLayout(false);
             this.pnlLayoutTareas.ResumeLayout(false);
             this.pnlLayoutCalendario.ResumeLayout(false);
-            this.flTopText.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

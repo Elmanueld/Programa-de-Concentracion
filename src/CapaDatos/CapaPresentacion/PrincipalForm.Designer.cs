@@ -27,7 +27,7 @@ namespace CapaPresentacion
             this.lblPequenaSabado = new System.Windows.Forms.Label();
             this.lblPequenaDomingo = new System.Windows.Forms.Label();
             this.lblMesAnio = new System.Windows.Forms.Label();
-            this.flTareas = new BufferedFlowLayoutPanel();
+            this.flTareas = new CapaPresentacion.BufferedFlowLayoutPanel();
             this.lblPequenaDiaSeleccionado = new System.Windows.Forms.Label();
             this.pnlPequenoMartes = new AntdUI.Panel();
             this.pnlPequenoMiercoles = new AntdUI.Panel();
@@ -50,6 +50,8 @@ namespace CapaPresentacion
             this.pnlPequenoDiaSeleccionado = new AntdUI.Panel();
             this.pnlLayoutTareas = new AntdUI.Panel();
             this.pnlLayoutCalendario = new AntdUI.Panel();
+            this.lblVersionTop = new System.Windows.Forms.Label();
+            this.flTopText = new System.Windows.Forms.FlowLayoutPanel();
             this.pnlPequenoMartes.SuspendLayout();
             this.pnlPequenoMiercoles.SuspendLayout();
             this.pnlPequenoLunes.SuspendLayout();
@@ -61,6 +63,7 @@ namespace CapaPresentacion
             this.pnlPequenoDiaSeleccionado.SuspendLayout();
             this.pnlLayoutTareas.SuspendLayout();
             this.pnlLayoutCalendario.SuspendLayout();
+            this.flTopText.SuspendLayout();
             this.SuspendLayout();
             //
             // tlpCalendario
@@ -184,6 +187,7 @@ namespace CapaPresentacion
             this.flTareas.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flTareas.Location = new System.Drawing.Point(12, 12);
             this.flTareas.Name = "flTareas";
+            this.flTareas.PaginacionHabilitada = true;
             this.flTareas.Size = new System.Drawing.Size(300, 780);
             this.flTareas.TabIndex = 13;
             this.flTareas.WrapContents = false;
@@ -366,9 +370,8 @@ namespace CapaPresentacion
             //
             this.pnlTop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(104)))), ((int)(((byte)(180)))));
             this.pnlTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlTop.Controls.Add(this.flTopText);
             this.pnlTop.Controls.Add(this.btnTopCerrar);
-            this.pnlTop.Controls.Add(this.lblBienvenida);
-            this.pnlTop.Controls.Add(this.pbFotoDePerfil);
             this.pnlTop.Controls.Add(this.btnTopMinimizar);
             this.pnlTop.Controls.Add(this.btnTopConfiguracion);
             this.pnlTop.Controls.Add(this.btnTopCerrarSesion);
@@ -399,9 +402,9 @@ namespace CapaPresentacion
             this.lblBienvenida.BackColor = System.Drawing.Color.Transparent;
             this.lblBienvenida.Font = new System.Drawing.Font("Inter", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblBienvenida.ForeColor = System.Drawing.Color.White;
-            this.lblBienvenida.Location = new System.Drawing.Point(192, 0);
+            this.lblBienvenida.Location = new System.Drawing.Point(66, 0);
             this.lblBienvenida.Name = "lblBienvenida";
-            this.lblBienvenida.Size = new System.Drawing.Size(396, 60);
+            this.lblBienvenida.Size = new System.Drawing.Size(855, 60);
             this.lblBienvenida.TabIndex = 80;
             this.lblBienvenida.Text = "Bienvenido, Nombre";
             this.lblBienvenida.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -409,9 +412,9 @@ namespace CapaPresentacion
             // pbFotoDePerfil
             //
             this.pbFotoDePerfil.BackColor = System.Drawing.Color.Transparent;
-            this.pbFotoDePerfil.Location = new System.Drawing.Point(132, 0);
+            this.pbFotoDePerfil.Location = new System.Drawing.Point(3, 3);
             this.pbFotoDePerfil.Name = "pbFotoDePerfil";
-            this.pbFotoDePerfil.Size = new System.Drawing.Size(60, 60);
+            this.pbFotoDePerfil.Size = new System.Drawing.Size(57, 57);
             this.pbFotoDePerfil.TabIndex = 79;
             //
             // btnTopMinimizar
@@ -503,6 +506,28 @@ namespace CapaPresentacion
             this.pnlLayoutCalendario.TabIndex = 94;
             this.pnlLayoutCalendario.Text = "panel9";
             //
+            // lblVersionTop
+            //
+            this.lblVersionTop.BackColor = System.Drawing.Color.Transparent;
+            this.lblVersionTop.Font = new System.Drawing.Font("Inter", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblVersionTop.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblVersionTop.Location = new System.Drawing.Point(927, 0);
+            this.lblVersionTop.Name = "lblVersionTop";
+            this.lblVersionTop.Size = new System.Drawing.Size(258, 36);
+            this.lblVersionTop.TabIndex = 82;
+            this.lblVersionTop.Text = "Versión";
+            this.lblVersionTop.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // flTopText
+            //
+            this.flTopText.Controls.Add(this.pbFotoDePerfil);
+            this.flTopText.Controls.Add(this.lblBienvenida);
+            this.flTopText.Controls.Add(this.lblVersionTop);
+            this.flTopText.Location = new System.Drawing.Point(120, 0);
+            this.flTopText.Name = "flTopText";
+            this.flTopText.Size = new System.Drawing.Size(1272, 60);
+            this.flTopText.TabIndex = 83;
+            //
             // PrincipalForm
             //
             this.BackColor = System.Drawing.Color.Lavender;
@@ -537,6 +562,7 @@ namespace CapaPresentacion
             this.pnlPequenoDiaSeleccionado.ResumeLayout(false);
             this.pnlLayoutTareas.ResumeLayout(false);
             this.pnlLayoutCalendario.ResumeLayout(false);
+            this.flTopText.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -561,5 +587,7 @@ namespace CapaPresentacion
         private AntdUI.Panel pnlLayoutTareas;
         private AntdUI.Panel pnlLayoutCalendario;
         private AntdUI.Button btnTopCerrar;
+        private FlowLayoutPanel flTopText;
+        private Label lblVersionTop;
     }
 }

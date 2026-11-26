@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -41,15 +42,9 @@ namespace CapaPresentacion
 
                 string mensaje = "Hay una versión nueva del Programa de Concentración (" + publicada.Version + ").\r\n\r\n" +
                     "¿Quieres instalarla ahora? El programa se cerrará y volverá a abrirse al terminar la actualización.";
-                DialogResult respuesta;
-                if (propietario is Form formularioPropietario &&
-                    (!formularioPropietario.Visible || formularioPropietario.WindowState == FormWindowState.Minimized ||
-                     !formularioPropietario.ShowInTaskbar))
-                    respuesta = MessageBox.Show(mensaje, "Actualización disponible",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-                else
-                    respuesta = MessageBox.Show(propietario, mensaje, "Actualización disponible",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                Trace.TraceInformation("Hay una actualización disponible: {0}.", publicada.Version);
+                DialogResult respuesta = MostrarPreguntaActualizacion(propietario, mensaje);
+                Trace.TraceInformation("Respuesta a la oferta de actualización: {0}.", respuesta);
                 if (respuesta != DialogResult.Yes) return;
 
                 string carpeta = PrepararPaquetePortable(publicada);
@@ -89,6 +84,62 @@ namespace CapaPresentacion
                 MessageBox.Show(propietario,
                     "No se pudo preparar la actualización. El programa seguirá abierto; puedes intentarlo de nuevo más tarde.",
                     "No se pudo actualizar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private static DialogResult MostrarPreguntaActualizacion(IWin32Window propietario, string mensaje)
+        {
+            using (var dialogo = new Form())
+            {
+                dialogo.Text = "Actualización disponible";
+                dialogo.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dialogo.StartPosition = FormStartPosition.CenterScreen;
+                dialogo.ClientSize = new Size(470, 190);
+                dialogo.MaximizeBox = false;
+                dialogo.MinimizeBox = false;
+                dialogo.ShowInTaskbar = false;
+                dialogo.TopMost = true;
+                dialogo.Font = new Font("Segoe UI", 10F);
+
+                var texto = new Label
+                {
+                    AutoSize = false,
+                    Location = new Point(22, 20),
+                    Size = new Size(426, 100),
+                    Text = mensaje,
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+                var actualizar = new Button
+                {
+                    DialogResult = DialogResult.Yes,
+                    Location = new Point(230, 135),
+                    Size = new Size(135, 34),
+                    Text = "Actualizar ahora",
+                    UseVisualStyleBackColor = true
+                };
+                var despues = new Button
+                {
+                    DialogResult = DialogResult.No,
+                    Location = new Point(374, 135),
+                    Size = new Size(74, 34),
+                    Text = "Después",
+                    UseVisualStyleBackColor = true
+                };
+                dialogo.Controls.Add(texto);
+                dialogo.Controls.Add(actualizar);
+                dialogo.Controls.Add(despues);
+                dialogo.AcceptButton = actualizar;
+                dialogo.CancelButton = despues;
+
+                Form formularioPropietario = propietario as Form;
+                if (formularioPropietario != null && !formularioPropietario.IsDisposed &&
+                    formularioPropietario.Visible && formularioPropietario.WindowState != FormWindowState.Minimized &&
+                    formularioPropietario.ShowInTaskbar)
+                    return dialogo.ShowDialog(formularioPropietario);
+
+                // Un diálogo independiente y siempre visible evita que la oferta
+                // quede detrás de una ventana oculta en la bandeja.
+                return dialogo.ShowDialog();
             }
         }
 

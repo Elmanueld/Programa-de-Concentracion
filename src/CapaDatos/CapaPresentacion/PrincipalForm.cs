@@ -59,6 +59,11 @@ namespace CapaPresentacion
             InitializeComponent();
             if (EnModoDiseno) return;
             if (usuario == null) throw new ArgumentNullException("usuario");
+            lblVersionTop.Text = ObtenerTextoVersion();
+            lblVersionTop.AutoEllipsis = true;
+            lblBienvenida.AutoEllipsis = true;
+            flTopText.WrapContents = false;
+            pbFotoDePerfil.Radius = 12;
             AjustePantalla.Preparar(this);
             Icon iconoPrograma = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
             Icon = iconoPrograma;
@@ -172,6 +177,15 @@ namespace CapaPresentacion
         {
             lblBienvenida.Text = "Bienvenido, " + (usuario.Nombre ?? String.Empty).Normalize(System.Text.NormalizationForm.FormC);
             ActualizarFotoPerfil(preferencias == null ? null : preferencias.RutaFoto);
+        }
+
+        private static string ObtenerTextoVersion()
+        {
+            string texto = System.Diagnostics.FileVersionInfo
+                .GetVersionInfo(Application.ExecutablePath).FileVersion;
+            Version version;
+            if (!Version.TryParse(texto, out version)) return "Versión desconocida";
+            return "v" + version.Major + "." + version.Minor + "." + Math.Max(0, version.Build);
         }
 
         private void ActualizarFotoPerfil(string ruta)

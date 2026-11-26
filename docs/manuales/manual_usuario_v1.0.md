@@ -99,12 +99,12 @@ En **Personalizar apariencia** puedes revisar los cambios en una vista previa an
 
 ## 7. Bandeja del sistema
 
-- **Minimizar:** usa el botón de minimizar de la ventana. Esta acción oculta el programa en el área de iconos junto al reloj.
+- **Minimizar:** usa el botón de minimizar de la ventana. La ventana baja a la barra de tareas y el programa sigue activo.
 - **Cerrar con la X:** oculta la ventana y deja el programa activo en segundo plano.
 - **Volver a abrir:** haz doble clic en el icono del programa o abre su menú y selecciona **Abrir Programa de Concentración**.
 - **Salir completamente:** abre el menú del icono y selecciona **Salir**. Esto detiene supervisores y temporizadores.
 
-Ocultar la ventana no equivale a salir. Mientras está oculta, la tarea y la sincronización pueden continuar. Un aviso de Windows puede aparecer sobre el icono según las preferencias de notificación.
+Minimizar u ocultar la ventana no equivale a salir. El botón de minimizar conserva la ventana en la barra de tareas; la X la oculta en la bandeja. En ambos casos, la tarea y la sincronización pueden continuar. Un aviso de Windows puede aparecer sobre el icono según las preferencias de notificación.
 
 En el menú del icono, selecciona **Abrir Programa de Concentración** para mostrar la ventana de nuevo o **Salir** para cerrar el programa completamente.
 

@@ -1093,7 +1093,8 @@ namespace CapaPresentacion
 
         private void btnMinimizar_Click(object sender, EventArgs e)
         {
-            MinimizarEnBandeja();
+            ShowInTaskbar = true;
+            WindowState = FormWindowState.Minimized;
         }
 
         private PreferenciasUsuario ObtenerPreferencias()

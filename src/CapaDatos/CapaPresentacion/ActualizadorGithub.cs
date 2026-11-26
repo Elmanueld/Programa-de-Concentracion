@@ -23,6 +23,11 @@ namespace CapaPresentacion
         private const string NombrePaquetePortable = "ProgramaConcentracion-Portatil.zip";
         private static int comprobacionIniciada;
 
+        static ActualizadorGithub()
+        {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
+
         public static async void ComprobarYOfrecer(IWin32Window propietario)
         {
             if (Interlocked.Exchange(ref comprobacionIniciada, 1) != 0) return;
@@ -34,10 +39,17 @@ namespace CapaPresentacion
                     (propietario is Form formulario && (formulario.IsDisposed || !formulario.IsHandleCreated)))
                     return;
 
-                DialogResult respuesta = MessageBox.Show(propietario,
-                    "Hay una versión nueva del Programa de Concentración (" + publicada.Version + ").\r\n\r\n" +
-                    "¿Quieres instalarla ahora? El programa se cerrará y volverá a abrirse al terminar la actualización.",
-                    "Actualización disponible", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                string mensaje = "Hay una versión nueva del Programa de Concentración (" + publicada.Version + ").\r\n\r\n" +
+                    "¿Quieres instalarla ahora? El programa se cerrará y volverá a abrirse al terminar la actualización.";
+                DialogResult respuesta;
+                if (propietario is Form formularioPropietario &&
+                    (!formularioPropietario.Visible || formularioPropietario.WindowState == FormWindowState.Minimized ||
+                     !formularioPropietario.ShowInTaskbar))
+                    respuesta = MessageBox.Show(mensaje, "Actualización disponible",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                else
+                    respuesta = MessageBox.Show(propietario, mensaje, "Actualización disponible",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (respuesta != DialogResult.Yes) return;
 
                 string carpeta = PrepararPaquetePortable(publicada);
@@ -87,6 +99,9 @@ namespace CapaPresentacion
                 string json;
                 var solicitud = (HttpWebRequest)WebRequest.Create(ApiUltimaPublicacion);
                 solicitud.Method = "GET";
+                // The web blocker installs a local Windows proxy; updater traffic
+                // must reach GitHub directly or version checks fail silently.
+                solicitud.Proxy = null;
                 solicitud.Accept = "application/vnd.github+json";
                 solicitud.UserAgent = "Programa-de-Concentracion-Updater/1.0";
                 solicitud.Timeout = 7000;
@@ -104,6 +119,8 @@ namespace CapaPresentacion
                 if (version == null) return null;
 
                 Version versionActual = ParsearVersion(FileVersionInfo.GetVersionInfo(Application.ExecutablePath).FileVersion);
+                Trace.TraceInformation("Comprobación de GitHub: versión instalada {0}; última versión publicada {1}.",
+                    versionActual == null ? "desconocida" : versionActual.ToString(), version.ToString());
                 if (versionActual == null || version.CompareTo(versionActual) <= 0) return null;
 
                 object assetsObjeto;
@@ -153,6 +170,7 @@ namespace CapaPresentacion
             string archivoZip = Path.Combine(raiz, NombrePaquetePortable);
             var solicitud = (HttpWebRequest)WebRequest.Create(publicacion.Url);
             solicitud.Method = "GET";
+            solicitud.Proxy = null;
             solicitud.UserAgent = "Programa-de-Concentracion-Updater/1.0";
             solicitud.Timeout = 30000;
             solicitud.ReadWriteTimeout = 30000;

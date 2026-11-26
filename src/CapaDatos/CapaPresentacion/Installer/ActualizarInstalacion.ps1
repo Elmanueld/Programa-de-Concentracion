@@ -66,8 +66,17 @@ foreach ($archivo in $archivos) {
 }
 
 [IO.File]::AppendAllText($rutaLog, ('[{0:O}] Se actualizaron {1} archivos desde Release.{2}' -f [DateTime]::Now, $archivos.Count, [Environment]::NewLine), [Text.Encoding]::UTF8)
+$accesoDirecto = Join-Path ([Environment]::GetFolderPath('CommonPrograms')) 'Programa de Concentración.lnk'
+if (Test-Path -LiteralPath $accesoDirecto) {
+    $shell = New-Object -ComObject WScript.Shell
+    $atajo = $shell.CreateShortcut($accesoDirecto)
+    $atajo.TargetPath = $Ejecutable
+    $atajo.Arguments = '--mostrar'
+    $atajo.WorkingDirectory = $destino
+    $atajo.Save()
+}
 if ($Reiniciar -and (Test-Path -LiteralPath $Ejecutable)) {
-    Start-Process -FilePath $Ejecutable -WorkingDirectory $destino
+    Start-Process -FilePath $Ejecutable -ArgumentList '--mostrar' -WorkingDirectory $destino
 }
 }
 finally {

@@ -283,7 +283,7 @@ namespace CapaPresentacion
                     MessageBox.Show(this, "Ya existe una plantilla. Al guardar, se reemplazará por la nueva.",
                         "Plantilla de tareas", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK)
                     return;
-                using (var formulario = new frmTareas(usuario.IdUsuario, DateTime.Today, true))
+                using (var formulario = new frmTareas(usuario.IdUsuario, RelojNegocio.Hoy, true))
                     NavegacionFormularios.MostrarModal(this, formulario);
             }
             catch (Exception ex)

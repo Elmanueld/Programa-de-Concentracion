@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -173,6 +174,7 @@ namespace CapaDatos
         {
             try
             {
+                long inicioSolicitud = Stopwatch.GetTimestamp();
                 var mensaje = new HttpRequestMessage(metodo, new Uri(ObtenerBaseUri(), ruta));
                 if (solicitud != null)
                     mensaje.Content = new StringContent(Json.Serialize(solicitud), Encoding.UTF8, "application/json");
@@ -181,6 +183,13 @@ namespace CapaDatos
                 using (mensaje)
                 using (var respuesta = Cliente.SendAsync(mensaje).GetAwaiter().GetResult())
                 {
+                    DateTimeOffset horaServidor;
+                    IEnumerable<string> valoresHora;
+                    if (respuesta.Headers.TryGetValues("X-Server-Utc", out valoresHora) &&
+                        DateTimeOffset.TryParse(valoresHora.FirstOrDefault(), CultureInfo.InvariantCulture,
+                            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out horaServidor))
+                        RelojAplicacion.Sincronizar(horaServidor, inicioSolicitud, Stopwatch.GetTimestamp());
+
                     string contenido = respuesta.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     if (respuesta.StatusCode == HttpStatusCode.ServiceUnavailable ||
                         respuesta.StatusCode == HttpStatusCode.BadGateway ||

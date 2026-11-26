@@ -89,12 +89,13 @@ try {
     $wsh = New-Object -ComObject WScript.Shell
     $atajo = $wsh.CreateShortcut($accesoDirecto)
     $atajo.TargetPath = Join-Path $destino 'ProgramaConcentracion.exe'
+    $atajo.Arguments = '--mostrar'
     $atajo.WorkingDirectory = $destino
     $atajo.Description = 'Programa de Concentración'
     $atajo.Save()
 
     Mostrar-Mensaje 'La instalación terminó. Encontrarás el programa en el menú Inicio.' 'Instalación completada' 64
-    Start-Process -FilePath $atajo.TargetPath -WorkingDirectory $destino
+    Start-Process -FilePath $atajo.TargetPath -ArgumentList '--mostrar' -WorkingDirectory $destino
 }
 catch {
     $detalle = $_.Exception.Message

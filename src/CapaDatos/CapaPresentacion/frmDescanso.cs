@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CapaNegocio;
 
 namespace CapaPresentacion
 {
@@ -52,7 +53,7 @@ namespace CapaPresentacion
 
         private void ActualizarContexto()
         {
-            TimeSpan restante = finDescanso - DateTime.Now;
+            TimeSpan restante = finDescanso - RelojNegocio.Ahora;
 
             if (restante <= TimeSpan.Zero)
             {

@@ -40,13 +40,14 @@ namespace CapaPresentacion
             {
                 bool inicioDesdeWindows = Environment.GetCommandLineArgs().Any(a =>
                     String.Equals(a, "--inicio-windows", StringComparison.OrdinalIgnoreCase));
+                bool mostrarSolicitado = Environment.GetCommandLineArgs().Any(a =>
+                    String.Equals(a, "--mostrar", StringComparison.OrdinalIgnoreCase));
                 if (!instanciaNueva)
                 {
-                    // Los lanzadores de inicio pueden estar duplicados en equipos
-                    // actualizados desde versiones anteriores. Una segunda
-                    // instancia de Windows no debe restaurar la ventana que la
-                    // primera instancia está ocultando al arrancar.
-                    if (!inicioDesdeWindows)
+                    // Solo una apertura explícita desde el acceso directo debe
+                    // restaurar una ventana oculta. Lanzadores antiguos o
+                    // automáticos sin argumentos nunca deben mostrarla.
+                    if (mostrarSolicitado)
                     {
                         try { EventWaitHandle.OpenExisting(NombreEventoInstancia).Set(); }
                         catch (WaitHandleCannotBeOpenedException) { }
@@ -54,7 +55,9 @@ namespace CapaPresentacion
                     }
                     else
                     {
-                        Trace.TraceInformation("Se omitió una segunda instancia del inicio de Windows.");
+                        Trace.TraceInformation(inicioDesdeWindows
+                            ? "Se omitió un inicio automático duplicado; la ventana permanece en la bandeja."
+                            : "Se omitió una instancia duplicada sin solicitud explícita para mostrar la ventana.");
                     }
                     return;
                 }

@@ -34,7 +34,7 @@ namespace CapaPresentacion
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         };
 
-        private DateTime fechaActual = DateTime.Today;
+        private DateTime fechaActual = RelojNegocio.Hoy;
         private List<ucDia> diasCalendario = new List<ucDia>();
         private List<E_Tarea> tareasCache;
         private readonly TextBox filtro = new TextBox { Width = 180, MaxLength = 70 };
@@ -133,7 +133,7 @@ namespace CapaPresentacion
             CargarCalendario();
             DateTime diaInicio = String.Equals(preferenciasIniciales.PantallaInicio, "Ultima", StringComparison.OrdinalIgnoreCase)
                 && preferenciasIniciales.UltimaFechaSeleccionada != DateTime.MinValue
-                ? preferenciasIniciales.UltimaFechaSeleccionada.Date : DateTime.Today;
+                ? preferenciasIniciales.UltimaFechaSeleccionada.Date : RelojNegocio.Hoy;
             ucDia diaInicioControl = diasCalendario.FirstOrDefault(d => d.Fecha.Date == diaInicio);
             if (diaInicioControl != null) SeleccionarDia(diaInicioControl);
             TemaAplicacion.Aplicar(this, preferenciasIniciales.ModoOscuro);
@@ -224,7 +224,7 @@ namespace CapaPresentacion
             {
                 BeginInvoke(new Action(() =>
                 {
-                    using (var formulario = new frmTareas(usuario.IdUsuario, DateTime.Today))
+                    using (var formulario = new frmTareas(usuario.IdUsuario, RelojNegocio.Hoy))
                         NavegacionFormularios.MostrarModal(this, formulario);
                 }));
             }
@@ -332,7 +332,7 @@ namespace CapaPresentacion
                 (!preferencias.MostrarComoVentana && !preferencias.MostrarComoNotificacion) || tareasCache == null)
                 return;
 
-            DateTime ahora = DateTime.Now;
+            DateTime ahora = RelojNegocio.Ahora;
             foreach (E_Tarea tarea in tareasCache.Where(t => t != null && t.Estado == 'P' && !t.EsPlantilla))
             {
                 DateTime inicio = tarea.FechaInicio;
@@ -385,7 +385,7 @@ namespace CapaPresentacion
         private void ProcesarEstadosDeTarea()
         {
             if (tareasCache == null) return;
-            DateTime ahora = DateTime.Now;
+            DateTime ahora = RelojNegocio.Ahora;
             bool huboCambios = false;
             bool errorEnCiclo = false;
             foreach (E_Tarea tarea in tareasCache.ToArray())
@@ -435,7 +435,7 @@ namespace CapaPresentacion
                 if (!errorEnCiclo) errorEstadoTareaNotificado = false;
                 return;
             }
-            DateTime fecha = diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha;
+            DateTime fecha = diaSeleccionado == null ? RelojNegocio.Hoy : diaSeleccionado.Fecha;
             try
             {
                 tareasCache = tareas.BuscarTarea(usuario.IdUsuario, String.Empty) ?? new List<E_Tarea>();
@@ -629,7 +629,7 @@ namespace CapaPresentacion
                 if (!sincronizada) return;
                 errorSincronizacionNotificado = false;
                 errorCopiaLocalNotificado = false;
-                DateTime fecha = diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha;
+                DateTime fecha = diaSeleccionado == null ? RelojNegocio.Hoy : diaSeleccionado.Fecha;
                 tareasCache = null;
                 ActualizarCalendarioYDia(fecha);
                 bloqueador.ActualizarProgramacion();
@@ -698,7 +698,7 @@ namespace CapaPresentacion
         private E_Tarea ObtenerTareaActual()
         {
             if (tareasCache == null) return null;
-            DateTime ahora = DateTime.Now;
+            DateTime ahora = RelojNegocio.Ahora;
             return tareasCache
                 .Where(t => t != null && !t.EsPlantilla && (t.Estado == 'P' || t.Estado == 'A') &&
                     ahora >= t.FechaInicio && ahora < t.FechaFin)
@@ -736,7 +736,7 @@ namespace CapaPresentacion
                 if (formularioDescanso != null && !formularioDescanso.IsDisposed) formularioDescanso.Close();
                 bloqueador.ActualizarProgramacion();
                 bloqueadorWeb.ActualizarProgramacion();
-                ActualizarCalendarioYDia(diaSeleccionado == null ? DateTime.Today : diaSeleccionado.Fecha);
+                ActualizarCalendarioYDia(diaSeleccionado == null ? RelojNegocio.Hoy : diaSeleccionado.Fecha);
             }
             catch (Exception ex)
             {

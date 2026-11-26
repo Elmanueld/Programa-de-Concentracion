@@ -82,6 +82,17 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// All clients use this UTC sample to align task start/end decisions across PCs.
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Server-Utc"] = DateTimeOffset.UtcNow.ToString("O");
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
 app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
 {
     var error = context.Features.Get<IExceptionHandlerFeature>()?.Error;

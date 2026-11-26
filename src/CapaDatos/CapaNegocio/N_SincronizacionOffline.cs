@@ -1,12 +1,22 @@
 using CapaDatos;
+using System.Diagnostics;
+using System.Threading;
 
 namespace CapaNegocio
 {
+    /// <summary>Exposes the synchronized application clock to the presentation layer.</summary>
+    public static class RelojNegocio
+    {
+        public static System.DateTime Ahora { get { return CapaDatos.RelojAplicacion.Ahora; } }
+        public static System.DateTime Hoy { get { return CapaDatos.RelojAplicacion.Hoy; } }
+    }
+
     public sealed class N_SincronizacionOffline
     {
         public static event System.Action<System.Exception> ErrorAlActualizarCopiaLocal;
         private readonly D_ProcesadorSincronizacionOffline datos = new D_ProcesadorSincronizacionOffline();
-        private static System.DateTime ultimaConsultaRemotaUtc = System.DateTime.MinValue;
+        private static long ultimaConsultaRemotaTick;
+        private static readonly long IntervaloConsultaRemotaTicks = Stopwatch.Frequency * 30L;
 
         static N_SincronizacionOffline()
         {
@@ -38,7 +48,11 @@ namespace CapaNegocio
 
         public bool HayCopiaNuevaNecesaria
         {
-            get { return System.DateTime.UtcNow - ultimaConsultaRemotaUtc >= System.TimeSpan.FromMinutes(2); }
+            get
+            {
+                long ultima = Interlocked.Read(ref ultimaConsultaRemotaTick);
+                return ultima == 0 || Stopwatch.GetTimestamp() - ultima >= IntervaloConsultaRemotaTicks;
+            }
         }
 
         public bool Sincronizar(int idUsuario)
@@ -59,7 +73,7 @@ namespace CapaNegocio
                 finally { contrasena = null; }
             }
             bool resultado = datos.Sincronizar(idUsuario);
-            if (resultado) ultimaConsultaRemotaUtc = System.DateTime.UtcNow;
+            if (resultado) Interlocked.Exchange(ref ultimaConsultaRemotaTick, Stopwatch.GetTimestamp());
             return resultado;
         }
     }

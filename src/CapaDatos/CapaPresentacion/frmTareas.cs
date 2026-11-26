@@ -26,7 +26,7 @@ namespace CapaPresentacion
             new List<E_Web>();
         private bool mostrarAplicaciones = true;
 
-        public frmTareas() : this(0, DateTime.Today, false, null)
+        public frmTareas() : this(0, RelojNegocio.Hoy, false, null)
         {
         }
 
@@ -42,7 +42,7 @@ namespace CapaPresentacion
 
         public frmTareas(int idUsuario, E_Tarea tarea)
             : this(idUsuario,
-                tarea == null ? DateTime.Today : tarea.FechaInicio.Date,
+                tarea == null ? RelojNegocio.Hoy : tarea.FechaInicio.Date,
                 false, tarea)
         {
             if (tarea == null) throw new ArgumentNullException("tarea");

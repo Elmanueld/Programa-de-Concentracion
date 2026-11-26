@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidades;
+using CapaNegocio;
 
 namespace CapaPresentacion
 {
@@ -83,7 +84,7 @@ namespace CapaPresentacion
 
         private void ActualizarColor()
         {
-            bool esHoy = Fecha.Date == DateTime.Today;
+            bool esHoy = Fecha.Date == RelojNegocio.Hoy;
             Color colorDia;
             if (Seleccionado)
                 colorDia = Color.FromArgb(apariencia.DiaSeleccionado);

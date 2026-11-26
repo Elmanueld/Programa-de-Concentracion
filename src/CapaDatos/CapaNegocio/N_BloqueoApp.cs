@@ -185,7 +185,7 @@ namespace CapaNegocio
                 if (idUsuario <= 0)
                     return;
 
-                DateTime ahora = DateTime.Now;
+                DateTime ahora = CapaDatos.RelojAplicacion.Ahora;
 
                 if (ahora >= _proximaRecarga)
                     RecargarProgramacion(idUsuario, ahora);
